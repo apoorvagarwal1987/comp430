@@ -3,39 +3,42 @@
 
 --Trigger 1
 
-
-
-create  trigger trigClosestDays
+ alter  trigger trigClosestDays
  on Climbed  
- after insert
+ for insert
  as
  begin
  	if @@ROWCOUNT = 0
 		return
 
-	declare @minDiff INT;
-	/*
-	set @minDiff = (	
-					select min(temp.closest)
-					from 
-							(select abs(DATEDIFF(day,d.WHEN_CLIMBED,i.WHEN_CLIMBED)) as "closest"
-								from		
-									inserted as i,
-								    climbed as d
-								where 
-									i.TRIP_ID = d.TRIP_ID 
-							) as temp
-				);*/
+	Declare myRes Cursor for
+		select  i.trip_id, abs(datediff(day,c.when_climbed,i.when_climbed)) as "diff"
+		from	inserted  as i,
+				climbed as c
+		where c.trip_id = i.trip_id and c.PEAK <> i.PEAK 
+		order by abs(datediff(day,c.when_climbed,i.when_climbed));
 
-	set @minDiff = (	
-					select temp.diff
-					from (
-						select top(1) abs(datediff(day,c.when_climbed,i.when_climbed)) as "diff"
-						from Climbed as c , inserted as i
-						where c.trip_id = i.trip_id
-						order by abs(datediff(day,c.when_climbed,i.when_climbed))	
-						) as temp
-				);
+	declare @minDiff INT;
+	declare @tripID INT;
+	declare @Diff INT;
+	declare @minTripId INT;
+	set @minDiff = 2147483647;
+	
+	open myRes ;
+	Fetch myRes into @tripID, @Diff
+	while (@@FETCH_STATUS = 0)
+		begin
+			if(@Diff < @minDiff)
+				begin
+					set @minDiff = @Diff;
+					set @minTripId = @tripID;
+				end
+			print 'Current: ' + cast(@Diff as varchar(10)) + ' Minimum: ' + cast(@minDiff as varchar(10))
+			Fetch myRes into @tripID, @Diff
+		end
+
+	close myRes;
+	Deallocate myRes;
 
 	print 'WARNING: The climb you inserted is days ' + cast(@minDiff as varchar(10)) + ' from the closest existing climb in trip '
 	print getdate()
