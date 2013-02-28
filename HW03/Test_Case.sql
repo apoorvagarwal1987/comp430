@@ -1,6 +1,7 @@
 use master;
 
 -- Test Case 1
+--part (a)
 
 delete from CLIMBED
 
@@ -17,7 +18,7 @@ INSERT INTO climbed VALUES (29, 'Lion Rock', '06/09/2004');
 
 
 select min(temp.Closest)
-	from (select abs(datediff(day,WHEN_CLIMBED,'2004-06-09 00:00:00.000')) as "Closest"
+	from (select abs(datediff(day,WHEN_CLIMBED,'2004-08-09 00:00:00.000')) as "Closest"
 			from climbed 
 			where TRIP_ID = 29
 			) as temp			
