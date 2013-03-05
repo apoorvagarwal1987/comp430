@@ -45,3 +45,11 @@ SELECT COUNT (DISTINCT trip_id) FROM climbed;
 
 select * from PARTICIPATED where TRIP_ID = 13
 select *  from CLIMBED where TRIP_ID = 13
+
+
+
+
+-- Test Case 2
+
+
+select dbo.levenshteinDistance('sd','sfds')
