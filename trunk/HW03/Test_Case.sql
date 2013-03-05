@@ -50,6 +50,32 @@ select *  from CLIMBED where TRIP_ID = 13
 
 
 -- Test Case 2
+select dbo.levenshteinDistance('Mo unt Gar diar','Mount G ardiner')
+
+create table ed_cutoff(cutoff INT);
+insert into ed_cutoff values(3)
+
+INSERT INTO climbed VALUES (30, 'North Guard', '09/06/2002');
+INSERT INTO climbed VALUES (30, 'Home Nose', '09/06/2002');
+SELECT * FROM climbed WHERE trip_id = 30;
+INSERT INTO climbed VALUES (31, 'Moses Mount', '09/06/2002');
+INSERT INTO climbed VALUES (31, 'Olancha Mountain', '09/06/2002');
+INSERT INTO climbed VALUES (31, 'Mt. Hitchcock', '09/06/2002');
+INSERT INTO climbed VALUES (31, 'Mt Hitchcock', '09/06/2002');
+INSERT INTO climbed VALUES (31, 'Milestoan Mounten', '09/06/2002');
+INSERT INTO climbed VALUES (31, 'Milestoan Mountan', '09/06/2002');
+SELECT * FROM climbed WHERE trip_id = 31;
+DROP TABLE ed_cutoff;
+CREATE TABLE ed_cutoff (cutoff INT);
+INSERT INTO ed_cutoff VALUES (2);
+INSERT INTO climbed VALUES (32, 'Piket Gard Peak', '09/06/2002');
+INSERT INTO climbed VALUES (32, 'Milestoan Mounten', '09/06/2002');
+INSERT INTO climbed VALUES (32, 'Milestoan Mountain', '09/06/2002');
+SELECT * FROM climbed WHERE trip_id = 32;
 
 
-select dbo.levenshteinDistance('sd','sfds')
+INSERT INTO climbed VALUES (32, 'Mount Gardinr', '09/06/2002');
+Mount Gardiner
+
+select * from CLIMBED
+where peak like '%Mile%'
