@@ -29,10 +29,19 @@ delete from CLIMBED
 delete from PARTICIPATED
 
 
-DELETE FROM participated WHERE trip_id = 12; SELECT COUNT(*) FROM climbed WHERE trip_id = 12;
-DELETE FROM participated WHERE trip_id = 13 AND name <> 'ELIZABETH'; SELECT COUNT(*) FROM climbed WHERE trip_id = 13;
-DELETE FROM participated WHERE name = 'ELIZABETH'; SELECT COUNT(*) FROM climbed WHERE trip_id = 13;
+DELETE FROM participated WHERE trip_id = 12; 
+SELECT COUNT(*) FROM climbed WHERE trip_id = 12;
 
-SELECT COUNT (DISTINCT trip_id) FROM climbed; DELETE FROM participated WHERE trip_id IN (SELECT trip_id FROM participated WHERE name = 'LINDA'); 
+DELETE FROM participated WHERE trip_id = 13 AND name <> 'ELIZABETH'; 
+SELECT COUNT(*) FROM climbed WHERE trip_id = 13;
+
+DELETE FROM participated WHERE name = 'ELIZABETH';
+ SELECT COUNT(*) FROM climbed WHERE trip_id = 13;
+
+SELECT COUNT (DISTINCT trip_id) FROM climbed;
+DELETE FROM participated WHERE trip_id IN (SELECT trip_id FROM participated WHERE name = 'LINDA'); 
+
 SELECT COUNT (DISTINCT trip_id) FROM climbed;
 
+select * from PARTICIPATED where TRIP_ID = 13
+select *  from CLIMBED where TRIP_ID = 13
