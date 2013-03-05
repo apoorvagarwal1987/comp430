@@ -100,6 +100,6 @@ BEGIN
 	  set @i = @i + 1;
 	END
 
-  SET @distance = (	SELECT value FROM @distanceTable WHERE i = 2 and j = 1 ); 
+  SET @distance = (	SELECT value FROM @distanceTable WHERE i = @lengthString1 and j = @lengthString2 ); 
   RETURN @distance ;
 END;
