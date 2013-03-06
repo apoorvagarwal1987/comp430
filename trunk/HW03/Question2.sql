@@ -1,4 +1,4 @@
- Alter  TRIGGER trigInsertClimbed
+ create  TRIGGER trigInsertClimbed
  on Climbed  
  instead of insert
  as
@@ -39,12 +39,34 @@
 	Declare resultSet Cursor for
 		SELECT  Top(1) peakName , distance
 			FROM @peakEditDistance
-			where distance <= @cutoffValue
 			order by distance;
 
 	open resultSet;
 	Fetch resultSet into @oldPeak , @distance;
-	print 'Peak closest is ' + @oldPeak + '  its distance is : '+ cast(@distance as varchar(10));
+
+	if (@distance = 0)
+	BEGIN
+		--print 'ERROR: Inserted peak name'  + @insertedPeak + ' does not match any in the database.' + @oldPeak + 'is used instead'
+		insert into climbed 
+			select * from inserted
+
+		print 'Successfully Inserted'
+		--print 'Peak closest is ' + @oldPeak + '  its distance is : '+ cast(@distance as varchar(10));
+	END
+
+	ELSE 
+	BEGIN
+		if ( @distance < @cutoffValue)
+			BEGIN
+				print 'ERROR: Inserted peak name '  + @insertedPeak + ' does not match any in the database. ' + @oldPeak + ' is used instead'
+				insert into climbed select * from inserted
+			END
+		else
+			BEGIN
+				print 'ERROR: Inserted peak name '  + @insertedPeak + ' does not closely match any in the database and so the insert is rejected'
+			END
+	END
+		
 	close resultSet
 	deallocate resultset;
 
