@@ -1,4 +1,4 @@
- create  TRIGGER trigInsertClimbed
+ alter  TRIGGER trigInsertClimbed
  on Climbed  
  instead of insert
  as
@@ -46,7 +46,7 @@
 
 	if (@distance = 0)
 	BEGIN
-		--print 'ERROR: Inserted peak name'  + @insertedPeak + ' does not match any in the database.' + @oldPeak + 'is used instead'
+		--print 'Success: Inserted peak name'  + @insertedPeak + ' does not match any in the database.' + @oldPeak + 'is used instead'
 		insert into climbed 
 			select * from inserted
 
@@ -66,7 +66,7 @@
 				print 'ERROR: Inserted peak name '  + @insertedPeak + ' does not closely match any in the database and so the insert is rejected'
 			END
 	END
-		
+	print 'Peak closest is ' + @oldPeak + '  its distance is : '+ cast(@distance as varchar(10));	
 	close resultSet
 	deallocate resultset;
 
