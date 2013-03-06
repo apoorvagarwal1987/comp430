@@ -6,6 +6,10 @@ use master;
 delete from CLIMBED
 delete from PARTICIPATED
 
+drop trigger trigClosestDays
+drop trigger trigInsertClimbed
+drop trigger trigDelParticipated
+
 select Count(*) from CLIMBED
 
  INSERT INTO climbed VALUES (1, 'Kearsarge Peak', '06/28/2002');
@@ -56,7 +60,7 @@ drop trigger trigInsertClimbed
 select * from CLIMBED
 select * from ed_cutoff
 
-select dbo.levenshteinDistance('asd asd','asd asfc')
+select dbo.levenshteinDistance('Moses Mount','Moses Mountain')
 
 create table ed_cutoff(cutoff INT);
 insert into ed_cutoff values(3)
@@ -78,6 +82,9 @@ SELECT * FROM climbed WHERE trip_id = 31;
 DROP TABLE ed_cutoff;
 CREATE TABLE ed_cutoff (cutoff INT);
 INSERT INTO ed_cutoff VALUES (2);
+
+
+
 INSERT INTO climbed VALUES (32, 'Piket Gard Peak', '09/06/2002');
 INSERT INTO climbed VALUES (32, 'Milestoan Mounten', '09/06/2002');
 INSERT INTO climbed VALUES (32, 'Milestoan Mountain', '09/06/2002');

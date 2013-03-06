@@ -1,4 +1,4 @@
- alter  TRIGGER trigInsertClimbed
+ CREATE  TRIGGER trigInsertClimbed
  on Climbed  
  instead of insert
  as
@@ -27,7 +27,7 @@
 
 	while (@@FETCH_STATUS = 0)
 	BEGIN
-		set @distance = (select dbo.levenshteinDistance(@oldPeak,@insertedPeak));
+		set @distance = (select dbo.levenshteinDistance(@insertedPeak,@oldPeak));
 		insert into @peakEditDistance values (@oldPeak,@distance);
 		Fetch peakNames into @oldPeak ;
 	END
@@ -56,10 +56,16 @@
 
 	ELSE 
 	BEGIN
-		if ( @distance < @cutoffValue)
+		if ( @distance <= @cutoffValue)
 			BEGIN
 				print 'ERROR: Inserted peak name '  + @insertedPeak + ' does not match any in the database. ' + @oldPeak + ' is used instead'
-				insert into climbed select * from inserted
+				declare @date DATE;
+				declare @tripId INT;
+
+				set @date = (	select when_climbed from inserted );
+				set @tripId = (	select trip_id from inserted );
+
+				insert into climbed values (@tripId,@oldPeak,@date)
 			END
 		else
 			BEGIN
