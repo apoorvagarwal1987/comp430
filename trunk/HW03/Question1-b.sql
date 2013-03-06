@@ -2,7 +2,7 @@
 ---Question 1---
 
 --Trigger 2
- alter  TRIGGER trigDelParticipated
+ ALTER  TRIGGER trigDelParticipated
  on Participated  
  after delete
  as
