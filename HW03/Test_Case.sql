@@ -91,8 +91,4 @@ INSERT INTO climbed VALUES (32, 'Milestoan Mountain', '09/06/2002');
 SELECT * FROM climbed WHERE trip_id = 32;
 
 
-INSERT INTO climbed VALUES (32, 'Mount Gardinr', '09/06/2002');
-Mount Gardiner
-
-select * from CLIMBED
-where peak like '%Mou%'
+-- Test Case 3
