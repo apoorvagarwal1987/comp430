@@ -52,7 +52,7 @@ BEGIN
 		END
 	ELSE
 		BEGIN
-				INSERT INTO ##ClimberInfo VALUES (@fPerson,@sPerson);
+				--INSERT INTO ##ClimberInfo VALUES (@fPerson,@sPerson);
 				WHILE (@i<= @fPeakClimbedCount)
 				  BEGIN		
 						INSERT INTO @longestSequencePeakTable VALUES (@i,0,0);
@@ -108,6 +108,7 @@ BEGIN
 
 			SET @longestSequence = (SELECT Top (1) value FROM @longestSequencePeakTable WHERE i = @fPeakClimbedCount and j = @sPeakClimbedCount ); 
 		END
+	--EXECUTE dbo.CommonSequence @fPerson = @fPerson, @sPerson = @sPerson;
 	return @longestSequence;
 END
 
