@@ -70,7 +70,7 @@ BEGIN
 					
 					SET @value1 = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i-1 and j = @j-1 );
 					SET @value2 = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i and j = @j-1 );
-					SET @value3 = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i and j = @j-1 );
+					SET @value3 = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i-1 and j = @j );
 
 					--SET @tempValue = (	SELECT dbo.findMinimum(@value1,@value2,@value3)	);
 

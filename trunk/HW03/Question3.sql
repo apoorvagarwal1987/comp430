@@ -17,7 +17,7 @@ alter procedure FindMostSimilar
 	set @maxSequence = 0;
 
 
-	open climberPairList;
+	OPEN climberPairList;
 	Fetch climberPairList into @fClimber , @sClimber;
 
 	while (@@FETCH_STATUS = 0)
