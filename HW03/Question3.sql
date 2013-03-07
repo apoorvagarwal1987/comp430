@@ -13,36 +13,26 @@ alter procedure FindMostSimilar
 	
 	declare @fClimber varchar (8000);
 	declare @sClimber varchar (8000);
-	declare @maxSequence INT;
-	set @maxSequence = 0;
 
+	declare @maxSequence INT;
+	SET @maxSequence = 0;
+
+	DECLARE @SequencePeakTable table ( fClimber VARCHAR(8000),sClimber VARCHAR(8000) ,value INT);
+
+	CREATE table ##SequenceInfo (seqid INT PRIMARY KEY , peak VARCHAR(8000));
+	CREATE table ##ClimberInfo (seqid INT PRIMARY KEY , fClimber VARCHAR(8000),sClimber VARCHAR(8000))
 
 	OPEN climberPairList;
 	Fetch climberPairList into @fClimber , @sClimber;
+	WHILE (@@FETCH_STATUS = 0)
+	BEGIN	
+		SET @maxSequence = (select dbo.longestSequence(@fClimber,@sClimber));
+		insert into @SequencePeakTable values (@fClimber,@sClimber,@maxSequence);
+		Fetch climberPairList into @fClimber , @sClimber;
+	END
 
-	while (@@FETCH_STATUS = 0)
 
-	begin
-			
-		declare peakListfClimber cursor for
-			select  c.PEAK 
-				from	PARTICIPATED as p,
-						climbed  as c
-				where p.TRIP_ID = c.TRIP_ID and p.NAME = @fClimber
-				order by c.WHEN_CLIMBED	 ;
 
-		
-		declare peakListsClimber cursor for
-				select  c.PEAK 
-				from	PARTICIPATED as p,
-						climbed  as c
-				where p.TRIP_ID = c.TRIP_ID and p.NAME = @sClimber
-				order by c.WHEN_CLIMBED	 ;
-
-		Fetch climberPairList into @fClimber , @sClimber; 
-
-	end
-	
 	close climberPairList
 	deallocate climberPairList
 
@@ -50,4 +40,4 @@ end
 
 
 
-exec FindMostSimilar
+--exec FindMostSimilar
