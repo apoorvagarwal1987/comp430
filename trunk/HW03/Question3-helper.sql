@@ -29,16 +29,6 @@ BEGIN
 			where p.TRIP_ID = c.TRIP_ID and p.NAME = @sPerson
 			order by c.WHEN_CLIMBED	;
 
-	/*
-
-	declare peakListfClimber cursor for
-			select  c.PEAK 
-				from	PARTICIPATED as p,
-						climbed  as c
-				where p.TRIP_ID = c.TRIP_ID and p.NAME = @fPerson
-				order by c.WHEN_CLIMBED	 ;
-
-   */
 	--
 		-- Working on the peaks information of both the climber
 	--
@@ -62,14 +52,13 @@ BEGIN
 		END
 	ELSE
 		BEGIN
+				INSERT INTO ##ClimberInfo VALUES (@fPerson,@sPerson);
 				WHILE (@i<= @fPeakClimbedCount)
 				  BEGIN		
 						INSERT INTO @longestSequencePeakTable VALUES (@i,0,0);
 						SET @i = @i + 1;
 				  END
-  
-
-				WHILE (@j<= @sPeakClimbedCount)
+  				WHILE (@j<= @sPeakClimbedCount)
 				  BEGIN		
 						INSERT INTO @longestSequencePeakTable VALUES (0,@j,0);
 						SET @j = @j + 1;
@@ -104,6 +93,7 @@ BEGIN
 								IF (@value2 < @value3)
 									BEGIN
 										INSERT INTO @longestSequencePeakTable VALUES (@i,@j,@value3);
+										
 									END
 								ELSE
 									BEGIN
@@ -116,7 +106,7 @@ BEGIN
 				  SET @i = @i + 1;
 				END
 
-			SET @longestSequence = (SELECT Top (1) value FROM @longestSequencePeakTable WHERE i = 0 and j = 0 ); 
+			SET @longestSequence = (SELECT Top (1) value FROM @longestSequencePeakTable WHERE i = @fPeakClimbedCount and j = @sPeakClimbedCount ); 
 		END
 	return @longestSequence;
 END
