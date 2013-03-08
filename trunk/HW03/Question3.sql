@@ -37,13 +37,27 @@ alter procedure FindMostSimilar
 	Declare @msClimber VARCHAR(8000);
 	Declare @peaksClimbed INT;
 
-	SET @mfClimber = (select TOP(1) fClimber from @SequencePeakTable order by value DESC);
-	SET @msClimber = (select TOP(1) sClimber from @SequencePeakTable order by value DESC);
+	--SET @mfClimber = (select TOP(1) fClimber from @SequencePeakTable order by value DESC);
+	--SET @msClimber = (select TOP(1) sClimber from @SequencePeakTable order by value DESC);
 	SET @peaksClimbed = (select TOP(1) value from @SequencePeakTable order by value DESC);
 
-	print 'Most common climber are ' + @mfClimber + ' and  ' + @msClimber + ' common peaks are:' + cast(@peaksClimbed as varchar(10));
-	EXECUTE dbo.CommonSequence @fPerson = @mfClimber, @sPerson = @msClimber;
-end
+	DECLARE resultSet CURSOR FOR
+		SELECT fClimber,sClimber
+		FROM @SequencePeakTable
+		WHERE value = @peaksClimbed;
+	
+	OPEN resultSet;
+	FETCH resultSet into @mfClimber,@msClimber;
 
-SET NOCOUNT ON
-exec FindMostSimilar
+	WHILE (@@FETCH_STATUS = 0)
+	BEGIN
+		PRINT 'The two most similar climbers are ' + @mfClimber + ' and  ' + @msClimber + ' common peaks between them are:' + cast(@peaksClimbed as varchar(10));
+		PRINT 'The longest sequence of peak ascents common to both is: '
+		EXECUTE dbo.CommonSequence @fPerson = @mfClimber, @sPerson = @msClimber;
+		FETCH resultSet into @mfClimber,@msClimber;
+	END
+
+	CLOSE resultSet;
+	DEALLOCATE resultSet;
+END
+
