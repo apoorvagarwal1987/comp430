@@ -7,19 +7,19 @@ CREATE FUNCTION findMinimum
 RETURNS int
 AS
 BEGIN
-Declare @minValue int
-set @minValue = case when @num1 < @num2 then
-               case when @num1 < @num3 then 
+DECLARE @minValue int
+SET @minValue = CASE WHEN @num1 < @num2 THEN
+               CASE WHEN @num1 < @num3 THEN 
                 @num1
-               else
+               ELSE
                 @num3
-               end
-        when @num2 < @num3 then 
+               END
+        WHEN @num2 < @num3 THEN 
                 @num2
-        else
+        ELSE
                  @num3
-    end
-  return @minValue  
+    END
+  RETURN @minValue  
 END 
 
 

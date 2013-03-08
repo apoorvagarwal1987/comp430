@@ -1,81 +1,81 @@
- CREATE  TRIGGER trigInsertClimbed
+ CREATE  TRIGGER trigINSERTClimbed
  on Climbed  
- instead of insert
+ instead of INSERT
  as
- begin
+ BEGIN
 	
- 	if @@ROWCOUNT = 0
-		return
+ 	IF @@ROWCOUNT = 0
+		RETURN
  
-	Declare @insertedPeak VARCHAR(8000);
-	Declare @oldPeak VARCHAR(8000);
-	Declare @cutoffValue INT;
-	Declare @distance INT;
+	DECLARE @INSERTedPeak VARCHAR(8000);
+	DECLARE @oldPeak VARCHAR(8000);
+	DECLARE @cutoffValue INT;
+	DECLARE @distance INT;
 
-	set @cutoffValue = ( select cutoff from ed_cutoff );
+	SET @cutoffValue = ( SELECT cutoff FROM ed_cutoff );
 
-	set @insertedPeak = ( select PEAK from inserted );
+	SET @INSERTedPeak = ( SELECT PEAK FROM INSERTed );
 
-	Declare peakNames Cursor for
+	DECLARE peakNames Cursor for
 		SELECT  name
 			FROM peak;
 
-	DECLARE @peakEditDistance table ( peakName VARCHAR(8000) unique, distance INT );
+	DECLARE @peakEditDistance TABLE ( peakName VARCHAR(8000) unique, distance INT );
 
-	open peakNames;
-	Fetch peakNames into @oldPeak ;
+	OPEN peakNames;
+	FETCH peakNames INTO @oldPeak ;
 
 	while (@@FETCH_STATUS = 0)
 	BEGIN
-		set @distance = (select dbo.levenshteinDistance(@insertedPeak,@oldPeak));
-		insert into @peakEditDistance values (@oldPeak,@distance);
-		Fetch peakNames into @oldPeak ;
+		SET @distance = (SELECT dbo.levenshteinDistance(@INSERTedPeak,@oldPeak));
+		INSERT INTO @peakEditDistance values (@oldPeak,@distance);
+		FETCH peakNames INTO @oldPeak ;
 	END
 
-	close peakNames;
-	deallocate peakNames;
+	CLOSE peakNames;
+	DEALLOCATE peakNames;
 	
 
-	Declare resultSet Cursor for
+	DECLARE resultSet Cursor for
 		SELECT  Top(1) peakName , distance
 			FROM @peakEditDistance
-			order by distance;
+			ORDER by distance;
 
-	open resultSet;
-	Fetch resultSet into @oldPeak , @distance;
+	OPEN resultSet;
+	FETCH resultSet INTO @oldPeak , @distance;
 
-	if (@distance = 0)
+	IF (@distance = 0)
 	BEGIN
-		--print 'Success: Inserted peak name'  + @insertedPeak + ' does not match any in the database.' + @oldPeak + 'is used instead'
-		insert into climbed 
-			select * from inserted
+		--PRINT 'Success: INSERTed peak name'  + @INSERTedPeak + ' does not match any in the database.' + @oldPeak + 'is used instead'
+		INSERT INTO climbed 
+			SELECT * FROM INSERTed
 
-		print 'Successfully Inserted'
-		--print 'Peak closest is ' + @oldPeak + '  its distance is : '+ cast(@distance as varchar(10));
+		PRINT 'Successfully INSERTed'
+		--PRINT 'Peak closest is ' + @oldPeak + '  its distance is : '+ cast(@distance as varchar(10));
 	END
 
 	ELSE 
 	BEGIN
-		if ( @distance <= @cutoffValue)
+		IF ( @distance <= @cutoffValue)
 			BEGIN
-				print 'ERROR: Inserted peak name '  + @insertedPeak + ' does not match any in the database. ' + @oldPeak + ' is used instead'
-				declare @date DATE;
-				declare @tripId INT;
+				PRINT 'ERROR: INSERTed peak name '  + @INSERTedPeak + ' does not match any in the database. ' + @oldPeak + ' is used instead'
+				DECLARE @date DATE;
+				DECLARE @tripId INT;
 
-				set @date = (	select when_climbed from inserted );
-				set @tripId = (	select trip_id from inserted );
+				SET @date = (	SELECT when_climbed FROM INSERTed );
+				SET @tripId = (	SELECT trip_id FROM INSERTed );
 
-				insert into climbed values (@tripId,@oldPeak,@date)
+				INSERT INTO climbed values (@tripId,@oldPeak,@date)
 			END
-		else
+		ELSE
 			BEGIN
-				print 'ERROR: Inserted peak name '  + @insertedPeak + ' does not closely match any in the database and so the insert is rejected'
+				PRINT 'ERROR: INSERTed peak name '  + @INSERTedPeak + ' does not closely match any in the database and so the INSERT is rejected'
 			END
 	END
-	print 'Peak closest is ' + @oldPeak + '  its distance is : '+ cast(@distance as varchar(10));	
-	close resultSet
-	deallocate resultset;
+	PRINT 'Peak closest is ' + @oldPeak + '  its distance is : '+ cast(@distance as varchar(10));	
+	CLOSE resultSet
+	DEALLOCATE resultset;
 
- end
+ END
 
 
