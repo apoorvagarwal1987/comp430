@@ -13,13 +13,13 @@ BEGIN
   SET @lengthString2 = LEN(@oldPeak)
 
   IF @lengthString1 = 0
-	begin
-		return @lengthString2;
-	end
+	BEGIN
+		RETURN @lengthString2;
+	END
 
   IF @lengthString2 = 0 
 	BEGIN
-		return @lengthString1;
+		RETURN @lengthString1;
 	END
 
   DECLARE @i AS INT;
@@ -29,19 +29,19 @@ BEGIN
   SET @j = 0;
   SET @distance = 0;
 
-  DECLARE @distanceTable table ( i INT,  j INT, value INT);
+  DECLARE @distanceTABLE TABLE ( i INT,  j INT, value INT);
 
   WHILE (@i<= @lengthString1)
   BEGIN		
-		INSERT INTO @distanceTable VALUES (@i,0,@i);
-		set @i = @i + 1;
+		INSERT INTO @distanceTABLE VALUES (@i,0,@i);
+		SET @i = @i + 1;
   END
   
 
   WHILE (@j<= @lengthString2)
   BEGIN		
-		INSERT INTO @distanceTable VALUES (0,@j,@j);
-		set @j = @j + 1;
+		INSERT INTO @distanceTABLE VALUES (0,@j,@j);
+		SET @j = @j + 1;
   END
 
   SET @i = 1;
@@ -58,8 +58,8 @@ BEGIN
 		BEGIN	
 			IF CHAR(ASCII(SUBSTRING(@newPeak,@i,@i+1))) = CHAR(ASCII(SUBSTRING(@oldPeak,@j,@j+1)))
 				BEGIN
-					SET @tempValue = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i-1 and j = @j-1 ); 
-					INSERT INTO @distanceTable VALUES(@i,@j,@tempValue);				
+					SET @tempValue = (	SELECT Top(1) value FROM @distanceTABLE WHERE i = @i-1 and j = @j-1 ); 
+					INSERT INTO @distanceTABLE VALUES(@i,@j,@tempValue);				
 				END
 			ELSE
 				BEGIN
@@ -68,38 +68,38 @@ BEGIN
 					DECLARE @value2 INT;
 					DECLARE @value3 INT;			
 					
-					SET @value1 = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i-1 and j = @j-1 );
-					SET @value2 = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i and j = @j-1 );
-					SET @value3 = (	SELECT Top(1) value FROM @distanceTable WHERE i = @i-1 and j = @j );
+					SET @value1 = (	SELECT Top(1) value FROM @distanceTABLE WHERE i = @i-1 and j = @j-1 );
+					SET @value2 = (	SELECT Top(1) value FROM @distanceTABLE WHERE i = @i and j = @j-1 );
+					SET @value3 = (	SELECT Top(1) value FROM @distanceTABLE WHERE i = @i-1 and j = @j );
 
 					--SET @tempValue = (	SELECT dbo.findMinimum(@value1,@value2,@value3)	);
 
-					set @tempValue = case when @value1 < @value2 
-										then
-											case when @value1 < @value3
-											   then 
+					SET @tempValue = CASE WHEN @value1 < @value2 
+										THEN
+											CASE WHEN @value1 < @value3
+											   THEN 
 													@value1
-											   else
+											   ELSE
 													@value3
-											end									
-										when @value2 < @value3 									
-											then 
+											END									
+										WHEN @value2 < @value3 									
+											THEN 
 													@value2
-											else
+											ELSE
 													@value3
-										end
+										END
 
 				   SET @tempValue = @tempValue  + 1 ;
-				   INSERT INTO @distanceTable VALUES(@i,@j,@tempValue);
+				   INSERT INTO @distanceTABLE VALUES(@i,@j,@tempValue);
 				END
 			
-			--print 'Min Values: ' + cast(@tempValue as varchar(10))
-		set @j = @j + 1;
+			--PRINT 'Min Values: ' + cast(@tempValue as varchar(10))
+		SET @j = @j + 1;
 	  END
-	  set @j = 1;
-	  set @i = @i + 1;
+	  SET @j = 1;
+	  SET @i = @i + 1;
 	END
 
-  SET @distance = (	SELECT value FROM @distanceTable WHERE i = @lengthString1 and j = @lengthString2 ); 
+  SET @distance = (	SELECT value FROM @distanceTABLE WHERE i = @lengthString1 and j = @lengthString2 ); 
   RETURN @distance ;
 END;

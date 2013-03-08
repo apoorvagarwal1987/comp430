@@ -3,17 +3,17 @@
 
 --Trigger 2
  ALTER  TRIGGER trigDelParticipated
- on Participated  
- after delete
- as
- begin
- 	if @@ROWCOUNT = 0
-		return
+ ON Participated  
+ AFTER DELETE
+ AS
+ BEGIN
+ 	IF @@ROWCOUNT = 0
+		RETURN
 
-	delete 
-	from climbed
-	where TRIP_ID not in (
-							select TRIP_ID
-							from PARTICIPATED	
+	DELETE 
+	FROM climbed
+	WHERE TRIP_ID not in (
+							SELECT TRIP_ID
+							FROM PARTICIPATED	
 							)
- end
+ END

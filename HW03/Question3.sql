@@ -4,57 +4,57 @@
 alter procedure FindMostSimilar
 
 	as
-	begin
+	BEGIN
 	
-	declare climberPairList  Cursor for 
-		select c1.name , c2.name
-			from  climber as c1 , CLIMBER as c2
-			where c1.NAME < c2.name ;
+	DECLARE climberPairList  Cursor for 
+		SELECT c1.name , c2.name
+			FROM  climber as c1 , CLIMBER as c2
+			WHERE c1.NAME < c2.name ;
 	
-	declare @fClimber varchar (8000);
-	declare @sClimber varchar (8000);
+	DECLARE @fClimber varchar (8000);
+	DECLARE @sClimber varchar (8000);
 
-	declare @maxSequence INT;
+	DECLARE @maxSequence INT;
 	SET @maxSequence = 0;
 
-	DECLARE @SequencePeakTable table ( fClimber VARCHAR(8000),sClimber VARCHAR(8000) ,value INT);
+	DECLARE @SequencePeakTABLE TABLE ( fClimber VARCHAR(8000),sClimber VARCHAR(8000) ,value INT);
 
-	--CREATE table ##SequenceInfo (seqid INT PRIMARY KEY , peak VARCHAR(8000));
-	--CREATE table ##ClimberInfo (seqid INT PRIMARY KEY , fClimber VARCHAR(8000),sClimber VARCHAR(8000))
+	--CREATE TABLE ##SequenceInfo (seqid INT PRIMARY KEY , peak VARCHAR(8000));
+	--CREATE TABLE ##ClimberInfo (seqid INT PRIMARY KEY , fClimber VARCHAR(8000),sClimber VARCHAR(8000))
 
 	OPEN climberPairList;
-	Fetch climberPairList into @fClimber , @sClimber;
+	FETCH climberPairList INTO @fClimber , @sClimber;
 	WHILE (@@FETCH_STATUS = 0)
 	BEGIN	
-		SET @maxSequence = (select dbo.longestSequence(@fClimber,@sClimber));
-		insert into @SequencePeakTable values (@fClimber,@sClimber,@maxSequence);
-		Fetch climberPairList into @fClimber , @sClimber;
+		SET @maxSequence = (SELECT dbo.longestSequence(@fClimber,@sClimber));
+		INSERT INTO @SequencePeakTABLE values (@fClimber,@sClimber,@maxSequence);
+		FETCH climberPairList INTO @fClimber , @sClimber;
 	END
-	close climberPairList
-	deallocate climberPairList
+	CLOSE climberPairList
+	DEALLOCATE climberPairList
 	
-	Declare @mfClimber VARCHAR(8000);
-	Declare @msClimber VARCHAR(8000);
-	Declare @peaksClimbed INT;
+	DECLARE @mfClimber VARCHAR(8000);
+	DECLARE @msClimber VARCHAR(8000);
+	DECLARE @peaksClimbed INT;
 
-	--SET @mfClimber = (select TOP(1) fClimber from @SequencePeakTable order by value DESC);
-	--SET @msClimber = (select TOP(1) sClimber from @SequencePeakTable order by value DESC);
-	SET @peaksClimbed = (select TOP(1) value from @SequencePeakTable order by value DESC);
+	--SET @mfClimber = (SELECT TOP(1) fClimber FROM @SequencePeakTABLE ORDER by value DESC);
+	--SET @msClimber = (SELECT TOP(1) sClimber FROM @SequencePeakTABLE ORDER by value DESC);
+	SET @peaksClimbed = (SELECT TOP(1) value FROM @SequencePeakTABLE ORDER by value DESC);
 
 	DECLARE resultSet CURSOR FOR
 		SELECT fClimber,sClimber
-		FROM @SequencePeakTable
+		FROM @SequencePeakTABLE
 		WHERE value = @peaksClimbed;
 	
 	OPEN resultSet;
-	FETCH resultSet into @mfClimber,@msClimber;
+	FETCH resultSet INTO @mfClimber,@msClimber;
 
 	WHILE (@@FETCH_STATUS = 0)
 	BEGIN
 		PRINT 'The two most similar climbers are ' + @mfClimber + ' and  ' + @msClimber + ' common peaks between them are:' + cast(@peaksClimbed as varchar(10));
 		PRINT 'The longest sequence of peak ascents common to both is: '
 		EXECUTE dbo.CommonSequence @fPerson = @mfClimber, @sPerson = @msClimber;
-		FETCH resultSet into @mfClimber,@msClimber;
+		FETCH resultSet INTO @mfClimber,@msClimber;
 	END
 
 	CLOSE resultSet;
