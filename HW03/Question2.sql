@@ -1,4 +1,4 @@
- CREATE  TRIGGER trigINSERTClimbed
+ ALTER  TRIGGER trigINSERTClimbed
  on Climbed  
  instead of INSERT
  as
@@ -20,7 +20,7 @@
 		SELECT  name
 			FROM peak;
 
-	DECLARE @peakEditDistance TABLE ( peakName VARCHAR(8000) unique, distance INT );
+	DECLARE @peakEditDistance TABLE ( peakName VARCHAR(800) unique, distance INT );
 
 	OPEN peakNames;
 	FETCH peakNames INTO @oldPeak ;
