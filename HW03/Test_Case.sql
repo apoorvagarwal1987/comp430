@@ -12,7 +12,7 @@ drop trigger trigDelParticipated
 
 SELECT Count(*) FROM CLIMBED
 
- INSERT INTO climbed VALUES (1, 'Kearsarge Peak', '06/28/2002');
+INSERT INTO climbed VALUES (1, 'Kearsarge Peak', '06/28/2002');
 INSERT INTO climbed VALUES (6, 'Mount Guyot', '06/21/2002');
 INSERT INTO climbed VALUES (23, 'Lion Rock', '08/09/2004');
 INSERT INTO climbed VALUES (23, 'Mount Williamson', '06/09/2004');
@@ -32,6 +32,9 @@ SELECT min(temp.Closest)
 delete FROM CLIMBED
 delete FROM PARTICIPATED
 
+drop table CLIMBED
+drop table PARTICIPATED
+
 
 DELETE FROM participated WHERE trip_id = 12; 
 SELECT COUNT(*) FROM climbed WHERE trip_id = 12;
@@ -44,7 +47,6 @@ DELETE FROM participated WHERE name = 'ELIZABETH';
 
 SELECT COUNT (DISTINCT trip_id) FROM climbed;
 DELETE FROM participated WHERE trip_id IN (SELECT trip_id FROM participated WHERE name = 'LINDA'); 
-
 SELECT COUNT (DISTINCT trip_id) FROM climbed;
 
 SELECT * FROM PARTICIPATED WHERE TRIP_ID = 13
