@@ -38,9 +38,11 @@ ALTER PROCEDURE Bacon
 
 		OPEN resultSet ;
 		FETCH resultSet INTO @personName , @bDistance;
+		PRINT 'PERSON NAME '+ ' DISTANCE ' ;
 		WHILE (@@FETCH_STATUS = 0)
 		BEGIN
-			PRINT ' PERSON NAME: ' + @personName + ' DISTANCE FROM ' + @climber + ' IS ' + cast(@bDistance as varchar(10));
+			--PRINT ' PERSON NAME: ' + @personName + ' DISTANCE FROM ' + @climber + ' IS ' + cast(@bDistance as varchar(10));
+			PRINT @personName + '        '  + cast(@bDistance as varchar(10));
 			FETCH resultSet INTO @personName , @bDistance;
 		END
 		CLOSE resultSet;

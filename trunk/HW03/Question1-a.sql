@@ -3,7 +3,7 @@
 
 --Trigger 1
 
- ALTER  TRIGGER trigClosestDays
+ CREATE  TRIGGER trigClosestDays
  ON Climbed  
  FOR INSERT
  AS
@@ -28,7 +28,7 @@
 
 	IF @Diff > 20
 	BEGIN
-		PRINT 'WARNING: The climb you INSERTed is days ' + cast(@Diff as varchar(10)) + ' FROM the closest existing climb in trip ' +  cast(@tripId as varchar(10))
+		PRINT 'WARNING: The climb you INSERTED is days ' + cast(@Diff as varchar(10)) + ' FROM the closest existing climb in trip ' +  cast(@tripId as varchar(10))
 		RETURN 
 	END
 
