@@ -33,6 +33,7 @@ GROUP BY
 		AND (r.r_name = "region") ;
  ________________________________________________________________________________________________
   
+ -- query with mismatch between int and string in WHERE clause with "literal int"
  SELECT
 		c.c_phone
  FROM
@@ -43,8 +44,7 @@ GROUP BY
 		(r.r_name = 10)	 ;
  _________________________________________________________________________________________________
  
- 
- --
+ -- query with mismatch between int and string in WHERE clause "identifier"
  SELECT
 		c.c_phone
  FROM
@@ -54,3 +54,33 @@ GROUP BY
  WHERE
 		(c.c_custkey = o.o_orderpriority) ;
  _________________________________________________________________________________________________
+ 
+  -- query with mismatch between int and string in FROM clause "identifier"
+ SELECT
+		(c.c_phone * c.c_custkey),
+		(1 - c.c_phone)
+ FROM
+		customer AS c,
+		orders AS o,
+		region AS r
+ WHERE
+		(c.c_custkey = o.o_orderpriority) ;
+ _________________________________________________________________________________________________
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

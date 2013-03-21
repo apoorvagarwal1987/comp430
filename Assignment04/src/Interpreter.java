@@ -79,7 +79,14 @@ class Interpreter {
 				  return false;
 	  }	  
 	  
-	  
+	  if((lExpAttribType.equals("Str") && rExpAttribType.equals("Str") ) || (lExpAttribType.equals("Str") && rExpAttribType.equals("Str"))){
+		  switch(expType){
+		  //	case "plus":
+		  	case "minus":
+		  	case "times":
+		  	case "divided by"  : return false;
+		  }
+	  }	  
 	  return true;
   }
   
@@ -101,10 +108,23 @@ class Interpreter {
 		  if(lExpType.equals("identifier") && rExpType.equals("identifier")){		  
 			  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
 			  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
+			  if((lExpAttribType == null) || (rExpAttribType == null))
+				  return false;
+			  
 			  if(!checkCompatibility(lExpAttribType, rExpAttribType, expType))
 				  return false;
 		  }
 		  
+		  if((lExpType.equals("literal string") && rExpType.equals("literal int") )
+				  	|| 
+		     (lExpType.equals("literal int") && rExpType.equals("literal string"))
+		     		||
+		     (lExpType.equals("literal string") && rExpType.equals("literal float") )
+				  	|| 
+		     (lExpType.equals("literal float") && rExpType.equals("literal string"))
+		     ){
+		    	 return false;
+		     }
 		  
 		  String lExpValue = lExp.getValue();
 		  String rExpValue = rExp.getValue();
@@ -190,6 +210,26 @@ public static void main (String [] args) throws Exception {
         //Validating the group by clause of the query
         if((att != null) && !validateGroupByClause(att,myFrom)){
         	System.out.println("\n\n\nSemantically incorrect query: Referenced attribute in the group by clause do not present in database");
+        }
+        
+        //Validating the Type mismatches in the WHERE Expression
+        if(!where.getType().equals("and")){
+        	if(validateTypeExpression(where,myFrom)){
+        		System.out.println("Valid Expression in WHERE  :" + where.print());
+        	}
+        	else{
+        		System.out.println("Invalid Expression in WHERE  :" + where.print());
+        	}
+        }
+        
+        //Validating the Type mismatch in the SELECT Expression
+        for (Expression selectExp : mySelect){
+        	if(validateTypeExpression(selectExp,myFrom)){
+        		System.out.println("Valid Expression in SELECT  :" + selectExp.print() );
+        	}
+        	else{
+        		System.out.println("Invalid Expression in SELECT  :" + selectExp.print());
+        	}
         }
         
         //
