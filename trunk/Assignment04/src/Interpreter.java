@@ -92,9 +92,15 @@ class Interpreter {
   
   private static boolean validateTypeExpression(Expression exp, Map <String, String> fromClause){
 	  
-	  if(exp.getType().equals("and")|| exp.getType().equals("or")){
+/*	  if(exp.getType().equals("and")|| exp.getType().equals("or")){
 		  return validateTypeExpression(exp.getLeftSubexpression(),fromClause) && validateTypeExpression(exp.getRightSubexpression(),fromClause);
-	  }
+	  }*/
+	  
+	  if(exp.getType().equals("and") || exp.getType().equals("or"))
+		  return validateTypeExpression(exp.getLeftSubexpression(),fromClause) && validateTypeExpression(exp.getRightSubexpression(),fromClause);
+	  
+	  if(checkUnaryOperation(exp.getType()))
+		  return validateTypeExpression(exp.getLeftSubexpression(),fromClause);
 	  
 	  String expType = exp.getType();
 	  
@@ -104,6 +110,12 @@ class Interpreter {
 		  
 		  String lExpType = lExp.getType();
 		  String rExpType = rExp.getType();
+		  
+		  if(checkBinaryOperation(lExpType))
+			 return validateTypeExpression(lExp,fromClause);
+		  
+		  if(checkBinaryOperation(rExpType))
+			  return validateTypeExpression(rExp,fromClause);
 		  
 		  if(lExpType.equals("identifier") && rExpType.equals("identifier")){		  
 			  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
@@ -126,9 +138,68 @@ class Interpreter {
 		    	 return false;
 		     }
 		  
-		  String lExpValue = lExp.getValue();
-		  String rExpValue = rExp.getValue();
+		  if(lExpType.equals("literal string") && rExpType.equals("identifier")){
+			  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
+			  if((rExpAttribType == null))
+				  return false;
+			  
+			  if(rExpAttribType.equals("Float")|| rExpAttribType.equals("Int")){
+				  for(String incompatibility : Expression.incompatibleTypes)
+					  if(expType.equals(incompatibility))
+						  return false;
+			  }
+			  
+			  if(rExpAttribType.equals("Str")){
+				  switch(expType){
+				  //	case "plus":
+				  	case "minus":
+				  	case "times":
+				  	case "divided by"  : return false;
+				  }				  
+			  }			  
+		  }
 		  
+		  if(rExpType.equals("literal string") && lExpType.equals("identifier")){
+			  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
+			  if((lExpAttribType == null))
+				  return false;
+			  
+			  if(lExpAttribType.equals("Float")|| lExpAttribType.equals("Int")){
+				  for(String incompatibility : Expression.incompatibleTypes)
+					  if(expType.equals(incompatibility))
+						  return false;
+			  }	
+			  if(lExpAttribType.equals("Str")){
+				  switch(expType){
+				  //	case "plus":
+				  	case "minus":
+				  	case "times":
+				  	case "divided by"  : return false;
+				  }				  
+			  }	
+		  }
+		  
+		  if(lExpType.equals("literal int") && rExpType.equals("identifier")
+			||
+			(lExpType.equals("literal float") && rExpType.equals("identifier"))){
+			  
+			  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
+			  if((rExpAttribType == null))
+				  return false;
+			  if(rExpAttribType.equals("Str"))
+				  return false;
+		  }
+			
+		   if(lExpType.equals("identifier") && rExpType.equals("literal int")
+				   ||
+		    (lExpType.equals("identifier") && rExpType.equals("literal float"))){
+			
+			  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
+			  if((lExpAttribType == null))
+				  return false;
+			  if(lExpAttribType.equals("Str"))
+				  return false;
+		  }		  
 	  }	  
 	  return true;
   }
@@ -213,14 +284,14 @@ public static void main (String [] args) throws Exception {
         }
         
         //Validating the Type mismatches in the WHERE Expression
-        if(!where.getType().equals("and")){
+/*        if(!where.getType().equals("and")){
         	if(validateTypeExpression(where,myFrom)){
         		System.out.println("Valid Expression in WHERE  :" + where.print());
         	}
         	else{
         		System.out.println("Invalid Expression in WHERE  :" + where.print());
         	}
-        }
+        }*/
         
         //Validating the Type mismatch in the SELECT Expression
         for (Expression selectExp : mySelect){
@@ -231,6 +302,9 @@ public static void main (String [] args) throws Exception {
         		System.out.println("Invalid Expression in SELECT  :" + selectExp.print());
         	}
         }
+        
+        
+        
         
         //
         System.out.format ("\nSQL>");
