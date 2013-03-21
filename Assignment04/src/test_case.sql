@@ -55,7 +55,7 @@ GROUP BY
 		(c.c_custkey = o.o_orderpriority) ;
  _________________________________________________________________________________________________
  
-  -- query with mismatch between int and string in FROM clause "identifier"
+  -- query with mismatch between int and string in SELECT clause "identifier" / "literal identifier"
  SELECT
 		(c.c_phone * c.c_custkey),
 		(1 - c.c_phone)
@@ -64,14 +64,31 @@ GROUP BY
 		orders AS o,
 		region AS r
  WHERE
-		(c.c_custkey = o.o_orderpriority) ;
+		(c.c_custkey = 4) ;
  _________________________________________________________________________________________________
  
+ -- query with mismatch between int and string in SELECT clause attribute do not exist
+ SELECT
+		(1 - c.c_phone1)
+ FROM
+		customer AS c,
+		orders AS o,
+		region AS r
+ WHERE
+		(c.c_custkey = 4) ;
+  _________________________________________________________________________________________________
+
+  -- correct query
+ SELECT
+		(1 - c.c_custkey)
+ FROM
+		customer AS c,
+		orders AS o,
+		region AS r
+ WHERE
+		(c.c_custkey = 4) ;
  
- 
- 
- 
- 
+   _________________________________________________________________________________________________
  
  
  
