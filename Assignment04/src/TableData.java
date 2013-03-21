@@ -10,7 +10,11 @@ class TableData {
   private int tupleCount;
   private Map <String, AttInfo> attributes;
   
-  public TableData (int numTuples, Map <String, AttInfo> attsIn) {
+  public Map<String, AttInfo> getAttributes() {
+	return attributes;
+}
+
+public TableData (int numTuples, Map <String, AttInfo> attsIn) {
     tupleCount = numTuples;
     attributes = attsIn;
   }
@@ -31,4 +35,6 @@ class TableData {
     res += "}";
     return res;
   }
+  
+  
 }
