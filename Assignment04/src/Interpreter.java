@@ -284,14 +284,13 @@ public static void main (String [] args) throws Exception {
         }
         
         //Validating the Type mismatches in the WHERE Expression
-/*        if(!where.getType().equals("and")){
-        	if(validateTypeExpression(where,myFrom)){
+        if(validateTypeExpression(where,myFrom)){
         		System.out.println("Valid Expression in WHERE  :" + where.print());
         	}
         	else{
         		System.out.println("Invalid Expression in WHERE  :" + where.print());
         	}
-        }*/
+      
         
         //Validating the Type mismatch in the SELECT Expression
         for (Expression selectExp : mySelect){
