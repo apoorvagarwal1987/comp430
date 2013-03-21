@@ -19,21 +19,106 @@ class Interpreter {
   }
   
   private static boolean validateGroupByClause(String att, Map <String, String> fromClause) {
-		String alias = att.substring(0, att.indexOf('.'));
-		String tableName = fromClause.get(alias);
-		TableData tableInfo = res.get(tableName);
-		System.out.println(tableInfo.print());
+		String alias = att.substring(0, att.indexOf("."));
 		
-		return false;
+		String attName = att.substring(att.indexOf(".")+1);
+		//System.out.println(att.in);
+		String tableName = fromClause.get(alias);
+		Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
+		if(!(attributesInfo.containsKey(attName)))
+			return false;
+		
+		System.out.println(getAtributeType(att, fromClause));
+		return true;
 	}
   
+  private static String getAtributeType(String att, Map <String, String> fromClause){
+	  	String attributeType;
+		String alias = att.substring(0, att.indexOf("."));
+		String tableName = fromClause.get(alias);
+		String attName = att.substring(att.indexOf(".")+1);
+		Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
+		
+		if (attributesInfo == null)
+			return null;
+		
+		if(!(attributesInfo.containsKey(attName)))
+			return null;
+		
+		else
+			attributeType = attributesInfo.get(attName).getDataType();
+		
+	  return attributeType;
+	  
+  }
   
-  public static void main (String [] args) throws Exception {
+  private static boolean checkUnaryOperation(String expType) {
+	for (String operation : Expression.unaryTypes) {
+		if(operation.equals(expType))
+			return true;
+	}
+	return false;
+}
+  
+  private static boolean checkBinaryOperation(String expType) {
+	for (String operation : Expression.binaryTypes) {
+		if(operation.equals(expType))
+			return true;
+	}
+	return false;
+}
+  
+  private static boolean checkCompatibility(String lExpAttribType,String rExpAttribType, String expType){
+	  
+	  if((lExpAttribType.equals("Str") && rExpAttribType.equals("Int") ) || (lExpAttribType.equals("Int") && rExpAttribType.equals("Str"))
+		  || 	  
+		  (lExpAttribType.equals("Str") && rExpAttribType.equals("Float") ) || (lExpAttribType.equals("Float") && rExpAttribType.equals("Str"))
+	     ){
+		for(String incompatibility : Expression.incompatibleTypes)
+			  if(expType.equals(incompatibility))
+				  return false;
+	  }	  
+	  
+	  
+	  return true;
+  }
+  
+  private static boolean validateTypeExpression(Expression exp, Map <String, String> fromClause){
+	  
+	  if(exp.getType().equals("and")|| exp.getType().equals("or")){
+		  return validateTypeExpression(exp.getLeftSubexpression(),fromClause) && validateTypeExpression(exp.getRightSubexpression(),fromClause);
+	  }
+	  
+	  String expType = exp.getType();
+	  
+	  if(checkBinaryOperation(expType)){
+		  Expression lExp = exp.getLeftSubexpression();
+		  Expression rExp = exp.getRightSubexpression();
+		  
+		  String lExpType = lExp.getType();
+		  String rExpType = rExp.getType();
+		  
+		  if(lExpType.equals("identifier") && rExpType.equals("identifier")){		  
+			  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
+			  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
+			  if(!checkCompatibility(lExpAttribType, rExpAttribType, expType))
+				  return false;
+		  }
+		  
+		  
+		  String lExpValue = lExp.getValue();
+		  String rExpValue = rExp.getValue();
+		  
+	  }	  
+	  return true;
+  }
+  
+  
+public static void main (String [] args) throws Exception {
     
     try {
       
-      CatalogReader foo = new CatalogReader ("C:\\Users\\ApoorvAgarwal\\workspace\\Assignment04\\src\\Catalog.xml");
-      
+      CatalogReader foo = new CatalogReader ("C:\\Users\\ApoorvAgarwal\\workspace\\Assignment04\\src\\Catalog.xml");      
       res = foo.getCatalog ();
       System.out.println (foo.printCatalog (res));
       
@@ -79,17 +164,20 @@ class Interpreter {
         Map <String, String> myFrom = parser.getFROM ();
         System.out.println ("\t" + myFrom);
         
-        System.out.println ("WHERE clause:");
-        Expression where = parser.getWHERE ();  
+        Expression where = parser.getWHERE ();
+        if (where != null){
+        	System.out.println ("WHERE clause:");
+            System.out.println ("\t" + where.print ());            
+        }  
         	
-        if (where != null)
-          System.out.println ("\t" + where.print ());
-        
-        System.out.println ("GROUPING att:");
+
         String att = parser.getGROUPBY ();
-        if (att != null) 
-          System.out.println ("\t" + att);
-                  
+        if (att != null){
+            System.out.println ("GROUPING att:");
+            System.out.println ("\t" + att);
+        }
+        
+              
         /*
          * Doing the semantics check of the query :			
          */
@@ -100,8 +188,11 @@ class Interpreter {
         }
         
         //Validating the group by clause of the query
-        if((att != null) && !validateGroupByClause(att,myFrom))
+        if((att != null) && !validateGroupByClause(att,myFrom)){
+        	System.out.println("\n\n\nSemantically incorrect query: Referenced attribute in the group by clause do not present in database");
+        }
         
+        //
         System.out.format ("\nSQL>");
               
       } 

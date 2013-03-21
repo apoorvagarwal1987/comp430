@@ -12,11 +12,18 @@ public class Expression {
   
   // this is an exhaustive list of the binary expression types
   static public final String [] binaryTypes = {"plus", "minus", "times",
-    "divided by", "or", "and", "equals", "greater than", "less than"};
+    "divided by", "or", "and", "equals", "greater than", "less than"
+  };
   
   // this is an exhaustive list of the value types
-  public final String [] valueTypes = {"literal string", "literal float",
-    "literal int", "identifier"};
+  public static final String [] valueTypes = {"literal string", "literal float",
+    "literal int", "identifier"
+  };
+  
+  //this is an list of incompatible binary operation between integer, string, float
+  public static final String [] incompatibleTypes = {
+	  "plus", "minus", "times", "divided by", "equals", "greater than", "less than"
+  };
   
   // this is the type of the expression
   private String myType;
@@ -27,7 +34,16 @@ public class Expression {
   
   // these are the two subexpressions
   private Expression leftSubexpression;
-  private Expression rightSubexpression;
+  
+  public Expression getLeftSubexpression() {
+	return leftSubexpression;
+  }
+
+	public Expression getRightSubexpression() {
+		return rightSubexpression;
+	}
+
+	private Expression rightSubexpression;
   
   // prints the expression
   public String print () {
