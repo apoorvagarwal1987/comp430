@@ -82,7 +82,7 @@ public class SemanticCheck {
 		return false;
 	}
 	  
-	  private boolean checkCompatibility(String lExpAttribType,String rExpAttribType, String expType){
+	  private ResultValue checkCompatibility(String lExpAttribType,String rExpAttribType, String expType){
 		  
 		  if((lExpAttribType.equals("Str") && rExpAttribType.equals("Int") ) || (lExpAttribType.equals("Int") && rExpAttribType.equals("Str"))
 			  || 	  
@@ -90,33 +90,47 @@ public class SemanticCheck {
 		     ){
 			for(String incompatibility : Expression.incompatibleTypes)
 				  if(expType.equals(incompatibility))
-					  return false;
+					  return (new ResultValue(null, false));
 		  }	  
 		  
 		  if((lExpAttribType.equals("Str") && rExpAttribType.equals("Str") ) || (lExpAttribType.equals("Str") && rExpAttribType.equals("Str"))){
 			  switch(expType){
-			  //	case "plus":
 			  	case "minus":
 			  	case "times":
-			  	case "divided by"  : return false;
+			  	case "divided by"  : 
+			  		return (new ResultValue(null, false));
 			  }
-		  }	  
-		  return true;
+		  }	 
+		  
+		  return (new ResultValue(lExpAttribType, true));
 	  }
 	  
-	  private boolean validateTypeExpression(Expression exp, Map <String, String> fromClause){
+	  private ResultValue validateTypeExpression(Expression exp, Map <String, String> fromClause){
 		  
 	/*	  if(exp.getType().equals("and")|| exp.getType().equals("or")){
 			  return validateTypeExpression(exp.getLeftSubexpression(),fromClause) && validateTypeExpression(exp.getRightSubexpression(),fromClause);
 		  }*/
 		  
-		  if(exp.getType().equals("and") || exp.getType().equals("or"))
-			  return validateTypeExpression(exp.getLeftSubexpression(),fromClause) && validateTypeExpression(exp.getRightSubexpression(),fromClause);
+		  if(exp.getType().equals("and") || exp.getType().equals("or")){
+			  ResultValue resValue1 = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
+			  ResultValue resValue2 = validateTypeExpression(exp.getRightSubexpression(),fromClause);
+			  
+			  if(resValue1.isResult() && resValue2.isResult()){
+				  if(resValue1.getType().equals(resValue2.getType())|| resValue1.getType().equals("Int")|| resValue1.getType().equals("Float")) {
+					  return (new ResultValue(resValue1.getType(), true));
+				  }					  
+			  }
+			  else{
+				  return (new ResultValue(null, true));
+			  }			  
+		  }
 		  
-		  if(checkUnaryOperation(exp.getType()))
+		  
+		  if(checkUnaryOperation(exp.getType())){			  
 			  return validateTypeExpression(exp.getLeftSubexpression(),fromClause);
-		  
+		  }
 		  String expType = exp.getType();
+		  String retType;
 		  
 		  if(checkBinaryOperation(expType)){
 			  Expression lExp = exp.getLeftSubexpression();
@@ -135,10 +149,10 @@ public class SemanticCheck {
 				  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
 				  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
 				  if((lExpAttribType == null) || (rExpAttribType == null))
-					  return false;
+					  return (new ResultValue(null, false));
 				  
-				  if(!checkCompatibility(lExpAttribType, rExpAttribType, expType))
-					  return false;
+				  if(!checkCompatibility(lExpAttribType, rExpAttribType, expType).isResult())
+					  return (new ResultValue(null, false));
 			  }
 			  
 			  if((lExpType.equals("literal string") && rExpType.equals("literal int") )
@@ -149,18 +163,18 @@ public class SemanticCheck {
 					  	|| 
 			     (lExpType.equals("literal float") && rExpType.equals("literal string"))
 			     ){
-			    	 return false;
+				  	return (new ResultValue(null, false));
 			     }
 			  
 			  if(lExpType.equals("literal string") && rExpType.equals("identifier")){
 				  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
 				  if((rExpAttribType == null))
-					  return false;
+					  return (new ResultValue(null, false));
 				  
 				  if(rExpAttribType.equals("Float")|| rExpAttribType.equals("Int")){
 					  for(String incompatibility : Expression.incompatibleTypes)
 						  if(expType.equals(incompatibility))
-							  return false;
+							  return (new ResultValue(null, false));
 				  }
 				  
 				  if(rExpAttribType.equals("Str")){
@@ -168,7 +182,8 @@ public class SemanticCheck {
 					  //	case "plus":
 					  	case "minus":
 					  	case "times":
-					  	case "divided by"  : return false;
+					  	case "divided by"  : 
+					  		return (new ResultValue(null, false));
 					  }				  
 				  }			  
 			  }
@@ -176,19 +191,20 @@ public class SemanticCheck {
 			  if(rExpType.equals("literal string") && lExpType.equals("identifier")){
 				  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
 				  if((lExpAttribType == null))
-					  return false;
+					  return (new ResultValue(null, false));
 				  
 				  if(lExpAttribType.equals("Float")|| lExpAttribType.equals("Int")){
 					  for(String incompatibility : Expression.incompatibleTypes)
 						  if(expType.equals(incompatibility))
-							  return false;
+							  return (new ResultValue(null, false));
 				  }	
 				  if(lExpAttribType.equals("Str")){
 					  switch(expType){
 					  //	case "plus":
 					  	case "minus":
 					  	case "times":
-					  	case "divided by"  : return false;
+					  	case "divided by"  : 
+					  		return (new ResultValue(null, false));
 					  }				  
 				  }	
 			  }
@@ -199,9 +215,10 @@ public class SemanticCheck {
 				  
 				  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
 				  if((rExpAttribType == null))
-					  return false;
+					  return (new ResultValue(null, false));
+				  
 				  if(rExpAttribType.equals("Str"))
-					  return false;
+					  return (new ResultValue(null, false));
 			  }
 				
 			   if(lExpType.equals("identifier") && rExpType.equals("literal int")
@@ -210,12 +227,22 @@ public class SemanticCheck {
 				
 				  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
 				  if((lExpAttribType == null))
-					  return false;
+					  return (new ResultValue(null, false));
+				  
 				  if(lExpAttribType.equals("Str"))
-					  return false;
+					  return (new ResultValue(null, false));
+				  
 			  }		  
 		  }	  
-		  return true;
+		  
+		  //TODO: Fix the return type of the
+		  // string and float types.
+		  
+		  if(exp.getType().equals("identifier"))
+			  retType = getAtributeType(exp.getValue(), fromClause);
+		  
+		  
+		  return (new ResultValue(exp.getType(), true));
 	  }
 	  
 	  public boolean validateQuery(){		  
@@ -233,7 +260,7 @@ public class SemanticCheck {
 	        }
 	        
 	        //Validating the Type mismatches in the WHERE Expression
-	        if(!validateTypeExpression(where,myFrom)){
+	        if(!(validateTypeExpression(where,myFrom).isResult())){
 	        	System.out.println("Invalid Expression in WHERE  :" + where.print());
 	        	return false;
 	        }
@@ -241,7 +268,7 @@ public class SemanticCheck {
 	        
 	        //Validating the Type mismatch in the SELECT Expression
 	        for (Expression selectExp : mySelect){
-	        	if(!validateTypeExpression(selectExp,myFrom)){
+	        	if(!(validateTypeExpression(selectExp,myFrom).isResult())){
 	        		System.out.println("Invalid Expression in SELECT  :" + selectExp.print());
 	        		return false;
 	        	}
