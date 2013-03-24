@@ -89,8 +89,9 @@ public class SemanticCheck1 {
 			  (lExpAttribType.equals("Str") && rExpAttribType.equals("Float") ) || (lExpAttribType.equals("Float") && rExpAttribType.equals("Str"))
 		     ){
 			for(String incompatibility : Expression.incompatibleTypes)
-				  if(expType.equals(incompatibility))
+				  if(expType.equals(incompatibility)){
 					  return (new ResultValue(-1, false));
+				  }
 		  }	  
 		  
 		  if((lExpAttribType.equals("Str") && rExpAttribType.equals("Str") ) || (lExpAttribType.equals("Str") && rExpAttribType.equals("Str"))){
@@ -114,15 +115,11 @@ public class SemanticCheck1 {
 			  ResultValue resValue1 = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
 			  ResultValue resValue2 = validateTypeExpression(exp.getRightSubexpression(),fromClause);
 			  
-			  if(resValue1.isResult() && resValue2.isResult()){
-				  if((resValue1.getType()== resValue2.getType())) {
-					  return (new ResultValue(resValue1.getType(), true));
-				  }		
-				  return (new ResultValue(-1, false));
-			  }
+			  if(resValue1.isResult() && resValue2.isResult())
+					  return (new ResultValue(-1, true));						  			
 			  else{
 				  return (new ResultValue(-1, false));
-			  }			  
+			  }				  
 		  }
 		  
 		  
@@ -177,11 +174,19 @@ public class SemanticCheck1 {
 			  if(lExpType.equals("identifier") && rExpType.equals("identifier")){		  
 				  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
 				  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
-				  if((lExpAttribType == null) || (rExpAttribType == null))
+				  if((lExpAttribType == null) || (rExpAttribType == null)){
+					  if(lExpAttribType == null)
+						  System.out.println("Error: "+ lExp.getValue() +"  is not the valid attribute of the table");
+					  
+					  else
+						  System.out.println("Error: "+ rExp.getValue() +"  is not the valid attribute of the table");
+					  
 					  return (new ResultValue(-1, false));
-				  
-				  if(!checkCompatibility(lExpAttribType, rExpAttribType, expType).isResult())
+				  }
+				  if(!checkCompatibility(lExpAttribType, rExpAttribType, expType).isResult()){
+					  System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 					  return (new ResultValue(-1, false));
+				  }
 			  }
 			  
 			  if((lExpType.equals("literal string") && rExpType.equals("literal int") )
@@ -192,26 +197,30 @@ public class SemanticCheck1 {
 					  	|| 
 			     (lExpType.equals("literal float") && rExpType.equals("literal string"))
 			     ){
+				  	System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 				  	return (new ResultValue(-1, false));
 			     }
 			  
 			  if(lExpType.equals("literal string") && rExpType.equals("identifier")){
 				  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
-				  if((rExpAttribType == null))
+				  if((rExpAttribType == null)){
+					  System.out.println("Error: "+ rExp.getValue() +"  is not the valid attribute of the table");
 					  return (new ResultValue(-1, false));
-				  
+				  }
 				  if(rExpAttribType.equals("Float")|| rExpAttribType.equals("Int")){
 					  for(String incompatibility : Expression.incompatibleTypes)
-						  if(expType.equals(incompatibility))
+						  if(expType.equals(incompatibility)){
+							  System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 							  return (new ResultValue(-1, false));
+						  }
 				  }
 				  
 				  if(rExpAttribType.equals("Str")){
 					  switch(expType){
-					  //	case "plus":
 					  	case "minus":
 					  	case "times":
 					  	case "divided by"  : 
+					  		System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 					  		return (new ResultValue(-1, false));
 					  }				  
 				  }			  
@@ -219,20 +228,23 @@ public class SemanticCheck1 {
 			  
 			  if(rExpType.equals("literal string") && lExpType.equals("identifier")){
 				  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
-				  if((lExpAttribType == null))
+				  if((lExpAttribType == null)){
+					  System.out.println("Error: "+ lExp.getValue() +"  is not the valid attribute of the table");
 					  return (new ResultValue(-1, false));
-				  
+				  }
 				  if(lExpAttribType.equals("Float")|| lExpAttribType.equals("Int")){
 					  for(String incompatibility : Expression.incompatibleTypes)
-						  if(expType.equals(incompatibility))
+						  if(expType.equals(incompatibility)){
+							  System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 							  return (new ResultValue(-1, false));
+						  }
 				  }	
 				  if(lExpAttribType.equals("Str")){
 					  switch(expType){
-					  //	case "plus":
 					  	case "minus":
 					  	case "times":
 					  	case "divided by"  : 
+					  		System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 					  		return (new ResultValue(-1, false));
 					  }				  
 				  }	
@@ -243,12 +255,14 @@ public class SemanticCheck1 {
 				(lExpType.equals("literal float") && rExpType.equals("identifier"))){
 				  
 				  String rExpAttribType = getAtributeType(rExp.getValue(), fromClause);
-				  if((rExpAttribType == null))
+				  if((rExpAttribType == null)){
+					  System.out.println("Error: "+ rExp.getValue() +"  is not the valid attribute of the table");
 					  return (new ResultValue(-1, false));
-				  
-				  if(rExpAttribType.equals("Str"))
+				  }
+				  if(rExpAttribType.equals("Str")){
+					  System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 					  return (new ResultValue(-1, false));
-				  
+				  }
 				  return (new ResultValue(1, true));
 			  }
 				
@@ -257,23 +271,25 @@ public class SemanticCheck1 {
 			    (lExpType.equals("identifier") && rExpType.equals("literal float"))){
 				
 				  String lExpAttribType = getAtributeType(lExp.getValue(), fromClause);
-				  if((lExpAttribType == null))
+				  if((lExpAttribType == null)){
+					  System.out.println("Error: "+ lExp.getValue() +"  is not the valid attribute of the table");
 					  return (new ResultValue(-1, false));
-				  
-				  if(lExpAttribType.equals("Str"))
+				  }
+				  if(lExpAttribType.equals("Str")){
+					  System.out.println("Error:" + exp.getValue()+ "  has an incompatible computataion");
 					  return (new ResultValue(-1, false));
-				  
+				  }
 				  return (new ResultValue(1, true));
 			  }		  
 		  }	  
-		  
-		  //TODO: Fix the return type of the
-		  // string and float types.
+
 		  
 		  if(exp.getType().equals("identifier")){
 			  retType = getAtributeType(exp.getValue(), fromClause);
-			  if(retType == null)
+			  if(retType == null){
+				  System.out.println("Error: "+exp.getValue() +"  is not the valid attribute of the table");
 				  return (new ResultValue(-1, false));
+			  }
 			  if(retType.equals("Str"))
 				  return (new ResultValue(0, true));			  
 			  else
@@ -306,8 +322,6 @@ public class SemanticCheck1 {
 	        	return false;
 	        }
 	      
-	        System.out.println("asda");
-	        
 	        //Validating the Type mismatch in the SELECT Expression
 	        for (Expression selectExp : mySelect){
 	        	if(!(validateTypeExpression(selectExp,myFrom).isResult())){
