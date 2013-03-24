@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class SemanticCheck {
+public class SemanticCheck1 {
 	
 	Map <String, String> myFrom;
 	ArrayList <Expression> mySelect;
@@ -12,7 +12,7 @@ public class SemanticCheck {
 	Expression where;
 	Map <String, TableData> res;
 	
-	public SemanticCheck(Map <String, String> myFrom,ArrayList <Expression> mySelect,String att,Expression where){
+	public SemanticCheck1(Map <String, String> myFrom,ArrayList <Expression> mySelect,String att,Expression where){
 		this.myFrom = myFrom;
 		this.mySelect = mySelect;
 		this.att =  att;
@@ -141,6 +141,22 @@ public class SemanticCheck {
 			  
 			  String lExpType = lExp.getType();
 			  String rExpType = rExp.getType();
+			  ResultValue resValue1 = null;
+			  ResultValue resValue2 = null;
+			  resValue1 = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
+			  resValue2 = validateTypeExpression(exp.getRightSubexpression(),fromClause);
+			  
+			  if((resValue1!=null) && (resValue2 !=null)){
+				  if(resValue1.isResult() && resValue2.isResult()){
+					  if((resValue1.getType()== resValue2.getType())) {
+						  return (new ResultValue(resValue1.getType(), true));
+					  }		
+					  return (new ResultValue(-1, false));
+				  }
+				  else{
+					  return (new ResultValue(-1, false));
+				  }	
+			  }
 			  
 			  if(checkBinaryOperation(lExpType))
 				  lResValue =  validateTypeExpression(lExp,fromClause);
@@ -256,9 +272,10 @@ public class SemanticCheck {
 		  
 		  if(exp.getType().equals("identifier")){
 			  retType = getAtributeType(exp.getValue(), fromClause);
+			  if(retType == null)
+				  return (new ResultValue(-1, false));
 			  if(retType.equals("Str"))
-				  return (new ResultValue(0, true));
-			  
+				  return (new ResultValue(0, true));			  
 			  else
 				  return (new ResultValue(1, true));
 		  }
@@ -289,6 +306,7 @@ public class SemanticCheck {
 	        	return false;
 	        }
 	      
+	        System.out.println("asda");
 	        
 	        //Validating the Type mismatch in the SELECT Expression
 	        for (Expression selectExp : mySelect){
@@ -301,3 +319,4 @@ public class SemanticCheck {
 	        return true;
 	  }	  
 }
+

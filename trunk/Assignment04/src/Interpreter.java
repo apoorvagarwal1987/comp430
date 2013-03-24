@@ -74,7 +74,7 @@ public static void main (String [] args) throws Exception {
         /*
          * Doing the semantics check of the query :			
          */
-        if ((new SemanticCheck(myFrom, mySelect, att, where)).validateQuery()){
+        if ((new SemanticCheck1(myFrom, mySelect, att, where)).validateQuery()){
         	System.out.println("Query is semantically correct");
         }
         //
