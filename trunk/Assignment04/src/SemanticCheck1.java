@@ -165,8 +165,11 @@ public class SemanticCheck1 {
 				  else{
 					  return (new ResultValue(-1, false));
 				  }	*/
+				  ResultValue rv = checkCompatibilityHelper(resValue1, resValue2, expType);	
+				  if(!rv.isResult())
+					  System.out.println("ERROR: Incompatible expression computation in: " );
 				  
-				  return checkCompatibilityHelper(resValue1, resValue2, expType);				  
+				  return rv;		  
 			  }
 			  
 			  if(checkBinaryOperation(lExpType))
@@ -331,7 +334,7 @@ public class SemanticCheck1 {
 	        }
 	        
 	        //Validating the Type mismatches in the WHERE Expression
-	        if(!(validateTypeExpression(where,myFrom).isResult())){
+	        if((where != null)&&!(validateTypeExpression(where,myFrom).isResult())){
 	        	System.out.println("Invalid Expression in WHERE  :" + where.print());
 	        	return false;
 	        }
