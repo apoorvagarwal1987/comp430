@@ -36,7 +36,6 @@ public class SemanticCheck1 {
 			String alias = att.substring(0, att.indexOf("."));
 			
 			String attName = att.substring(att.indexOf(".")+1);
-			//System.out.println(att.in);
 			String tableName = fromClause.get(alias);
 			Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
 			if(!(attributesInfo.containsKey(attName)))
@@ -50,6 +49,9 @@ public class SemanticCheck1 {
 		  	String attributeType;
 			String alias = att.substring(0, att.indexOf("."));
 			String tableName = fromClause.get(alias);
+			if(tableName == null)
+				return null;
+			
 			String attName = att.substring(att.indexOf(".")+1);
 			Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
 			
@@ -135,8 +137,13 @@ public class SemanticCheck1 {
 		  }
 		  
 		  
-		  if(checkUnaryOperation(exp.getType())){			  
-			  return validateTypeExpression(exp.getLeftSubexpression(),fromClause);
+		  if(checkUnaryOperation(exp.getType())){	
+			  ResultValue rv = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
+			  if(rv.getType()==0)
+				  return new ResultValue(-1, false);
+			  
+			  else
+				  return rv;
 		  }
 		  String expType = exp.getType();
 		  String retType;
@@ -156,22 +163,13 @@ public class SemanticCheck1 {
 			  resValue2 = validateTypeExpression(exp.getRightSubexpression(),fromClause);
 			  
 			  if((resValue1!=null) && (resValue2 !=null)){
-				  /*if(resValue1.isResult() && resValue2.isResult()){
-					  if((resValue1.getType()== resValue2.getType())) {
-						  return (new ResultValue(resValue1.getType(), true));
-					  }		
-					  return (new ResultValue(-1, false));
-				  }
-				  else{
-					  return (new ResultValue(-1, false));
-				  }	*/
 				  ResultValue rv = checkCompatibilityHelper(resValue1, resValue2, expType);	
 				  if(!rv.isResult())
-					  System.out.println("ERROR: Incompatible expression computation in: " );
+					  System.out.println("ERROR: Incompatible expression computation in: " + exp.print());
 				  
 				  return rv;		  
 			  }
-			  
+			  /*
 			  if(checkBinaryOperation(lExpType))
 				  lResValue =  validateTypeExpression(lExp,fromClause);
 			  
@@ -297,7 +295,7 @@ public class SemanticCheck1 {
 					  return (new ResultValue(-1, false));
 				  }
 				  return (new ResultValue(1, true));
-			  }		  
+			  }		  */
 		  }	  
 
 		  

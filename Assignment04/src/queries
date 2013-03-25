@@ -104,7 +104,7 @@ FROM
         lineitem AS l
 WHERE
         (c.c_custkey = h.o_custkey)
-        AND (l.l_orderkey = o.o_orderkey;
+        AND (l.l_orderkey = o.o_orderkey);
 
 (9)
 SELECT
