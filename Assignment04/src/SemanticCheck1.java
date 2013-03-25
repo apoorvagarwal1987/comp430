@@ -109,6 +109,18 @@ public class SemanticCheck1 {
 			  return (new ResultValue(1, true));
 	  }
 	  
+	  private ResultValue checkCompatibilityHelper(ResultValue _resValue1,ResultValue _resValue2,String _type){
+		
+		  if(_resValue1.isResult()&& _resValue2.isResult()){			  
+			  if(_resValue1.getType()==1)
+				  return (new IntegerCompatibility().compatibility(_resValue1, _resValue2, _type));			 
+			  else
+				  return (new StringCompatibility().compatibility(_resValue1, _resValue2, _type));
+		  }
+		  else
+			  return (new ResultValue(-1, false));		  
+	  }
+	  
 	  private ResultValue validateTypeExpression(Expression exp, Map <String, String> fromClause){
 		  
 		  if(exp.getType().equals("and") || exp.getType().equals("or")){
@@ -144,7 +156,7 @@ public class SemanticCheck1 {
 			  resValue2 = validateTypeExpression(exp.getRightSubexpression(),fromClause);
 			  
 			  if((resValue1!=null) && (resValue2 !=null)){
-				  if(resValue1.isResult() && resValue2.isResult()){
+				  /*if(resValue1.isResult() && resValue2.isResult()){
 					  if((resValue1.getType()== resValue2.getType())) {
 						  return (new ResultValue(resValue1.getType(), true));
 					  }		
@@ -152,7 +164,9 @@ public class SemanticCheck1 {
 				  }
 				  else{
 					  return (new ResultValue(-1, false));
-				  }	
+				  }	*/
+				  
+				  return checkCompatibilityHelper(resValue1, resValue2, expType);				  
 			  }
 			  
 			  if(checkBinaryOperation(lExpType))
