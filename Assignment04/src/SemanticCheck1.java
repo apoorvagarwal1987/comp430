@@ -68,7 +68,7 @@ public class SemanticCheck1 {
 		  
 	  }
 	  
-	  private boolean checkUnaryOperation(String expType) {
+	  private boolean isUnaryOperation(String expType) {
 		for (String operation : Expression.unaryTypes) {
 			if(operation.equals(expType))
 				return true;
@@ -76,7 +76,7 @@ public class SemanticCheck1 {
 		return false;
 	}
 	  
-	  private boolean checkBinaryOperation(String expType) {
+	  private boolean isBinaryOperation(String expType) {
 		for (String operation : Expression.binaryTypes) {
 			if(operation.equals(expType))
 				return true;
@@ -137,18 +137,19 @@ public class SemanticCheck1 {
 		  }
 		  
 		  
-		  if(checkUnaryOperation(exp.getType())){	
+		  if(isUnaryOperation(exp.getType())){	
 			  ResultValue rv = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
-			  if(rv.getType()==0)
-				  return new ResultValue(-1, false);
-			  
+			  if(exp.getType().equals("not"))
+				return rv;
+			  else if (rv.getType()== 0 )
+				  return new ResultValue(-1, false);			  
 			  else
 				  return rv;
 		  }
 		  String expType = exp.getType();
 		  String retType;
 		  
-		  if(checkBinaryOperation(expType)){
+		  if(isBinaryOperation(expType)){
 			  Expression lExp = exp.getLeftSubexpression();
 			  Expression rExp = exp.getRightSubexpression();
 			  
