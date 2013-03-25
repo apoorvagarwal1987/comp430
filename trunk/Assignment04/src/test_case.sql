@@ -155,8 +155,7 @@ GROUP BY
  
 	  -- query with mismatch between string and string in SELECT clause "identifier" / "literal identifier" but doing times operation
 	 SELECT
-			(c.c_phone * c.c_custkey),
-			(1 - c.c_phone)
+			(c.c_phone * c.c_address)			
 	 FROM
 			customer AS c,
 			orders AS o,
