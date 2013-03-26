@@ -20,7 +20,7 @@ public class SemanticCheck1 {
 		this.res = Interpreter.res;
 	}
 	
-	  private  boolean validateFromClause (Map <String, String> fromClause){	  
+	  private  boolean isValidaFromClause (Map <String, String> fromClause){	  
 		  	Set<String> tableNames = res.keySet();
 			Iterator<String> aliases = fromClause.keySet().iterator();
 			while(aliases.hasNext()){
@@ -32,16 +32,39 @@ public class SemanticCheck1 {
 			return true;	  
 	  }
 	  
-	  private  boolean validateGroupByClause(String att, Map <String, String> fromClause) {
+	  private  boolean isValidGroupByClause(String att, Map <String, String> fromClause, ArrayList<Expression> mySelect) {
 			String alias = att.substring(0, att.indexOf("."));
 			
 			String attName = att.substring(att.indexOf(".")+1);
 			String tableName = fromClause.get(alias);
-			Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
-			if(!(attributesInfo.containsKey(attName)))
+			if(tableName == null){
+				System.out.println("Error:"+ alias +" do not correspond to the any table in the FROM clause");
 				return false;
+			}
+			Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
+			if (attributesInfo == null){
+				System.out.println("Error:"+ tableName +" do not exist in the CATALOGUE");
+				return false;
+			}
 			
-			System.out.println(getAtributeType(att, fromClause));
+			if(!(attributesInfo.containsKey(attName))){
+				System.out.println("Error: "+ attName +" attribute absent in the table" + tableName +" database used in GroupBy");
+				return false;
+			}
+			for(Expression exp : mySelect){
+				if(isBinaryOperation(exp.getType())){
+					System.out.println("Error: "+ exp.print() +" expression is not allowed in the select clause when GroupBy");
+					return false;
+				}
+				else if(isUnaryOperation(exp.getType())){
+				}				
+				else if (!(exp.getType().equals("identifier")&& exp.getValue().equals(att))){
+					System.out.println("Error: "+ exp.print() +" expression is not allowed in the select clause when GroupBy");
+					return false;	
+				}
+				else{}
+			}
+			
 			return true;
 		}
 	  
@@ -49,18 +72,22 @@ public class SemanticCheck1 {
 		  	String attributeType;
 			String alias = att.substring(0, att.indexOf("."));
 			String tableName = fromClause.get(alias);
-			if(tableName == null)
+			if(tableName == null){
+				System.out.println("Error:"+ alias +" do not correspond to the any table in the FROM clause");
 				return null;
-			
+			}
 			String attName = att.substring(att.indexOf(".")+1);
 			Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
 			
-			if (attributesInfo == null)
+			if (attributesInfo == null){
+				System.out.println("Error:"+ tableName +" do not exist in the CATALOGUE");
 				return null;
+			}
 			
-			if(!(attributesInfo.containsKey(attName)))
+			if(!(attributesInfo.containsKey(attName))){
+				System.out.println("Error:"+ attName +" do not exist in the TABLE: "+ tableName);
 				return null;
-			
+			}
 			else
 				attributeType = attributesInfo.get(attName).getDataType();
 			
@@ -139,10 +166,15 @@ public class SemanticCheck1 {
 		  
 		  if(isUnaryOperation(exp.getType())){	
 			  ResultValue rv = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
+			  if(!rv.isResult())
+				  System.out.println("ERROR: Incompatible expression computation in: " + exp.print());			
+			  
 			  if(exp.getType().equals("not"))
 				return rv;
-			  else if (rv.getType()== 0 )
-				  return new ResultValue(-1, false);			  
+			  else if (rv.getType()== 0 ){
+				  System.out.println("ERROR: Incompatible expression computation in: " + exp.print());
+				  return new ResultValue(-1, false);
+			  }
 			  else
 				  return rv;
 		  }
@@ -150,14 +182,6 @@ public class SemanticCheck1 {
 		  String retType;
 		  
 		  if(isBinaryOperation(expType)){
-			  Expression lExp = exp.getLeftSubexpression();
-			  Expression rExp = exp.getRightSubexpression();
-			  
-			  ResultValue lResValue  = null;
-			  ResultValue rResValue  = null;
-			  
-			  String lExpType = lExp.getType();
-			  String rExpType = rExp.getType();
 			  ResultValue resValue1 = null;
 			  ResultValue resValue2 = null;
 			  resValue1 = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
@@ -303,7 +327,7 @@ public class SemanticCheck1 {
 		  if(exp.getType().equals("identifier")){
 			  retType = getAtributeType(exp.getValue(), fromClause);
 			  if(retType == null){
-				  System.out.println("Error: "+exp.getValue() +"  is not the valid attribute of the table");
+				 // System.out.println("Error: "+exp.getValue() +"  is not the valid attribute of the table");
 				  return (new ResultValue(-1, false));
 			  }
 			  if(retType.equals("Str"))
@@ -318,17 +342,17 @@ public class SemanticCheck1 {
 			   return (new ResultValue(1, true));
 		  }
 	  
-	  public boolean validateQuery(){		  
-	        
+	  public boolean validateQuery(){		    
+		  
 	        //Validating the from clause of the query
-	        if(!validateFromClause(myFrom)){
-	        	System.out.println("\n\n\nSemantically incorrect query: Referenced table in from clause do not present in database");
+	        if(!isValidaFromClause(myFrom)){
+	        	System.out.println("Semantically incorrect query: Referenced table in from clause do not present in database");
 	        	return false;
 	        }
 	        
 	        //Validating the group by clause of the query
-	        if((att != null) && !validateGroupByClause(att,myFrom)){
-	        	System.out.println("\n\n\nSemantically incorrect query: Referenced attribute in the group by clause do not present in database");
+	        if((att != null) && !isValidGroupByClause(att,myFrom,mySelect)){
+	        	System.out.println("Semantically incorrect query");
 	        	return false;
 	        }
 	        
@@ -345,7 +369,6 @@ public class SemanticCheck1 {
 	        		return false;
 	        	}
 	        }      
-	        
 	        return true;
 	  }	  
 }
