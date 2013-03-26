@@ -52,7 +52,7 @@ class Runner {
     
     // run the selection operation
     try {
-      Grouping foo = new Grouping (inAtts, outAtts, groupingAtts, myAggs, "orders.tbl", "out.tbl", "g++", "cppDir/"); 
+      Grouping foo = new Grouping (inAtts, outAtts, groupingAtts, myAggs, "src/orders.tbl", "src/out.tbl", "g++", "src/cppDir/"); 
     } catch (Exception e) {
       throw new RuntimeException (e);
     }
@@ -91,7 +91,7 @@ class Runner {
     
     // run the selection operation
     try {
-      Selection foo = new Selection (inAtts, outAtts, selection, exprs, "orders.tbl", "out.tbl", "g++", "cppDir/"); 
+      Selection foo = new Selection (inAtts, outAtts, selection, exprs, "src/orders.tbl", "src/out.tbl", "g++", "src/cppDir/"); 
     } catch (Exception e) {
       throw new RuntimeException (e);
     }
@@ -148,8 +148,9 @@ class Runner {
     
     // run the join
     try {
+    	
       Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, selection, exprs, 
-                                "customer.tbl", "orders.tbl", "out.tbl", "g++", "cppDir/"); 
+                                "src/customer.tbl", "src/orders.tbl", "src/out.tbl", "g++", "src/cppDir/"); 
     } catch (Exception e) {
       throw new RuntimeException (e);
     }
