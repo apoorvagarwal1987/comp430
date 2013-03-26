@@ -11,7 +11,7 @@ public static void main (String [] args) throws Exception {
     
     try {
       
-      CatalogReader foo = new CatalogReader ("/home/apoorvagarwal/workspace/Project-4/src/Catalog.xml");      
+      CatalogReader foo = new CatalogReader ("src/Catalog.xml");      
       res = foo.getCatalog ();
       System.out.println (foo.printCatalog (res));
       
