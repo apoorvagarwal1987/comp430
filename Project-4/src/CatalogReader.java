@@ -170,7 +170,7 @@ class CatalogReader {
         String myType = findString ("<type>", "</type>");
         int numVals = findInt ("<value_count>", "</value_count>");
         suckToTag ("</att>");
-        attributes.put (attName, new AttInfo (numVals, myType, j));
+        attributes.put (attName, new AttInfo (numVals, myType, j, attName));
       }
       returnVal.put (tableName, new TableData (tupleCount, attributes));
       suckToTag ("</table>");

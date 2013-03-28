@@ -15,6 +15,7 @@ public class IntegerCompatibility {
 					  return (new ResultValue(-1, false));
 				  }
 		  }		
-		return (new ResultValue(_resValue1.getType(), true));		
+		int rettype = (_resValue1.getType() > _resValue2.getType() ? _resValue1.getType() : _resValue2.getType());
+		return (new ResultValue(rettype, true));		
 	}
 }

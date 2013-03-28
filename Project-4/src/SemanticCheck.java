@@ -190,7 +190,7 @@ public class SemanticCheck {
 	        //Validating the Type mismatch in the SELECT Expression
 	        for (Expression selectExp : mySelect){
 	        	ResultValue rvTemp = validateTypeExpression(selectExp,myFrom);
-	        	selectionTypes.add(rvTemp);	        	
+	        	selectionTypes.add(rvTemp);	       
 	        	if(!(rvTemp.isResult())){
 	        		System.out.println("Invalid Expression in SELECT  :" + selectExp.print());
 	        		return (new ResultValidQuery(false,selectionTypes));
