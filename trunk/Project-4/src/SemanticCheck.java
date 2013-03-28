@@ -34,8 +34,7 @@ public class SemanticCheck {
 	  }
 	  
 	  private  boolean isValidGroupByClause(String att, Map <String, String> fromClause, ArrayList<Expression> mySelect) {
-			String alias = att.substring(0, att.indexOf("."));
-			
+			String alias = att.substring(0, att.indexOf("."));			
 			String attName = att.substring(att.indexOf(".")+1);
 			String tableName = fromClause.get(alias);
 			if(tableName == null){
@@ -69,33 +68,6 @@ public class SemanticCheck {
 			return true;
 		}
 	  
-	  private String getAtributeType(String att, Map <String, String> fromClause){
-		  	String attributeType;
-			String alias = att.substring(0, att.indexOf("."));
-			String tableName = fromClause.get(alias);
-			if(tableName == null){
-				System.out.println("Error: Alias "+ alias +" do not correspond to the any table in the FROM clause");
-				return null;
-			}
-			String attName = att.substring(att.indexOf(".")+1);
-			Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
-			
-			if (attributesInfo == null){
-				System.out.println("Error: Table "+ tableName +" do not exist in the CATALOGUE");
-				return null;
-			}
-			
-			if(!(attributesInfo.containsKey(attName))){
-				System.out.println("Error: Attribute "+ attName +" do not exist in the TABLE: "+ tableName);
-				return null;
-			}
-			else
-				attributeType = attributesInfo.get(attName).getDataType();
-			
-		  return attributeType;
-		  
-	  }
-	  
 	  private boolean isUnaryOperation(String expType) {
 		for (String operation : Expression.unaryTypes) {
 			if(operation.equals(expType))
@@ -116,7 +88,7 @@ public class SemanticCheck {
 	  private ResultValue checkCompatibility(ResultValue _resValue1,ResultValue _resValue2,String _type){
 		
 		  if(_resValue1.isResult()&& _resValue2.isResult()){			  
-			  if(_resValue1.getType()==1)
+			  if(_resValue1.getType()==1||_resValue1.getType()==2)
 				  return (new IntegerCompatibility().compatibility(_resValue1, _resValue2, _type));			 
 			  else
 				  return (new StringCompatibility().compatibility(_resValue1, _resValue2, _type));
@@ -172,51 +144,59 @@ public class SemanticCheck {
 		  }	  
 		  
 		  if(exp.getType().equals("identifier")){
-			  retType = getAtributeType(exp.getValue(), fromClause);
+			  retType = CommonMethods.getAtributeType(exp.getValue(), fromClause);
 			  if(retType == null){
 				 // System.out.println("Error: "+exp.getValue() +"  is not the valid attribute of the table");
 				  return (new ResultValue(-1, false));
 			  }
 			  if(retType.equals("Str"))
 				  return (new ResultValue(0, true));			  
-			  else
+			  else if (retType.equals("Int"))
 				  return (new ResultValue(1, true));
+			  else
+				  return (new ResultValue(2, true));
 		  }
 		  
 		  if(exp.getType().equals("literal string"))
 			   return (new ResultValue(0, true));
-		  else
+		  else if (exp.getType().equals("literal int"))
 			   return (new ResultValue(1, true));
+		  else
+			  return (new ResultValue(2, true));
 		  }
 	  
-	  public boolean validateQuery(){		    
+	  public ResultValidQuery validateQuery(){		    
 		  
 	        //Validating the from clause of the query
+		  	ArrayList <ResultValue> selectionTypes = new ArrayList<ResultValue>();
+		  
 	        if(!isValidFromClause(myFrom)){
 	        	System.out.println("Semantically incorrect query: Referenced table in from clause do not present in database");
-	        	return false;
+	        	return (new ResultValidQuery(false,selectionTypes));
 	        }
 	        
 	        //Validating the group by clause of the query
 	        if((att != null) && !isValidGroupByClause(att,myFrom,mySelect)){
 	        	System.out.println("Semantically incorrect query");
-	        	return false;
+	        	return (new ResultValidQuery(false,selectionTypes));
 	        }
 	        
 	        //Validating the Type mismatches in the WHERE Expression
 	        if((where != null)&&!(validateTypeExpression(where,myFrom).isResult())){
 	        	System.out.println("Invalid Expression in WHERE  :" + where.print());
-	        	return false;
+	        	return (new ResultValidQuery(false,selectionTypes));
 	        }
 	      
 	        //Validating the Type mismatch in the SELECT Expression
 	        for (Expression selectExp : mySelect){
-	        	if(!(validateTypeExpression(selectExp,myFrom).isResult())){
+	        	ResultValue rvTemp = validateTypeExpression(selectExp,myFrom);
+	        	selectionTypes.add(rvTemp);	        	
+	        	if(!(rvTemp.isResult())){
 	        		System.out.println("Invalid Expression in SELECT  :" + selectExp.print());
-	        		return false;
+	        		return (new ResultValidQuery(false,selectionTypes));
 	        	}
 	        }      
-	        return true;
+	        return (new ResultValidQuery(true,selectionTypes));
 	  }	  
 }
 

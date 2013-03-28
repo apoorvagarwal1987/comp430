@@ -15,4 +15,8 @@ public class ResultValue {
 	public boolean isResult() {
 		return result;
 	}	
+	
+	public void print (){
+		System.out.println(type + "   " + result);
+	}
 }

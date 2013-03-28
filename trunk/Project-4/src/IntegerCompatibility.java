@@ -15,6 +15,6 @@ public class IntegerCompatibility {
 					  return (new ResultValue(-1, false));
 				  }
 		  }		
-		return (new ResultValue(1, true));		
+		return (new ResultValue(_resValue1.getType(), true));		
 	}
 }

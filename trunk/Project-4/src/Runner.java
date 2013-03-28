@@ -9,10 +9,10 @@ class Runner {
     long startTime = System.currentTimeMillis();  
     System.out.println ("first running a selection...");
     DoSelection ();
-    System.out.println ("now running a join...");
+    /*System.out.println ("now running a join...");
     DoJoin ();
     System.out.println ("now running a group by...");
-    DoGroupBy ();
+    DoGroupBy ();*/
     long endTime = System.currentTimeMillis();
     System.out.println("The run took " + (endTime - startTime) + " milliseconds");
   }
