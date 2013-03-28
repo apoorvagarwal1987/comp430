@@ -1,5 +1,5 @@
  SELECT
 		c.c_phone,
-		c.custkey
+		c.c_custkey
  FROM
 		customer AS c;

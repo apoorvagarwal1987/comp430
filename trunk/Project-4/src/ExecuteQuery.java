@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -58,13 +59,27 @@ public class ExecuteQuery {
 		this.outputLocation = outputLocation;
 	}
 
-	ArrayList <Attribute> getAttributeInfo (String tableName){
+	ArrayList <Attribute> getAttributeInfo (String alias, String tableName){
 		ArrayList <Attribute> attributes = new ArrayList<Attribute>();
 		Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
+		ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();
 		for(String att : attributesInfo.keySet()){
-			attributes.add(new Attribute(attributesInfo.get(att).getDataType(), att));			
+//			Collections.sort(attributesInfo.get(att),new AttInfoComparator());
+//			attributes.add(new Attribute(""+alias+"."+attributesInfo.get(att).getDataType(), att));			
+			tempData.add(attributesInfo.get(att));
+		
+		}
+		Collections.sort(tempData, new AttInfoComparator());
+		for (AttInfo attrib : tempData){
+			//attrib.print();
+			attributes.add(new Attribute(attrib.getDataType(),attrib.getAttName()));
 		}
 		Iterator<Attribute> att = attributes.iterator();
+		System.out.println("Print __________");
+		while(att.hasNext()){
+			att.next().print();
+		}
+		System.out.println("__________");
 		return attributes;
 	}
 	
@@ -117,17 +132,40 @@ public class ExecuteQuery {
 		Iterator<String> aliases = myFrom.keySet().iterator();
 		String tableName = null;
 		while(aliases.hasNext()){
-			tableName = myFrom.get(aliases.next().toString());
-			tableAttribute = getAttributeInfo(tableName);
+			String alias = aliases.next().toString();
+			tableName = myFrom.get(alias);
+			tableAttribute = getAttributeInfo(alias,tableName);
 		}
 		ArrayList <Attribute> selectExpTypes = makeTypeOutAttributes();
 		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes);
-	    String selection = "";
+	    String selection = "(Int)1 == (Int)1";  // "c_custkey < Int (10)";
 	    String tableUsed = "src/"+tableName+".tbl";
-	    System.out.println(tableUsed);
+	    
+	    System.out.println("---------------------");
+	    for (Attribute att : tableAttribute){
+	    	att.print();
+	    }
+	    System.out.println("---------------------");
+
+	    for (Attribute att : selectExpTypes){
+	    	att.print();
+	    }
+	    System.out.println("---------------------");
+
+	    System.out.println(exprs);
+	    System.out.println("---------------------");
+
+	    System.out.println(tableUsed+"\n"+outputFile+"\n"+compiler+"\n" + outputLocation);
+	    
+	    System.out.println("---------------------");
+
+	    
+	    
+//	    System.out.println(tableAttribute+"   \n"+selectExpTypes+"\n"+exprs);
 	    // run the selection operation
 	    try {
-	      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation ); 
+	      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation );
+
 	    } catch (Exception e) {
 	      throw new RuntimeException (e);
 	    }

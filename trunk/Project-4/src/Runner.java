@@ -81,6 +81,10 @@ class Runner {
     outAtts.add (new Attribute ("Str", "att3"));
     outAtts.add (new Attribute ("Int", "att4"));
     
+    for (Attribute att : outAtts){
+    	att.print();
+    }
+    
     String selection = "o_orderdate > Str (\"1996-12-19\") && o_custkey < Int (100)";
     
     HashMap <String, String> exprs = new HashMap <String, String> ();
@@ -88,6 +92,8 @@ class Runner {
     exprs.put ("att2", "(o_totalprice * Float (1.5)) + Int (1)");
     exprs.put ("att3", "o_orderdate + Str (\" this is my string\")");
     exprs.put ("att4", "o_custkey");
+    
+    System.out.println(exprs);
     
     // run the selection operation
     try {

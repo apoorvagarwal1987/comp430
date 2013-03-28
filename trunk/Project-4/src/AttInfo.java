@@ -11,11 +11,13 @@ class AttInfo {
   private int valueCount;
   private String dataType;
   private int seqNumber;
+  private String attName;
   
-  public AttInfo (int numDistinctVals, String myType, int whichAtt) {
+  public AttInfo (int numDistinctVals, String myType, int whichAtt, String attName) {
     valueCount = numDistinctVals;
     dataType = myType;
     seqNumber = whichAtt;
+    this.attName = attName;
   }
   
   public int getNumDistinctVals () {
@@ -30,7 +32,14 @@ class AttInfo {
     return seqNumber; 
   }
   
-  String print () {
-    return "vals: " + valueCount + "; type: " + dataType + "; attnum: " + seqNumber;  
+   /**
+    * @return the attName
+    */
+  public String getAttName() {
+	return attName;
   }
+
+	String print () {
+	    return "attName:"+attName + " vals: " + valueCount + "; type: " + dataType + "; attnum: " + seqNumber;  
+	  }
 }
