@@ -15,6 +15,9 @@ class Attribute {
   public Attribute (String inType, String inName) {
     name = inName;
     attType = inType;
+  }  
+ 
+  public void print (){
+	  System.out.println(attType + "    "+name);
   }
-  
 }

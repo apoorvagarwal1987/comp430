@@ -75,15 +75,24 @@ public static void main (String [] args) throws Exception {
          * Doing the semantics check of the query :			
          */
 	  	System.out.println("\n\n************************Semantic Validation of Query********************************************\n");
-
-        if ((new SemanticCheck(myFrom, mySelect, att, where)).validateQuery()){
+	  	ResultValidQuery rvQuery = (new SemanticCheck(myFrom, mySelect, att, where)).validateQuery();
+        if (rvQuery.isResult()){
         	System.out.println("Query is semantically correct");
-        }
-        
-	  	System.out.println("\n\n***********************************************************************************************\n");
+        }        
+	  	System.out.println("***********************************************************************************************\n");
 
-        //
-        System.out.format ("\nSQL>");
+        
+	  	/*
+	  	 * Executing the query 
+	  	 */
+	  	System.out.println("\n\n************************Execution of Query********************************************\n");
+
+	    long startTime = System.currentTimeMillis(); 
+	    new ExecuteQuery(myFrom,mySelect,att,where,rvQuery.getSelTypes()).execution();
+	  	System.out.println("***********************************************************************************************\n");
+
+	  	
+	  	System.out.format ("\nSQL>");
               
       } 
     } catch (Exception e) {
