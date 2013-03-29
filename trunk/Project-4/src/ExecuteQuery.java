@@ -110,8 +110,11 @@ public class ExecuteQuery {
 		while(attributes.hasNext()){
 			String selExpression = CommonMethods.parseExpression(selExprs.next(),myFrom);
 //			String param = selExpression.substring(selExpression.indexOf(".")+1);
+			int ind1 = selExpression.indexOf('(');
+			int ind2 = selExpression.lastIndexOf(')');
+			//if((ind1 == 0) &&(ind2 == selExpression.length()-1))
+				//selExpression = selExpression.substring(1, selExpression.length()-2);
 			
-			String temp = selExpression.replace('.', '_');
 			exprs.put(attributes.next().getName(),selExpression);
 		}		
 		return exprs;
@@ -141,7 +144,10 @@ public class ExecuteQuery {
 		String selection = "(Int)1 == (Int) 1";
 		if(where!= null){
 			selection = CommonMethods.parseExpression(where, myFrom);
-			//selection = selection.replace('.', '_');
+			int ind1 = selection.indexOf('(');
+			int ind2 = selection.lastIndexOf(')');
+			//if((ind1 ==0) &&(ind2 == selection.length()-1))
+				//selection = selection.substring(1, selection.length()-1);
 		}
 		
 //		String selection = "c_custkey < Int (10)";

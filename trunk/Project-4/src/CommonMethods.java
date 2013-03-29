@@ -59,7 +59,7 @@ public class CommonMethods {
 			  String resValue2 = parseExpression(exp.getRightSubexpression(),fromClause);
 			  
 			  if(exp.getType().equals("and"))
-					  return (resValue1 + " && " + resValue2);						  			
+					  return (resValue1 + " && " + resValue2 );						  			
 			  else{
 				  return (resValue1 + " || " + resValue2);
 			  }				  
@@ -109,7 +109,7 @@ public class CommonMethods {
 					  return (resValue1 + " / " + resValue2);
 				  
 				  if(exp.getType().equals("equals"))
-					  return (resValue1 + " = " + resValue2);
+					  return (resValue1 + " == " + resValue2);
 				  
 				  if(exp.getType().equals("greater than"))
 					  return (resValue1 + " > " + resValue2);
@@ -128,7 +128,7 @@ public class CommonMethods {
 		   */
 		  String retString = "";
 		  if(exp.getType().equals("literal string"))
-			  retString = "Str (\"" + exp.getValue() + "\"";
+			  retString = "Str (" + exp.getValue() + ")";
 		  		  
 		  else if (exp.getType().equals("literal int"))
 			  retString = "Int (" + exp.getValue() +")";
