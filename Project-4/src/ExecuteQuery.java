@@ -59,20 +59,16 @@ public class ExecuteQuery {
 		this.outputLocation = outputLocation;
 	}
 
-	ArrayList <Attribute> getAttributeInfo (String alias, String tableName){
+	private ArrayList <Attribute> getAttributeInfo (String alias, String tableName){
 		ArrayList <Attribute> attributes = new ArrayList<Attribute>();
 		Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
 		ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();
 		for(String att : attributesInfo.keySet()){
-//			Collections.sort(attributesInfo.get(att),new AttInfoComparator());
-//			attributes.add(new Attribute(""+alias+"."+attributesInfo.get(att).getDataType(), att));			
-			tempData.add(attributesInfo.get(att));
-		
+			tempData.add(attributesInfo.get(att));		
 		}
 		Collections.sort(tempData, new AttInfoComparator());
 		for (AttInfo attrib : tempData){
-			//attrib.print();
-			attributes.add(new Attribute(attrib.getDataType(),attrib.getAttName()));
+			attributes.add(new Attribute(attrib.getDataType(),""+alias+"_"+attrib.getAttName()));
 		}
 		Iterator<Attribute> att = attributes.iterator();
 		System.out.println("Print __________");
@@ -83,7 +79,7 @@ public class ExecuteQuery {
 		return attributes;
 	}
 	
-	ArrayList <Attribute> makeTypeOutAttributes(){
+	private ArrayList <Attribute> makeTypeOutAttributes(){
 		ArrayList <Attribute> outAttributes = new ArrayList<Attribute>();
 		int outCount = 1;
 		Iterator<ResultValue> rv = selTypes.iterator();
@@ -107,14 +103,16 @@ public class ExecuteQuery {
 		return outAttributes;
 	}
 	
-	HashMap <String, String> makeSelectExpression (ArrayList<Attribute> selectExp){
+	private HashMap <String, String> makeSelectExpression (ArrayList<Attribute> selectExp){
 		HashMap <String, String> exprs = new HashMap <String, String> ();
 		Iterator<Attribute> attributes = selectExp.iterator();
 		Iterator<Expression> selExprs = mySelect.iterator();
 		while(attributes.hasNext()){
-			String selExpression = selExprs.next().getValue();
-			String param = selExpression.substring(selExpression.indexOf(".")+1);
-			exprs.put(attributes.next().getName(),param);
+			String selExpression = CommonMethods.parseExpression(selExprs.next(),myFrom);
+//			String param = selExpression.substring(selExpression.indexOf(".")+1);
+			
+			String temp = selExpression.replace('.', '_');
+			exprs.put(attributes.next().getName(),temp);
 		}		
 		return exprs;
 	}
@@ -126,6 +124,7 @@ public class ExecuteQuery {
 		doSelection();
 	}
 	
+
 	
 	public void doSelection(){
 		ArrayList <Attribute> tableAttribute = new ArrayList<Attribute>();
@@ -138,7 +137,14 @@ public class ExecuteQuery {
 		}
 		ArrayList <Attribute> selectExpTypes = makeTypeOutAttributes();
 		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes);
-	    String selection = "(Int)1 == (Int)1";  // "c_custkey < Int (10)";
+		
+		String selection = "(Int)1 == (Int) 1";
+		if(where!= null){
+			selection = CommonMethods.parseExpression(where, myFrom);
+			selection = selection.replace('.', '_');
+		}
+		
+//		String selection = "c_custkey < Int (10)";
 	    String tableUsed = "src/"+tableName+".tbl";
 	    
 	    System.out.println("---------------------");
@@ -153,6 +159,11 @@ public class ExecuteQuery {
 	    System.out.println("---------------------");
 
 	    System.out.println(exprs);
+	    
+	    System.out.println("---------------------");
+	    
+	    System.out.println(selection);
+	    
 	    System.out.println("---------------------");
 
 	    System.out.println(tableUsed+"\n"+outputFile+"\n"+compiler+"\n" + outputLocation);

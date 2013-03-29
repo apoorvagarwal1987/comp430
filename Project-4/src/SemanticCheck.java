@@ -52,11 +52,11 @@ public class SemanticCheck {
 				return false;
 			}
 			for(Expression exp : mySelect){
-				if(isBinaryOperation(exp.getType())){
+				if(CommonMethods.isBinaryOperation(exp.getType())){
 					System.out.println("Error: Expression "+ exp.print() +" expression is not allowed in the select clause when GroupBy");
 					return false;
 				}
-				else if(isUnaryOperation(exp.getType())){
+				else if(CommonMethods.isUnaryOperation(exp.getType())){
 				}				
 				else if (!(exp.getType().equals("identifier")&& exp.getValue().equals(att))){
 					System.out.println("Error: Expression "+ exp.print() +" expression is not allowed in the select clause when GroupBy");
@@ -67,103 +67,7 @@ public class SemanticCheck {
 			
 			return true;
 		}
-	  
-	  private boolean isUnaryOperation(String expType) {
-		for (String operation : Expression.unaryTypes) {
-			if(operation.equals(expType))
-				return true;
-		}
-		return false;
-	}
-	  
-	  private boolean isBinaryOperation(String expType) {
-		for (String operation : Expression.binaryTypes) {
-			if(operation.equals(expType))
-				return true;
-		}
-		return false;
-	}
-	  
-	  
-	  private ResultValue checkCompatibility(ResultValue _resValue1,ResultValue _resValue2,String _type){
-		
-		  if(_resValue1.isResult()&& _resValue2.isResult()){			  
-			  if(_resValue1.getType()==1||_resValue1.getType()==2)
-				  return (new IntegerCompatibility().compatibility(_resValue1, _resValue2, _type));			 
-			  else
-				  return (new StringCompatibility().compatibility(_resValue1, _resValue2, _type));
-		  }
-		  else
-			  return (new ResultValue(-1, false));		  
-	  }
-	  
-	  private ResultValue validateTypeExpression(Expression exp, Map <String, String> fromClause){
-		  
-		  if(exp.getType().equals("and") || exp.getType().equals("or")){
-			  ResultValue resValue1 = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
-			  ResultValue resValue2 = validateTypeExpression(exp.getRightSubexpression(),fromClause);
-			  
-			  if(resValue1.isResult() && resValue2.isResult())
-					  return (new ResultValue(-1, true));						  			
-			  else{
-				  return (new ResultValue(-1, false));
-			  }				  
-		  }
-		  
-		  
-		  if(isUnaryOperation(exp.getType())){	
-			  ResultValue rv = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
-			  if(!rv.isResult())
-				  System.out.println("Error: Incompatible expression computation in: " + exp.print());			
-			  
-			  if(exp.getType().equals("not"))
-				return rv;
-			  else if (rv.getType()== 0 ){
-				  System.out.println("Error: Incompatible expression computation in: " + exp.print());
-				  return new ResultValue(-1, false);
-			  }
-			  else
-				  return rv;
-		  }
-		  String expType = exp.getType();
-		  String retType;
-		  
-		  if(isBinaryOperation(expType)){
-			  ResultValue resValue1 = null;
-			  ResultValue resValue2 = null;
-			  resValue1 = validateTypeExpression(exp.getLeftSubexpression(),fromClause);
-			  resValue2 = validateTypeExpression(exp.getRightSubexpression(),fromClause);
-			  
-			  if((resValue1!=null) && (resValue2 !=null)){
-				  ResultValue rv = checkCompatibility(resValue1, resValue2, expType);	
-				  if(!rv.isResult())
-					  System.out.println("Error: Incompatible expression computation in: " + exp.print());
-				  
-				  return rv;		  
-			  }
-		  }	  
-		  
-		  if(exp.getType().equals("identifier")){
-			  retType = CommonMethods.getAtributeType(exp.getValue(), fromClause);
-			  if(retType == null){
-				 // System.out.println("Error: "+exp.getValue() +"  is not the valid attribute of the table");
-				  return (new ResultValue(-1, false));
-			  }
-			  if(retType.equals("Str"))
-				  return (new ResultValue(0, true));			  
-			  else if (retType.equals("Int"))
-				  return (new ResultValue(1, true));
-			  else
-				  return (new ResultValue(2, true));
-		  }
-		  
-		  if(exp.getType().equals("literal string"))
-			   return (new ResultValue(0, true));
-		  else if (exp.getType().equals("literal int"))
-			   return (new ResultValue(1, true));
-		  else
-			  return (new ResultValue(2, true));
-		  }
+
 	  
 	  public ResultValidQuery validateQuery(){		    
 		  
@@ -182,14 +86,14 @@ public class SemanticCheck {
 	        }
 	        
 	        //Validating the Type mismatches in the WHERE Expression
-	        if((where != null)&&!(validateTypeExpression(where,myFrom).isResult())){
+	        if((where != null)&&!(CommonMethods.validateTypeExpression(where,myFrom).isResult())){
 	        	System.out.println("Invalid Expression in WHERE  :" + where.print());
 	        	return (new ResultValidQuery(false,selectionTypes));
 	        }
 	      
 	        //Validating the Type mismatch in the SELECT Expression
 	        for (Expression selectExp : mySelect){
-	        	ResultValue rvTemp = validateTypeExpression(selectExp,myFrom);
+	        	ResultValue rvTemp = CommonMethods.validateTypeExpression(selectExp,myFrom);
 	        	selectionTypes.add(rvTemp);	       
 	        	if(!(rvTemp.isResult())){
 	        		System.out.println("Invalid Expression in SELECT  :" + selectExp.print());
