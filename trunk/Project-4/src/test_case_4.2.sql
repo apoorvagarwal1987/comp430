@@ -15,7 +15,7 @@ __________________________________________________
  FROM
 		customer AS c1
 
-  WHERE
+ WHERE
   		c1.c_custkey > 10 ;		
 __________________________________________________
 
@@ -27,8 +27,50 @@ __________________________________________________
 		customer AS c1,
 		customer As c2
 
-  WHERE
+ WHERE
   		c1.c_custkey > 10 and c2.c_custkey;
 
 __________________________________________________
+
+ SELECT	
+ 		c1.c_custkey + 100,
+		c1.c_phone,
+		c1.c_acctbal		
+ FROM
+		customer AS c1
+
+ WHERE
+  		c1.c_custkey > 10 ;
+
+__________________________________________________
+
+ SELECT	
+ 		c1.c_custkey + 100 * 0.01,
+		c1.c_phone,
+		c1.c_acctbal		
+ FROM
+		customer AS c1
+
+ WHERE
+  		c1.c_custkey > 10 ;
+__________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

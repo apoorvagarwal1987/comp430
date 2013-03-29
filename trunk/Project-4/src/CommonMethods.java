@@ -120,7 +120,7 @@ public class CommonMethods {
 		  }	  
 		  
 		  if(exp.getType().equals("identifier")){
-			 return exp.getValue();
+			 return exp.getValue().replace('.', '_');
 		  }
 		  
 		  /*
