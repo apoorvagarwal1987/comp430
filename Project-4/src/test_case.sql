@@ -167,7 +167,7 @@ GROUP BY
 	
 SELECT
         n.n_name,
-        SUM(l.l_extendedprice * (1 - l.l_discount))
+        SUM(l.l_shipdate * (1 - l.l_discount))
 FROM
         customer AS c,
         orders AS o,
