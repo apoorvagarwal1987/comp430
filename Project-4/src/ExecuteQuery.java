@@ -112,7 +112,7 @@ public class ExecuteQuery {
 //			String param = selExpression.substring(selExpression.indexOf(".")+1);
 			
 			String temp = selExpression.replace('.', '_');
-			exprs.put(attributes.next().getName(),temp);
+			exprs.put(attributes.next().getName(),selExpression);
 		}		
 		return exprs;
 	}
@@ -141,7 +141,7 @@ public class ExecuteQuery {
 		String selection = "(Int)1 == (Int) 1";
 		if(where!= null){
 			selection = CommonMethods.parseExpression(where, myFrom);
-			selection = selection.replace('.', '_');
+			//selection = selection.replace('.', '_');
 		}
 		
 //		String selection = "c_custkey < Int (10)";
