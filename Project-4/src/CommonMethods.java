@@ -221,5 +221,20 @@ public class CommonMethods {
 		  else
 			  return (new ResultValue(2, true));
 		  }
-
+	
+	public static RAExpression createRAExpression (Expression expression){
+		String type = expression.getType().toString();
+		RAExpression _raExpression = new RAExpression(null);
+		if(type.equals("and")||type.equals("or")){
+			_raExpression.setExpType(type);
+			_raExpression.setLeftExpression(createRAExpression(expression.getLeftSubexpression()));
+			_raExpression.setRightExpression(createRAExpression(expression.getRightSubexpression()));
+			_raExpression.setExpression(null);
+		}
+		else{
+			_raExpression.setExpression(expression);
+		}
+		return _raExpression;
+	}
+	
 }
