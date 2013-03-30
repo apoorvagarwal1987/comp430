@@ -52,11 +52,11 @@ public class CommonMethods {
 		return false;
 	}
 	
-	public static String parseExpression (Expression exp, Map <String, String> fromClause){
+	public static String parseExpression (Expression exp, Map <String, String> fromClause, boolean skip ){
 		
 		if(exp.getType().equals("and") || exp.getType().equals("or")){
-			  String resValue1 = parseExpression(exp.getLeftSubexpression(),fromClause);
-			  String resValue2 = parseExpression(exp.getRightSubexpression(),fromClause);
+			  String resValue1 = parseExpression(exp.getLeftSubexpression(),fromClause,skip);
+			  String resValue2 = parseExpression(exp.getRightSubexpression(),fromClause,skip);
 			  
 			  if(exp.getType().equals("and"))
 					  return (resValue1 + " && " + resValue2 );						  			
@@ -67,7 +67,7 @@ public class CommonMethods {
 		  
 		  
 		  if(CommonMethods.isUnaryOperation(exp.getType())){	
-			  String rv = parseExpression(exp.getLeftSubexpression(),fromClause);
+			  String rv = parseExpression(exp.getLeftSubexpression(),fromClause,skip);
 			  
 			  /*
 			   *Operators handled in this part is 
@@ -88,8 +88,8 @@ public class CommonMethods {
 		  }
 	  
 		  if(CommonMethods.isBinaryOperation(exp.getType())){			  
-			  String resValue1 = parseExpression(exp.getLeftSubexpression(),fromClause);
-			  String resValue2 = parseExpression(exp.getRightSubexpression(),fromClause);
+			  String resValue1 = parseExpression(exp.getLeftSubexpression(),fromClause,skip);
+			  String resValue2 = parseExpression(exp.getRightSubexpression(),fromClause,skip);
 			  /*
 			   * Operators handled in this function is 
 			   * "plus", "minus", "times", "divided by", "or", "and", "equals", "greater than", "less than"
@@ -119,8 +119,11 @@ public class CommonMethods {
 			  }
 		  }	  
 		  
-		  if(exp.getType().equals("identifier")){
-			 return exp.getValue().replace('.', '_');
+		  if(exp.getType().equals("identifier")){			 
+			  if(skip)
+				  return exp.getValue().replace('.', '_');
+			  else
+				  return exp.getValue();
 		  }
 		  
 		  /*

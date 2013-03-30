@@ -58,8 +58,15 @@ public class ExecuteQuery {
 	public void setOutputLocation(String outputLocation) {
 		this.outputLocation = outputLocation;
 	}
-
-	private ArrayList <Attribute> getAttributeInfo (String alias, String tableName){
+	
+	/**
+	 * 
+	 * @param alias
+	 * @param tableName
+	 * @param replace
+	 * @return
+	 */
+	private ArrayList <Attribute> getTableAttributeInfo (String alias, String tableName,boolean replace ){
 		ArrayList <Attribute> attributes = new ArrayList<Attribute>();
 		Map<String, AttInfo> attributesInfo = res.get(tableName).getAttributes();
 		ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();
@@ -68,7 +75,11 @@ public class ExecuteQuery {
 		}
 		Collections.sort(tempData, new AttInfoComparator());
 		for (AttInfo attrib : tempData){
-			attributes.add(new Attribute(attrib.getDataType(),""+alias+"_"+attrib.getAttName()));
+			if(replace)
+				attributes.add(new Attribute(attrib.getDataType(),""+alias+"_"+attrib.getAttName()));
+			else
+				attributes.add(new Attribute(attrib.getDataType(),attrib.getAttName()));
+
 		}
 		Iterator<Attribute> att = attributes.iterator();
 		System.out.println("Print __________");
@@ -79,6 +90,10 @@ public class ExecuteQuery {
 		return attributes;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	private ArrayList <Attribute> makeTypeOutAttributes(){
 		ArrayList <Attribute> outAttributes = new ArrayList<Attribute>();
 		int outCount = 1;
@@ -103,12 +118,17 @@ public class ExecuteQuery {
 		return outAttributes;
 	}
 	
-	private HashMap <String, String> makeSelectExpression (ArrayList<Attribute> selectExp){
+	/**
+	 * 
+	 * @param selectExp
+	 * @return
+	 */
+	private HashMap <String, String> makeSelectExpression (ArrayList<Attribute> selectExp,boolean skip){
 		HashMap <String, String> exprs = new HashMap <String, String> ();
 		Iterator<Attribute> attributes = selectExp.iterator();
 		Iterator<Expression> selExprs = mySelect.iterator();
 		while(attributes.hasNext()){
-			String selExpression = CommonMethods.parseExpression(selExprs.next(),myFrom);
+			String selExpression = CommonMethods.parseExpression(selExprs.next(),myFrom,skip);
 //			String param = selExpression.substring(selExpression.indexOf(".")+1);
 			int ind1 = selExpression.indexOf('(');
 			int ind2 = selExpression.lastIndexOf(')');
@@ -121,14 +141,8 @@ public class ExecuteQuery {
 	}
 	
 	/**
-	 * 
+	 * Function to execute the query with only one table in FROM clause
 	 */
-	public void execution() {
-		doSelection();
-	}
-	
-
-	
 	public void doSelection(){
 		ArrayList <Attribute> tableAttribute = new ArrayList<Attribute>();
 		Iterator<String> aliases = myFrom.keySet().iterator();
@@ -136,16 +150,16 @@ public class ExecuteQuery {
 		while(aliases.hasNext()){
 			String alias = aliases.next().toString();
 			tableName = myFrom.get(alias);
-			tableAttribute = getAttributeInfo(alias,tableName);
-		}
+			tableAttribute = getTableAttributeInfo(alias,tableName,true);
+		}		
 		ArrayList <Attribute> selectExpTypes = makeTypeOutAttributes();
-		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes);
+		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes,true);
 		
 		String selection = "(Int)1 == (Int) 1";
 		if(where!= null){
-			selection = CommonMethods.parseExpression(where, myFrom);
-			int ind1 = selection.indexOf('(');
-			int ind2 = selection.lastIndexOf(')');
+			selection = CommonMethods.parseExpression(where, myFrom,true);
+//			int ind1 = selection.indexOf('(');
+//			int ind2 = selection.lastIndexOf(')');
 			//if((ind1 ==0) &&(ind2 == selection.length()-1))
 				//selection = selection.substring(1, selection.length()-1);
 		}
@@ -187,4 +201,86 @@ public class ExecuteQuery {
 	      throw new RuntimeException (e);
 	    }
 	}
+	
+	/**
+	 * 
+	 * @param leftAlias
+	 * @param leftTableName
+	 * @param rightAlias
+	 * @param rightTableName
+	 */
+	private void doJoinHelper(String leftAlias, String leftTableName,String rightAlias, String rightTableName){
+		ArrayList <Attribute> inAttsLeft = getTableAttributeInfo(leftAlias, leftTableName,false);
+		ArrayList <Attribute> inAttsRight = getTableAttributeInfo(rightAlias, rightTableName,false);
+		ArrayList <Attribute> outAtts =  makeTypeOutAttributes();
+		String leftTablePath = "src/"+leftTableName+".tbl";
+		String rightTablePath = "src/"+rightTableName+".tbl";
+		
+		/*
+		 * Code to replace the alias
+		 * with the left and right "keywords"
+		 * in the select expressions.
+		 */
+		HashMap <String, String> tempExprs = makeSelectExpression(outAtts,false);
+		Iterator<String> exprsIterator = tempExprs.keySet().iterator();
+		HashMap <String, String> exprs = new HashMap<String, String>();
+		while(exprsIterator.hasNext()){
+			String tempExp = exprsIterator.next().toString();
+			String selectionPredicates = tempExprs.get(tempExp);
+			selectionPredicates = selectionPredicates.replaceAll(leftAlias, "left");
+			selectionPredicates = selectionPredicates.replaceAll(rightAlias, "right");
+			exprs.put(tempExp,selectionPredicates);
+		}
+		
+		
+		ArrayList <String> leftHash = new ArrayList <String> ();
+		leftHash.add ("o_custkey");
+		
+	    ArrayList <String> rightHash = new ArrayList <String> ();
+	    rightHash.add ("c_custkey");
+	    
+	    
+		String wherePredicate = "(Int)1 == (Int) 1";
+		if(where!= null){
+			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
+			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
+			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
+		}
+		
+		 // run the join
+	    try {
+	    	
+	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
+	    		  leftTablePath, rightTablePath, outputFile, compiler, outputLocation); 
+	    } catch (Exception e) {
+	      throw new RuntimeException (e);
+	    }
+	}
+	
+	
+	
+	/**
+	 * Function to execute the query with more than one table in FROM clause
+	 */
+	public void doJoin() {
+		doJoinHelper("o1", "orders", "c1", "customer");
+	}
+	
+	/**
+	 * 
+	 */
+	public void execution() {
+		switch(myFrom.size()){
+			case 1:
+				doSelection();
+				break;
+			
+			default:
+				doJoin();
+				break;
+				
+		}
+		
+	}
+	
 }

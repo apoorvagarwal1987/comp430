@@ -7,11 +7,11 @@ class Runner {
   static public void main (String [] args) {
 
     long startTime = System.currentTimeMillis();  
-    System.out.println ("first running a selection...");
-    DoSelection ();
-    /*System.out.println ("now running a join...");
+//    System.out.println ("first running a selection...");
+//    DoSelection ();
+    System.out.println ("now running a join...");
     DoJoin ();
-    System.out.println ("now running a group by...");
+    /*System.out.println ("now running a group by...");
     DoGroupBy ();*/
     long endTime = System.currentTimeMillis();
     System.out.println("The run took " + (endTime - startTime) + " milliseconds");
@@ -131,8 +131,8 @@ class Runner {
     inAttsLeft.add (new Attribute ("Str", "c_comment"));
     
     ArrayList <Attribute> outAtts = new ArrayList <Attribute> ();
-    outAtts.add (new Attribute ("Str", "att1"));
-    outAtts.add (new Attribute ("Int", "att2"));
+    outAtts.add (new Attribute ("Int", "att1"));
+    outAtts.add (new Attribute ("Str", "att2"));    
     outAtts.add (new Attribute ("Int", "att3"));
     outAtts.add (new Attribute ("Str", "att4"));
     outAtts.add (new Attribute ("Int", "att5"));
@@ -143,11 +143,11 @@ class Runner {
     ArrayList <String> rightHash = new ArrayList <String> ();
     rightHash.add ("o_custkey");
     
-    String selection = "right.o_custkey == left.c_custkey && right.o_custkey > Int (1000)";
+    String selection = "right.o_custkey == left.c_custkey && right.o_custkey < Int (135)";
                     
     HashMap <String, String> exprs = new HashMap <String, String> ();
-    exprs.put ("att1", "right.o_comment + Str(\" \") + left.c_comment");
-    exprs.put ("att2", "right.o_custkey");
+    exprs.put ("att1", "right.o_custkey");
+    exprs.put ("att2", "right.o_comment + Str(\" \") + left.c_comment");    
     exprs.put ("att3", "left.c_custkey");
     exprs.put ("att4", "left.c_name");
     exprs.put ("att5", "right.o_orderkey");           

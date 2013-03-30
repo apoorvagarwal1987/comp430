@@ -13,7 +13,7 @@ public static void main (String [] args) throws Exception {
       
       CatalogReader foo = new CatalogReader ("src/Catalog.xml");      
       res = foo.getCatalog ();
-      System.out.println (foo.printCatalog (res));
+      //System.out.println (foo.printCatalog (res));
       
     	
       InputStreamReader converter = new InputStreamReader(System.in);
@@ -79,16 +79,19 @@ public static void main (String [] args) throws Exception {
         if (rvQuery.isResult()){
         	System.out.println("Query is semantically correct");
         }        
-	  	System.out.println("***********************************************************************************************\n");
+	  	System.out.println("****************************************************************************************************\n");
 
         
 	  	/*
 	  	 * Executing the query 
 	  	 */
-	  	System.out.println("\n\n************************Execution of Query********************************************\n");
+	  	System.out.println("\n\n************************Execution of Query************************************************\n");
 
 	    long startTime = System.currentTimeMillis(); 
 	    new ExecuteQuery(myFrom,mySelect,att,where,rvQuery.getSelTypes()).execution();
+	    long endTime = System.currentTimeMillis();
+	    System.out.println("The run took " + (endTime - startTime) + " milliseconds");
+	    
 	  	System.out.println("***********************************************************************************************\n");
 
 	  	
