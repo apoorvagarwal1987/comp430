@@ -72,19 +72,21 @@ public static void main (String [] args) throws Exception {
         
               
         /*
-         * Doing the semantics check of the query :			
+         * Doing the semantics check of the query for Hw 4.1		
          */
 	  	System.out.println("\n\n************************Semantic Validation of Query********************************************\n");
 	  	ResultValidQuery rvQuery = (new SemanticCheck(myFrom, mySelect, att, where)).validateQuery();
         if (rvQuery.isResult()){
         	System.out.println("Query is semantically correct");
         }        
-	  	System.out.println("****************************************************************************************************\n");
+	  	System.out.println("************************************************************************************************\n");
 
         
-	  	/*
-	  	 * Executing the query 
-	  	 */
+	  	
+	  	 /*
+	  	  * Executing the query for Hw 4.2
+	  	  */
+	  	 
 	  	System.out.println("\n\n************************Execution of Query************************************************\n");
 
 	    long startTime = System.currentTimeMillis(); 
