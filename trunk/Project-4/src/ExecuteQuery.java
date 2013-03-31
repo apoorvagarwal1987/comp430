@@ -259,11 +259,23 @@ public class ExecuteQuery {
 	
 	
 	
+	
+	
+	
 	/**
 	 * Function to execute the query with more than one table in FROM clause
 	 */
+	
+	//TODO STUB code need to fix this by Monday.
 	public void doJoin() {
-		doJoinHelper("o1", "orders", "c1", "customer");
+		//doJoinHelper("o1", "orders", "c1", "customer");		
+		RAExpression _raWhereRoot = CommonMethods.createRAExpression(where);
+		CommonMethods.traverseRAExpression(_raWhereRoot);
+		while (mySelect.iterator().hasNext()){
+			Expression exp = mySelect.iterator().next();
+			RAExpression selRAExpression = CommonMethods.createRAExpression(exp);
+			
+		}
 	}
 	
 	/**
@@ -277,10 +289,7 @@ public class ExecuteQuery {
 			
 			default:
 				doJoin();
-				break;
-				
-		}
-		
-	}
-	
+				break;				
+		}		
+	}	
 }

@@ -7,41 +7,48 @@ public class RAExpression {
 	/**
 	 * @param type
 	 */
-	public RAExpression(String type) {
-		this.expType = type;
+	public RAExpression() {
+		this.expType = null;
+		leftRAExpression = null;
+		rightRAExpression = null;
+		topExpression = null;
+		botttomExpression =null;
+		expression = null;
 	}
 
-	private RAExpression leftExpression;
-	private RAExpression rightExpression;	
+	private RAExpression leftRAExpression;
+	private RAExpression rightRAExpression;	
 	private String expType;
 	private Expression expression;
+	private RAExpression topExpression;
+	private RAExpression botttomExpression;
 
 	/**
 	 * @return the leftExpression
 	 */
 	public RAExpression getLeftExpression() {
-		return leftExpression;
+		return leftRAExpression;
 	}
 
 	/**
 	 * @param leftExpression the leftExpression to set
 	 */
 	public void setLeftExpression(RAExpression leftExpression) {
-		this.leftExpression = leftExpression;
+		this.leftRAExpression = leftExpression;
 	}
 
 	/**
 	 * @return the rightExpression
 	 */
 	public RAExpression getRightExpression() {
-		return rightExpression;
+		return rightRAExpression;
 	}
 
 	/**
 	 * @param rightExpression the rightExpression to set
 	 */
 	public void setRightExpression(RAExpression rightExpression) {
-		this.rightExpression = rightExpression;
+		this.rightRAExpression = rightExpression;
 	}
 
 	/**
@@ -70,6 +77,34 @@ public class RAExpression {
 	 */
 	public void setExpression(Expression expression) {
 		this.expression = expression;
+	}
+
+	/**
+	 * @return the topExpression
+	 */
+	public RAExpression getTopExpression() {
+		return topExpression;
+	}
+
+	/**
+	 * @param topExpression the topExpression to set
+	 */
+	public void setTopExpression(RAExpression topExpression) {
+		this.topExpression = topExpression;
+	}
+
+	/**
+	 * @return the botttomExpression
+	 */
+	public RAExpression getBotttomExpression() {
+		return botttomExpression;
+	}
+
+	/**
+	 * @param botttomExpression the botttomExpression to set
+	 */
+	public void setBotttomExpression(RAExpression botttomExpression) {
+		this.botttomExpression = botttomExpression;
 	}
 	
 	
