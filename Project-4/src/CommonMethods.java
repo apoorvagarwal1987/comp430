@@ -224,12 +224,11 @@ public class CommonMethods {
 	
 	public static RAExpression createRAExpression (Expression expression){
 		String type = expression.getType().toString();
-		RAExpression _raExpression = new RAExpression(null);
+		RAExpression _raExpression = new RAExpression();
 		if(type.equals("and")||type.equals("or")){
 			_raExpression.setExpType(type);
 			_raExpression.setLeftExpression(createRAExpression(expression.getLeftSubexpression()));
 			_raExpression.setRightExpression(createRAExpression(expression.getRightSubexpression()));
-			_raExpression.setExpression(null);
 		}
 		else{
 			_raExpression.setExpression(expression);
@@ -237,4 +236,12 @@ public class CommonMethods {
 		return _raExpression;
 	}
 	
+	public static void traverseRAExpression (RAExpression raExpression){
+		if(raExpression.getExpType()!= null){
+			traverseRAExpression(raExpression.getLeftExpression());
+			traverseRAExpression(raExpression.getRightExpression());			
+		}
+		else
+			System.out.println(raExpression.getExpression().print());
+	}
 }
