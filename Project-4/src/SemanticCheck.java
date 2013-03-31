@@ -52,7 +52,7 @@ public class SemanticCheck {
 				return false;
 			}
 			for(Expression exp : mySelect){
-				if(CommonMethods.isBinaryOperation(exp.getType())){
+/*				if(CommonMethods.isBinaryOperation(exp.getType())){
 					System.out.println("Error: Expression "+ exp.print() +" expression is not allowed in the select clause when GroupBy");
 					return false;
 				}
@@ -62,7 +62,10 @@ public class SemanticCheck {
 					System.out.println("Error: Expression "+ exp.print() +" expression is not allowed in the select clause when GroupBy");
 					return false;	
 				}
-				else{}
+				else{}*/
+				
+				if(!(CommonMethods.isValidSelExpression(exp, att)))
+					return false;				
 			}
 			
 			return true;
