@@ -141,7 +141,29 @@ public class CommonMethods {
 			  
 	      return retString;		
 	}
-	  
+	
+	public static boolean isValidSelExpression(Expression exp, String groupByAtt){
+		
+		if(isBinaryOperation(exp.getType())){
+			return true;
+			//return isValidSelExpression(exp.getLeftSubexpression(), groupByAtt) && isValidSelExpression(exp.getRightSubexpression(), groupByAtt);			
+		}
+		
+		else if (isUnaryOperation(exp.getType())){
+			return true;
+			//return isValidSelExpression(exp.getLeftSubexpression(), groupByAtt);
+		}
+		
+		else if (exp.getType().equals("identifier") && !(exp.getValue().equals(groupByAtt))){
+			System.out.println("Error: Expression "+ exp.print() +" expression is not allowed in the select clause when GroupBy");
+			return false;
+		}
+		else
+			return true;
+		
+	}
+	
+	
 	public static ResultValue checkCompatibility(ResultValue _resValue1,ResultValue _resValue2,String _type){
 		
 		  if(_resValue1.isResult()&& _resValue2.isResult()){			  
