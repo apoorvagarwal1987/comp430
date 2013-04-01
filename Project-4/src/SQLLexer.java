@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 12:02:23 SQL.g 2013-03-20 19:26:46
+// $ANTLR 3.2 Sep 23, 2009 12:02:23 SQL.g 2013-04-01 15:45:16
 
 import org.antlr.runtime.*;
 import java.util.Stack;
@@ -1013,14 +1013,14 @@ public class SQLLexer extends Lexer {
         try {
             int _type = CharString;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // SQL.g:176:2: ( '\"' ( ( 'a' .. 'z' ) | ( 'A' .. 'Z' ) | ' ' | ( '0' .. '9' ) )* '\"' )
-            // SQL.g:176:4: '\"' ( ( 'a' .. 'z' ) | ( 'A' .. 'Z' ) | ' ' | ( '0' .. '9' ) )* '\"'
+            // SQL.g:176:9: ( '\"' ( ( 'a' .. 'z' ) | '-' | ( 'A' .. 'Z' ) | ' ' | ( '0' .. '9' ) )* '\"' )
+            // SQL.g:176:17: '\"' ( ( 'a' .. 'z' ) | '-' | ( 'A' .. 'Z' ) | ' ' | ( '0' .. '9' ) )* '\"'
             {
             match('\"'); 
-            // SQL.g:176:8: ( ( 'a' .. 'z' ) | ( 'A' .. 'Z' ) | ' ' | ( '0' .. '9' ) )*
+            // SQL.g:176:21: ( ( 'a' .. 'z' ) | '-' | ( 'A' .. 'Z' ) | ' ' | ( '0' .. '9' ) )*
             loop9:
             do {
-                int alt9=5;
+                int alt9=6;
                 switch ( input.LA(1) ) {
                 case 'a':
                 case 'b':
@@ -1052,6 +1052,11 @@ public class SQLLexer extends Lexer {
                     alt9=1;
                     }
                     break;
+                case '-':
+                    {
+                    alt9=2;
+                    }
+                    break;
                 case 'A':
                 case 'B':
                 case 'C':
@@ -1079,12 +1084,12 @@ public class SQLLexer extends Lexer {
                 case 'Y':
                 case 'Z':
                     {
-                    alt9=2;
+                    alt9=3;
                     }
                     break;
                 case ' ':
                     {
-                    alt9=3;
+                    alt9=4;
                     }
                     break;
                 case '0':
@@ -1098,7 +1103,7 @@ public class SQLLexer extends Lexer {
                 case '8':
                 case '9':
                     {
-                    alt9=4;
+                    alt9=5;
                     }
                     break;
 
@@ -1106,10 +1111,10 @@ public class SQLLexer extends Lexer {
 
                 switch (alt9) {
             	case 1 :
-            	    // SQL.g:176:9: ( 'a' .. 'z' )
+            	    // SQL.g:176:22: ( 'a' .. 'z' )
             	    {
-            	    // SQL.g:176:9: ( 'a' .. 'z' )
-            	    // SQL.g:176:10: 'a' .. 'z'
+            	    // SQL.g:176:22: ( 'a' .. 'z' )
+            	    // SQL.g:176:23: 'a' .. 'z'
             	    {
             	    matchRange('a','z'); 
 
@@ -1119,10 +1124,17 @@ public class SQLLexer extends Lexer {
             	    }
             	    break;
             	case 2 :
-            	    // SQL.g:176:22: ( 'A' .. 'Z' )
+            	    // SQL.g:176:35: '-'
             	    {
-            	    // SQL.g:176:22: ( 'A' .. 'Z' )
-            	    // SQL.g:176:23: 'A' .. 'Z'
+            	    match('-'); 
+
+            	    }
+            	    break;
+            	case 3 :
+            	    // SQL.g:176:41: ( 'A' .. 'Z' )
+            	    {
+            	    // SQL.g:176:41: ( 'A' .. 'Z' )
+            	    // SQL.g:176:42: 'A' .. 'Z'
             	    {
             	    matchRange('A','Z'); 
 
@@ -1131,18 +1143,18 @@ public class SQLLexer extends Lexer {
 
             	    }
             	    break;
-            	case 3 :
-            	    // SQL.g:176:35: ' '
+            	case 4 :
+            	    // SQL.g:176:54: ' '
             	    {
             	    match(' '); 
 
             	    }
             	    break;
-            	case 4 :
-            	    // SQL.g:176:41: ( '0' .. '9' )
+            	case 5 :
+            	    // SQL.g:176:60: ( '0' .. '9' )
             	    {
-            	    // SQL.g:176:41: ( '0' .. '9' )
-            	    // SQL.g:176:42: '0' .. '9'
+            	    // SQL.g:176:60: ( '0' .. '9' )
+            	    // SQL.g:176:61: '0' .. '9'
             	    {
             	    matchRange('0','9'); 
 

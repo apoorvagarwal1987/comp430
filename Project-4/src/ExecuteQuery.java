@@ -234,19 +234,19 @@ public class ExecuteQuery {
 		
 		
 		ArrayList <String> leftHash = new ArrayList <String> ();
-		leftHash.add ("o_custkey");
+//		leftHash.add ("o_custkey");
 		
 	    ArrayList <String> rightHash = new ArrayList <String> ();
-	    rightHash.add ("c_custkey");
+//	    rightHash.add ("c_custkey");
 	    
 	    
 		String wherePredicate = "(Int)1 == (Int) 1";
-		if(where!= null){
+	/*	if(where!= null){
 			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
 			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
 			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
 		}
-		
+		*/
 		 // run the join
 	    try {
 	    	
@@ -268,14 +268,14 @@ public class ExecuteQuery {
 	
 	//TODO STUB code need to fix this by Monday.
 	public void doJoin() {
-		//doJoinHelper("o1", "orders", "c1", "customer");		
-		RAExpression _raWhereRoot = CommonMethods.createRAExpression(where);
+		doJoinHelper("l1", "lineitem", "o1", "orders");		
+		/*RAExpression _raWhereRoot = CommonMethods.createRAExpression(where);
 		CommonMethods.traverseRAExpression(_raWhereRoot);
 		while (mySelect.iterator().hasNext()){
 			Expression exp = mySelect.iterator().next();
 			RAExpression selRAExpression = CommonMethods.createRAExpression(exp);
 			
-		}
+		}*/
 	}
 	
 	/**
