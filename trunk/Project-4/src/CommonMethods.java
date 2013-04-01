@@ -5,10 +5,18 @@ import java.util.Map;
 
 /**
  * @author apoorvagarwal
- *
+ * This class holds the collection of all the 
+ * methods collectively used by the project
+ * across the classes.
  */
 public class CommonMethods {
 
+	/**
+	 * This function return the attribute type from the table. 	
+	 * @param att : The name of the attribute
+	 * @param fromClause : The from clause used in the query
+	 * @return : returns the type of the attribute.
+	 */
 	public static String getAtributeType(String att, Map <String, String> fromClause){
 	  	String attributeType;
 		String alias = att.substring(0, att.indexOf("."));
@@ -36,6 +44,11 @@ public class CommonMethods {
 	  
   }
 	
+	/**
+	 * To check whether the expression type is binary or not
+	 * @param expType : Type of the expression
+	 * @return : true or false
+	 */
 	public static boolean isUnaryOperation(String expType) {
 		for (String operation : Expression.unaryTypes) {
 			if(operation.equals(expType))
@@ -44,6 +57,11 @@ public class CommonMethods {
 		return false;
 	}
 	  
+	/**
+	 * To check whether the expression type is unary or not
+	 * @param expType : Type of the expression
+	 * @return : true or false
+	 */
 	public static boolean isBinaryOperation(String expType) {
 		for (String operation : Expression.binaryTypes) {
 			if(operation.equals(expType))
@@ -52,6 +70,13 @@ public class CommonMethods {
 		return false;
 	}
 	
+	/**
+	 * The functions converts the where clause of the query into the parsed expression 
+	 * @param exp : expression that needs to be parsed
+	 * @param fromClause : From clause of the query
+	 * @param skip : Used during the Selection or Join operation
+	 * @return : return the parsed string.
+	 */
 	public static String parseExpression (Expression exp, Map <String, String> fromClause, boolean skip ){
 		
 		if(exp.getType().equals("and") || exp.getType().equals("or")){
@@ -142,6 +167,13 @@ public class CommonMethods {
 	      return retString;		
 	}
 	
+	/**
+	 * The function checks whether the select exp is valid or not under the 
+	 * group by clause
+	 * @param exp : Expression to validate
+	 * @param groupByAtt : Group by attribute
+	 * @return : true or false
+	 */
 	public static boolean isValidSelExpressionGP(Expression exp, String groupByAtt){
 		
 		if(isBinaryOperation(exp.getType())){
@@ -163,7 +195,14 @@ public class CommonMethods {
 		
 	}
 	
-	
+	/**
+	 * The functions the compatibility between the result types received from left and right
+	 * branch of the expression tree
+	 * @param _resValue1 : Left side result value
+	 * @param _resValue2 : Right side result value
+	 * @param _type : Type of the caller
+	 * @return : true or false
+	 */
 	public static ResultValue checkCompatibility(ResultValue _resValue1,ResultValue _resValue2,String _type){
 		
 		  if(_resValue1.isResult()&& _resValue2.isResult()){			  
@@ -176,6 +215,12 @@ public class CommonMethods {
 			  return (new ResultValue(-1, false));		  
 	  }
 	  
+	/**
+	 * The functions checks the validity of the expressions 
+	 * @param exp : Expression to validate
+	 * @param fromClause : From clause from the query
+	 * @return : true or false
+	 */
 	public static ResultValue validateTypeExpression(Expression exp, Map <String, String> fromClause){
 		  
 		  if(exp.getType().equals("and") || exp.getType().equals("or")){
@@ -244,6 +289,11 @@ public class CommonMethods {
 			  return (new ResultValue(2, true));
 		  }
 	
+	/**
+	 * @@Deprecated for the Time being
+	 * @param expression
+	 * @return
+	 */
 	public static RAExpression createRAExpression (Expression expression){
 		String type = expression.getType().toString();
 		RAExpression _raExpression = new RAExpression();
@@ -258,6 +308,10 @@ public class CommonMethods {
 		return _raExpression;
 	}
 	
+	/**
+	 * Deprecated for the Time being
+	 * @param raExpression
+	 */
 	public static void traverseRAExpression (RAExpression raExpression){
 		if(raExpression.getExpType()!= null){
 			traverseRAExpression(raExpression.getLeftExpression());
