@@ -86,7 +86,7 @@ public static void main (String [] args) throws Exception {
 	  	 /*
 	  	  * Executing the query for Hw 4.2
 	  	  */
-	  	 
+	/*  	 
 	  	System.out.println("\n\n************************Execution of Query************************************************\n");
 
 	    long startTime = System.currentTimeMillis(); 
@@ -95,7 +95,7 @@ public static void main (String [] args) throws Exception {
 	    System.out.println("The run took " + (endTime - startTime) + " milliseconds");
 	    
 	  	System.out.println("***********************************************************************************************\n");
-
+*/
 	  	
 	  	System.out.format ("\nSQL>");
               
