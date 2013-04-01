@@ -142,7 +142,7 @@ public class CommonMethods {
 	      return retString;		
 	}
 	
-	public static boolean isValidSelExpression(Expression exp, String groupByAtt){
+	public static boolean isValidSelExpressionGP(Expression exp, String groupByAtt){
 		
 		if(isBinaryOperation(exp.getType())){
 			return true;

@@ -64,7 +64,7 @@ public class SemanticCheck {
 				}
 				else{}*/
 				
-				if(!(CommonMethods.isValidSelExpression(exp, att)))
+				if(!(CommonMethods.isValidSelExpressionGP(exp, att)))
 					return false;				
 			}
 			
