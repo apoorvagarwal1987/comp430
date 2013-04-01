@@ -3,7 +3,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-
+/**
+ * 
+ * @author apoorvagarwal
+ * The class is responsible to do 
+ * the semantic check of the 
+ * query passed by the user.
+ */
 public class SemanticCheck {
 	
 	Map <String, String> myFrom;
@@ -20,6 +26,12 @@ public class SemanticCheck {
 		this.res = Interpreter.res;
 	}
 	
+	/**
+	 * The function checks that everything being passed to the 
+	 * from clause of the query is valid or not
+	 * @param fromClause : From clause of the Query
+	 * @return : true or not
+	 */
 	  private  boolean isValidFromClause (Map <String, String> fromClause){	  
 		  	Set<String> tableNames = res.keySet();
 			Iterator<String> aliases = fromClause.keySet().iterator();
@@ -33,6 +45,14 @@ public class SemanticCheck {
 			return true;	  
 	  }
 	  
+	  /**
+	   * The function checks the validity of the Group by clause
+	   * if the query has one.
+	   * @param att : The group by attribute
+	   * @param fromClause : From clause of the Query
+	   * @param mySelect : Select clauses of the Query
+	   * @return : True or false
+	   */
 	  private  boolean isValidGroupByClause(String att, Map <String, String> fromClause, ArrayList<Expression> mySelect) {
 			String alias = att.substring(0, att.indexOf("."));			
 			String attName = att.substring(att.indexOf(".")+1);
@@ -71,7 +91,10 @@ public class SemanticCheck {
 			return true;
 		}
 
-	  
+	  /**
+	   * The Function is the driver for the doing the semantic check over the query
+	   * @return True or false along with the type of the selection expression used in HW 4.2
+	   */
 	  public ResultValidQuery validateQuery(){		    
 		  
 	        //Validating the from clause of the query

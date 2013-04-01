@@ -4,7 +4,9 @@
 
 /**
  * @author ApoorvAgarwal
- *
+ * The class is used to check the conformity between the 
+ * two result values passed depending upon the fact that the 
+ * caller has an String type
  */
 public class StringCompatibility {
 	

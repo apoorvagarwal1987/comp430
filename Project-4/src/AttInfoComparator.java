@@ -6,7 +6,8 @@ import java.util.Comparator;
 
 /**
  * @author apoorvagarwal
- *
+ * The class is used to do the 
+ * sorting of the attributes in the table
  */
 public class AttInfoComparator implements Comparator<AttInfo>{
 
