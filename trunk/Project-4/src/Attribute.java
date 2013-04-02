@@ -17,7 +17,7 @@ class Attribute {
     attType = inType;
   }  
  
-  public void print (){
+public void print (){
 	  System.out.println(attType + "    "+name);
   }
 }
