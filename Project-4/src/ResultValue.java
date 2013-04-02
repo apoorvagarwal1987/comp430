@@ -12,6 +12,13 @@ public class ResultValue {
 		return type;
 	}
 
+	/**
+	 * @param type the type to set
+	 */
+	public void setType(int type) {
+		this.type = type;
+	}
+
 	public boolean isResult() {
 		return result;
 	}	
