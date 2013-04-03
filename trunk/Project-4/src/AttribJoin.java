@@ -9,8 +9,8 @@
 public class AttribJoin {
 
 	
-	AttInfo _attinfo;
-	int sequenceNumber;
+	private AttInfo _attinfo;
+	private int sequenceNumber;
 	
 	/**
 	 * @param attrib
@@ -21,4 +21,19 @@ public class AttribJoin {
 		this._attinfo = attrib;
 		this.sequenceNumber = i;		
 	}
+
+	/**
+	 * @return the _attinfo
+	 */
+	public AttInfo get_attinfo() {
+		return _attinfo;
+	}
+
+	/**
+	 * @return the sequenceNumber
+	 */
+	public int getSequenceNumber() {
+		return sequenceNumber;
+	}
+	
 }

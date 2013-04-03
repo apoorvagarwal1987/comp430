@@ -39,10 +39,11 @@ public class RATableType implements IRAType {
 		for (AttInfo attrib : tempData){
 			attrib.setAlias(alias);
 			attrib.setTableName(tableName);
-			if(replace)
+		/*	if(replace)
 				attributes.add(new Attribute(attrib.getDataType(),""+alias+"_"+attrib.getAttName()));
 			else
 				attributes.add(new Attribute(attrib.getDataType(),attrib.getAttName()));
+		*/
 		}		
 	}
 
