@@ -74,7 +74,7 @@ public class ExecuteQuery {
 			tableAttribute = CommonMethods.getTableAttributeInfo(alias,tableName,true);
 		}		
 		ArrayList <Attribute> selectExpTypes = CommonMethods.makeTypeOutAttributes(selTypes);
-		HashMap <String, String> exprs = CommonMethods.makeSelectExpression(selectExpTypes,true);
+		//HashMap <String, String> exprs = CommonMethods.makeSelectExpression(selectExpTypes,true);
 		
 		String selection = "(Int)1 == (Int) 1";
 		if(where!= null){
@@ -99,7 +99,7 @@ public class ExecuteQuery {
 	    }
 	    System.out.println("---------------------");
 
-	    System.out.println(exprs);
+	    //System.out.println(exprs);
 	    
 	    System.out.println("---------------------");
 	    
@@ -116,7 +116,7 @@ public class ExecuteQuery {
 //	    System.out.println(tableAttribute+"   \n"+selectExpTypes+"\n"+exprs);
 	    // run the selection operation
 	    try {
-	      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation );
+	      //Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation );
 
 	    } catch (Exception e) {
 	      throw new RuntimeException (e);
@@ -124,27 +124,13 @@ public class ExecuteQuery {
 	}
 	
 
-	
-	
-
-	
-	
-	
-	
 	/**
 	 * Function to execute the query with more than one table in FROM clause
 	 */
 	
 	//TODO STUB code need to fix this by Monday.
 	public void doJoin() {
-		CommonMethods.doJoinHelper("l1", "lineitem", "o1", "orders");		
-		/*RAExpression _raWhereRoot = CommonMethods.createRAExpression(where);
-		CommonMethods.traverseRAExpression(_raWhereRoot);
-		while (mySelect.iterator().hasNext()){
-			Expression exp = mySelect.iterator().next();
-			RAExpression selRAExpression = CommonMethods.createRAExpression(exp);
-			
-		}*/
+		CommonMethods.executeRATree(myFrom, mySelect, where);
 	}
 	
 	/**
