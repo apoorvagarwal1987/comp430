@@ -157,7 +157,8 @@ SELECT
       o1.o_orderstatus
 FROM
     lineitem AS l1,
-    orders AS o1
+    orders AS o1,
+    customer AS c1
 
 WHERE 
     (l1.l_orderkey =  o1.o_orderkey) and (o1.o_custkey = 7);
@@ -176,3 +177,14 @@ WHERE
     l1.l_orderkey =  o1.o_orderkey;
 
 __________________________________________________
+
+SELECT 
+    r1.r_regionkey,
+    n1.n_regionkey,
+    s1.s_nationkey    
+FROM 
+    region AS r1,
+    nation AS n1,
+    supplier AS s1
+WHERE 
+    (r1.r_regionkey = n1.n_regionkey) and (n1.n_nationkey = s1.s_nationkey);

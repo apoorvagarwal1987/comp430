@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class CommonMethods {
 	
-	static int nameCounter =0;
+	static int nameCounter = 1;
 	/**
 	 * This function return the attribute type from the table. 	
 	 * @param att : The name of the attribute
@@ -350,16 +350,49 @@ public class CommonMethods {
 	
 	public static void executeRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
 							Expression whereClause){
+		ReturnJoin finalJoin  = null;
 		RAProjectType _raRaProjectType = (RAProjectType)createRATree(fromClause, selectClause, whereClause); 
 		RASelectType _raSelectType = _raRaProjectType.get_raSelect();
 		RAJoinType _raJoinType = _raSelectType.get_raJoin();
 		if(_raJoinType.getType().equals("RA_JOIN_TYPE")){
-			ReturnJoin totalJoin = raJoinHelper(_raJoinType,fromClause);
-			System.out.println(totalJoin);
+			finalJoin = raJoinHelper(_raJoinType,fromClause);
+			System.out.println("Total Joins: "+finalJoin.getOutputFile());
 		}	
-		
+		raExecuteSelection(finalJoin,fromClause,_raRaProjectType,_raSelectType);
 	}
 
+	private static void raExecuteSelection (ReturnJoin finalJoin, Map<String, String> fromClause, RAProjectType _raRaProjectType, RASelectType _raSelectType){
+		String outputFile= "src/out_"+nameCounter +".tbl";
+		String compiler = "g++";
+		String outputLocation = "src/cppDir/";
+		nameCounter++;
+		
+		ArrayList <Attribute> tableAttribute = new ArrayList<Attribute>();
+		ArrayList<AttribJoin> totalJoins = finalJoin.getJoinOutAttribts();
+		Collections.sort(totalJoins,new AttribJoinComparator());
+		Iterator<AttribJoin> totalJoinsIt = totalJoins.iterator();
+		while (totalJoinsIt.hasNext()){
+			AttInfo attrib = totalJoinsIt.next().get_attinfo();
+			tableAttribute.add(new Attribute(attrib.getDataType(),""+attrib.getAlias()+"_"+attrib.getAttName()));
+		}
+		ArrayList<ResultValue> selResultValue = new ArrayList<ResultValue>();
+		for(Expression exp : _raRaProjectType.getSelectExprs()){
+			selResultValue.add(validateTypeExpression(exp, fromClause));
+		}
+		ArrayList <Attribute> selectExpTypes = CommonMethods.makeTypeOutAttributes(selResultValue);
+		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes, true, _raRaProjectType.getSelectExprs(), fromClause);
+		String selection = parseExpression(_raSelectType.getSelectPredicate(), fromClause,true);
+		String tableUsed = finalJoin.getOutputFile();
+	    try {
+		      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation );
+		      System.out.println("Final output: "+outputFile);
+		      nameCounter = 0;
+		    } 
+	   catch (Exception e) {
+		      throw new RuntimeException (e);
+       }
+	}
+	
 	private static ReturnJoin raJoinHelper(RAJoinType _raJoinType, Map<String, String> fromClause){
 		
 		ArrayList<ResultValue> selTypes = new ArrayList<ResultValue>();
@@ -504,9 +537,10 @@ public class CommonMethods {
 			ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
 			Map<String, String> fromClause) {
 		
-		String noutputFile= "src/out"+nameCounter+".tbl";
+		String noutputFile= "src/out_"+nameCounter+".tbl";
 		String compiler = "g++";
 		String outputLocation = "src/cppDir/";
+		nameCounter ++;
 		
 		ArrayList <Attribute> inAttsLeft = new ArrayList<Attribute>();
 		Collections.sort(oldJoinAttribts,new AttribJoinComparator());
@@ -635,9 +669,10 @@ public class CommonMethods {
 	public static String joinExecution(String leftAlias, String leftTableName,String rightAlias, 
 											String rightTableName,ArrayList<ResultValue> selTypes,ArrayList<Expression> selectExprs, Map<String, String> fromClause){
 		
-		String outputFile= "src/out.tbl";
+		String outputFile= "src/out_"+nameCounter +".tbl";
 		String compiler = "g++";
 		String outputLocation = "src/cppDir/";
+		nameCounter++;
 		
 		ArrayList <Attribute> inAttsLeft = getTableAttributeInfo(leftAlias, leftTableName,false);
 		ArrayList <Attribute> inAttsRight = getTableAttributeInfo(rightAlias, rightTableName,false);
