@@ -188,3 +188,19 @@ FROM
     supplier AS s1
 WHERE 
     (r1.r_regionkey = n1.n_regionkey) and (n1.n_nationkey = s1.s_nationkey);
+__________________________________________________
+
+
+-- Test Case to check whether the same tables with different alias are correctly recognised
+SELECT 
+    r1.r_regionkey,
+    r1.r_name,
+    r2.r_name    
+FROM 
+    region AS r1,
+    region AS r2
+WHERE
+    (r1.r_name < r2.r_name);
+
+__________________________________________________
+ 

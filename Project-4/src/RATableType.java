@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -7,7 +8,7 @@ import java.util.Map;
  */
 
 /**
- * @author apoorvagarwal
+ * @author apoorv agarwal
  *
  */
 public class RATableType implements IRAType {
@@ -28,41 +29,36 @@ public class RATableType implements IRAType {
 		this.type = "RA_TABLE_TYPE";
 		
 		// publishing the attribute of the table in the objects of the RA Table-type		
-		attributesInfo = res.get(tableName).getAttributes();
+		this.attributesInfo = new HashMap<String, AttInfo>();
+		Map<String, AttInfo> tattributesInfo = res.get(tableName).getAttributes();		
+		for(String att: tattributesInfo.keySet()){
+			AttInfo oldAtt = tattributesInfo.get(att);
+			AttInfo newAtt = new AttInfo(oldAtt.getNumDistinctVals(), oldAtt.getDataType(),
+								oldAtt.getAttSequenceNumber(), oldAtt.getAttName());
+			newAtt.setAlias(alias);
+			newAtt.setTableName(tableName);
+			attributesInfo.put(att, newAtt);
+		}
+		
 		tupleCount = res.get(tableName).getTupleCount();
 		this.position = position;
+		
 		ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();
-		for(String att : attributesInfo.keySet()){
-			tempData.add(attributesInfo.get(att));		
-		}
 		Collections.sort(tempData, new AttInfoComparator());
+		attributes = new ArrayList<Attribute>();
 		for (AttInfo attrib : tempData){
 			attrib.setAlias(alias);
 			attrib.setTableName(tableName);
-		/*	if(replace)
-				attributes.add(new Attribute(attrib.getDataType(),""+alias+"_"+attrib.getAttName()));
-			else
-				attributes.add(new Attribute(attrib.getDataType(),attrib.getAttName()));
-		*/
+			attributes.add(new Attribute(attrib.getDataType(),""+alias+"_"+attrib.getAttName()));
 		}		
 	}
-
-	/* (non-Javadoc)
-	 * @see IRAType#getType()
-	 */
-	@Override
+	
 	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
+		return type;
 	}
 
-	/* (non-Javadoc)
-	 * @see IRAType#setType(java.lang.String)
-	 */
-	@Override
 	public void setType(String type) {
-		// TODO Auto-generated method stub
-		
+		this.type = type;		
 	}
 
 	/**
@@ -105,6 +101,20 @@ public class RATableType implements IRAType {
 	 */
 	public void setAttributesInfo(Map<String, AttInfo> attributesInfo) {
 		this.attributesInfo = attributesInfo;
+	}
+
+	/**
+	 * @return the tupleCount
+	 */
+	public int getTupleCount() {
+		return tupleCount;
+	}
+
+	/**
+	 * @return the position
+	 */
+	public int getPosition() {
+		return position;
 	}
 	
 }

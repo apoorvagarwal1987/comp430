@@ -306,10 +306,9 @@ public class CommonMethods {
 		while(aliases.hasNext()){
 			String alias = aliases.next().toString();
 			String tableName = fromClause.get(alias);
-			RATableType _raTable = new RATableType(tableName,alias,true, counter++);
-			_tablePresent.put((counter-1),_raTable);
+			_tablePresent.put(counter,new RATableType(tableName,alias,true, counter++));
 		}		
-		
+
 		//Creating all the join in the query 
 		// starting with the basic cross joins in the query
 		counter = 1;		
@@ -384,6 +383,7 @@ public class CommonMethods {
 		String selection = parseExpression(_raSelectType.getSelectPredicate(), fromClause,true);
 		String tableUsed = finalJoin.getOutputFile();
 	    try {
+		      @SuppressWarnings("unused")
 		      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation );
 		      System.out.println("Final output: "+outputFile);
 		      nameCounter = 0;
@@ -568,7 +568,7 @@ public class CommonMethods {
 		while(exprsIterator.hasNext()){
 			String tempExp = exprsIterator.next().toString();
 			String selectionPredicates = tempExprs.get(tempExp);
-			Iterator aliasIt = leftAlias.iterator();
+			Iterator<String> aliasIt = leftAlias.iterator();
 			while(aliasIt.hasNext()){
 				String tempAlias = aliasIt.next().toString();
 				selectionPredicates = selectionPredicates.replaceAll(tempAlias, "left");

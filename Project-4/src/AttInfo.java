@@ -69,6 +69,6 @@ class AttInfo {
 		this.alias = alias;
 	}
 	String print () {
-		return "attName:"+attName + " vals: " + valueCount + "; type: " + dataType + "; attnum: " + seqNumber;  
+		return "alias: "+alias+" tablename: "+tableName+" attName:"+attName + " vals: " + valueCount + "; type: " + dataType + "; attnum: " + seqNumber;  
 	}
 }
