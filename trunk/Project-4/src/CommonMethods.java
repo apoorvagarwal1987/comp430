@@ -1,6 +1,7 @@
 /**
  * 
  */
+import java.awt.geom.CubicCurve2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,7 +17,17 @@ import java.util.Map;
  */
 public class CommonMethods {
 	
-	static int nameCounter = 1;
+	static int nameCounter ;
+	static ArrayList<Expression> _selectionPredicates;
+	static HashSet<String> contributedTable;
+	
+	
+	static{
+		nameCounter = 1;
+		_selectionPredicates = new ArrayList<Expression>();
+		contributedTable = new HashSet<String>();				
+	}
+	
 	/**
 	 * This function return the attribute type from the table. 	
 	 * @param att : The name of the attribute
@@ -301,6 +312,9 @@ public class CommonMethods {
 		// First creating the leaf nodes which is basically the
 		// tables present in the from clause of the query.		
 		Map<Integer, RATableType> _tablePresent = new HashMap<Integer, RATableType>();
+		Map<Integer, RAJoinType> _crossJoinPresent = new HashMap<Integer, RAJoinType>();	
+		Map<Integer, RASelectType> _selectPredicatePresent = new HashMap<Integer, RASelectType>();
+
 		Iterator<String> aliases = fromClause.keySet().iterator();
 		int counter = 1;
 		while(aliases.hasNext()){
@@ -312,7 +326,6 @@ public class CommonMethods {
 		//Creating all the join in the query 
 		// starting with the basic cross joins in the query
 		counter = 1;		
-		Map<Integer, RAJoinType> _crossJoinPresent = new HashMap<Integer, RAJoinType>();		
 		int countTable = _tablePresent.size();
 		if(countTable == 1){
 			
@@ -322,42 +335,61 @@ public class CommonMethods {
 			RAJoinType _raJoin = new RAJoinType();
 			RATableType _raLeftTable = _tablePresent.get(current);
 			RATableType _raRightTable = _tablePresent.get(++current);
-			_raJoin.setTables(_raLeftTable,_raRightTable);
+			_raJoin.setBranch(_raLeftTable,_raRightTable);
 			_crossJoinPresent.put(counter++,_raJoin);
 			
 			while(current < countTable){ 
 				_raRightTable = _tablePresent.get(++current);
 				RAJoinType _raTempJoin = new RAJoinType();
 				RAJoinType _insertedRAJoin = _crossJoinPresent.get((counter-1));
-				_raTempJoin.setTables(_raRightTable, _insertedRAJoin);
+				_raTempJoin.setBranch(_insertedRAJoin,_raRightTable);
+				_insertedRAJoin.setPrevious(_raTempJoin);
 				_crossJoinPresent.put(counter++,_raTempJoin);				
 			}			
 		}
 		
+		
 		// Creating part of the sub tree where nodes would be holding the 
 		// data of the selection predicates.
 		RAJoinType _raJoinTop = _crossJoinPresent.get(counter-1); 
-		RASelectType _raSelect = new RASelectType(_raJoinTop);
-		if(whereClause != null)
-			_raSelect.setSelectPredicate(whereClause);
+		int current = 1;
+		if(whereClause != null){			
+			traverseSelExpression(createSelPredicate(whereClause));
+			for(Expression exp : _selectionPredicates){
+				RASelectType _raSelectTemp = new RASelectType(exp);
+				_selectPredicatePresent.put(current++,_raSelectTemp);
+			}
+			current = 1;
+			RASelectType _raSelect = _selectPredicatePresent.get(current++);
+			_raSelect.setNext(_raJoinTop);
+			_raJoinTop.setPrevious(_raSelect);			
+			while(current <= _selectPredicatePresent.size()){
+				_selectPredicatePresent.get(current-1).setPrevious(_selectPredicatePresent.get(current));
+				_selectPredicatePresent.get(current).setNext(_selectPredicatePresent.get(current-1));
+				current++;
+			}
+		}	
 		
-		RAProjectType _raProjectType = new RAProjectType(_raSelect);
+		RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
+		_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
 		_raProjectType.setSelectExprs(selectClause);
+		sendSelPredicateDown(_selectPredicatePresent.get(1));
 		return _raProjectType;
 	}
 	
+	/*
 	
 	public static void executeRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
 							Expression whereClause){
 		ReturnJoin finalJoin  = null;
-		RAProjectType _raRaProjectType = (RAProjectType)createRATree(fromClause, selectClause, whereClause); 
-		RASelectType _raSelectType = _raRaProjectType.get_raSelect();
-		RAJoinType _raJoinType = _raSelectType.get_raJoin();
+		RAProjectType _raProjectType = (RAProjectType)createRATree(fromClause, selectClause, whereClause); 
+		RASelectType _raSelectType = _raProjectType.get_raSelect();
+		RAJoinType _raJoinType = (RAJoinType) _raSelectType.get_raJoin();
 		if(_raJoinType.getType().equals("RA_JOIN_TYPE")){
 			finalJoin = raJoinHelper(_raJoinType,fromClause);
 			System.out.println("Total Joins: "+finalJoin.getOutputFile());
 		}	
-		raExecuteSelection(finalJoin,fromClause,_raRaProjectType,_raSelectType);
+		raExecuteSelection(finalJoin,fromClause,_raProjectType,_raSelectType);
 	}
 
 	private static void raExecuteSelection (ReturnJoin finalJoin, Map<String, String> fromClause, RAProjectType _raRaProjectType, RASelectType _raSelectType){
@@ -384,7 +416,8 @@ public class CommonMethods {
 		String tableUsed = finalJoin.getOutputFile();
 	    try {
 		      @SuppressWarnings("unused")
-		      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation );
+		      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, 
+		    		  								outputFile, compiler, outputLocation );
 		      System.out.println("Final output: "+outputFile);
 		      nameCounter = 0;
 		    } 
@@ -522,6 +555,8 @@ public class CommonMethods {
 		return null;		
 	}
 	
+	*/
+	
 	/**
 	 * @param leftAlias 
 	 * @param outputFile
@@ -533,7 +568,8 @@ public class CommonMethods {
 	 * @param fromClause
 	 * @return
 	 */
-	private static String joinExecution(HashSet<String> leftAlias, String outputFile,ArrayList<AttribJoin> oldJoinAttribts, String rightAlias, String rightTableName,
+	private static String joinExecution(HashSet<String> leftAlias, String outputFile,ArrayList<AttribJoin> 
+oldJoinAttribts, String rightAlias, String rightTableName,
 			ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
 			Map<String, String> fromClause) {
 		
@@ -733,8 +769,8 @@ public class CommonMethods {
 	 * @param selExprs 
 	 * @return
 	 */
-	public static  HashMap <String, String> makeSelectExpression (ArrayList<Attribute> selectExp,boolean skip, ArrayList<Expression> selectExprs,
-																		Map <String, String> fromClause){
+	public static  HashMap <String, String> makeSelectExpression (ArrayList<Attribute> selectExp,
+								boolean skip, ArrayList<Expression> selectExprs,Map <String, String> fromClause){
 		HashMap <String, String> exprs = new HashMap <String, String> ();
 		Iterator<Attribute> attributes = selectExp.iterator();
 		Iterator<Expression> selExprs = selectExprs.iterator();
@@ -745,6 +781,58 @@ public class CommonMethods {
 		return exprs;
 	}
 	
+	private static SelectExpression createSelPredicate (Expression expression){
+            String type = expression.getType().toString();
+            SelectExpression _selectExpression = new SelectExpression();
+            if(type.equals("and")){
+                    _selectExpression.setExpType(type);
+                    _selectExpression.setLeftExpression(createSelPredicate(expression.getLeftSubexpression()));
+                    _selectExpression.setRightExpression(createSelPredicate(expression.getRightSubexpression()));
+            }
+            else{
+                    _selectExpression.setExpression(expression);
+            }
+            return _selectExpression;
+    }
+
+    private static void traverseSelExpression (SelectExpression selectExpression){
+            if(selectExpression.getExpType()!= null){
+                    traverseSelExpression(selectExpression.getLeftExpression());
+                    traverseSelExpression(selectExpression.getRightExpression());                        
+            }
+            else{
+                    System.out.println(selectExpression.getExpression().print());
+                    _selectionPredicates.add(selectExpression.getExpression());
+            }
+    }
+    
+    public static void sendSelPredicateDown(RASelectType raSelectType){
+    	
+    	IRAType next = raSelectType.getNext();
+    	IRAType previous = raSelectType.getPrevious();
+    	contributedTable.clear();
+    	Expression selExpression = raSelectType.getSelectPredicate();
+    	sendSelPredicateHelper(selExpression);
+    	System.out.println(contributedTable);
+    	
+    }
+    
+    public static void sendSelPredicateHelper(Expression exp){
+    	
+    	if(exp.getType().equals("or") || isBinaryOperation(exp.getType())){
+    		sendSelPredicateHelper(exp.getLeftSubexpression());
+    		sendSelPredicateHelper(exp.getRightSubexpression());
+    	}
+    	else if (isUnaryOperation(exp.getType()))
+    		sendSelPredicateHelper(exp.getLeftSubexpression());
+    	
+    	else{
+    		if (exp.getType().equals("identifier")){
+    			int index = exp.getValue().indexOf(".");
+    			contributedTable.add(exp.getValue().substring(0,index));
+    		}
+    	}    	
+    }
 }
 
 

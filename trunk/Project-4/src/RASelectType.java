@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * 
  */
@@ -10,20 +12,20 @@ public class RASelectType implements IRAType {
 	private String type;
 	private String value;
 	private Expression selectPredicate;
-	private RAJoinType _raJoin;
+	private IRAType _next;
+	private ReturnJoin _outputInfo;
+	private IRAType _previous;
 	
-	
-	public RASelectType (RAJoinType _raJoin){
-		this.type = "RA_SELECT_TYPE";
-		this._raJoin = _raJoin;
+	public RASelectType (Expression selExpression){
+		this.type = "RA_SELECT_TYPE";		
+		this.selectPredicate = selExpression;
 	}
 	/* (non-Javadoc)
 	 * @see IRAType#getType()
 	 */
 	@Override
 	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
+		return type;
 	}
 
 	/* (non-Javadoc)
@@ -47,16 +49,43 @@ public class RASelectType implements IRAType {
 		this.selectPredicate = selectPredicate;
 	}
 	/**
-	 * @return the _raJoin
+	 * @return the _next
 	 */
-	public RAJoinType get_raJoin() {
-		return _raJoin;
+	public IRAType getNext() {
+		return _next;
 	}
 	/**
-	 * @param _raJoin the _raJoin to set
+	 * @param _next the _next to set
 	 */
-	public void set_raJoin(RAJoinType _raJoin) {
-		this._raJoin = _raJoin;
+	public void setNext(IRAType _next) {
+		this._next = _next;
 	}
+
+	/**
+	 * @return the _outputInfo
+	 */
+	public ReturnJoin get_outputInfo() {
+		return _outputInfo;
+	}
+	/**
+	 * @param _outputInfo the _outputInfo to set
+	 */
+	public void set_outputInfo(ReturnJoin _outputInfo) {
+		this._outputInfo = _outputInfo;
+	}
+	/**
+	 * @return the _previous
+	 */
+	public IRAType getPrevious() {
+		return _previous;
+	}
+	/**
+	 * @param _previous the _previous to set
+	 */
+	public void setPrevious(IRAType _previous) {
+		this._previous = _previous;
+	}
+
+	
 	
 }

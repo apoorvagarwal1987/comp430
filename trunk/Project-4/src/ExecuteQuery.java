@@ -130,7 +130,9 @@ public class ExecuteQuery {
 	
 	//TODO STUB code need to fix this by Monday.
 	public void doJoin() {
-		CommonMethods.executeRATree(myFrom, mySelect, where);
+		//CommonMethods.executeRATree(myFrom, mySelect, where);
+		
+		CommonMethods.createRATree(myFrom, mySelect, where);
 	}
 	
 	/**
