@@ -11,14 +11,15 @@ import java.util.ArrayList;
 public class RAProjectType implements IRAType {
 	private String type;
 	private String value;
-	private RASelectType _raSelect;
+	private IRAType _next;
 	private ArrayList <Expression> selectExprs;
+	private ReturnJoin _outputInfo;
 	/**
-	 * @param _raSelect
+	 * @param _iraType
 	 */
-	public RAProjectType(RASelectType _raSelect) {
+	public RAProjectType(IRAType _iraType) {
 		this.type = "RA_PROJECT_TYPE";
-		this._raSelect = _raSelect;
+		this._next = _iraType;
 	}
 
 	/* (non-Javadoc)
@@ -40,20 +41,6 @@ public class RAProjectType implements IRAType {
 	}
 
 	/**
-	 * @return the _raSelect
-	 */
-	public RASelectType get_raSelect() {
-		return _raSelect;
-	}
-
-	/**
-	 * @param _raSelect the _raSelect to set
-	 */
-	public void set_raSelect(RASelectType _raSelect) {
-		this._raSelect = _raSelect;
-	}
-
-	/**
 	 * @return the selectExprs
 	 */
 	public ArrayList<Expression> getSelectExprs() {
@@ -65,6 +52,20 @@ public class RAProjectType implements IRAType {
 	 */
 	public void setSelectExprs(ArrayList<Expression> selectExprs) {
 		this.selectExprs = selectExprs;
+	}
+
+	/**
+	 * @return the _next
+	 */
+	public IRAType getNext() {
+		return _next;
+	}
+
+	/**
+	 * @param _next the _next to set
+	 */
+	public void setNext(IRAType _next) {
+		this._next = _next;
 	}
 
 }

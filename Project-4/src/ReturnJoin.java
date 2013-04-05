@@ -14,8 +14,8 @@ public class ReturnJoin  {
 	private String outputFile;
 	
 	/**
-	 * @param joinOutAttribts2
-	 * @param outputFile2
+	 * @param joinOutAttribts
+	 * @param outputFile
 	 */
 	public ReturnJoin(ArrayList<AttribJoin> joinOutAttribts, String outputFile) {
 		this.joinOutAttribts = joinOutAttribts;
