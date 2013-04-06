@@ -337,6 +337,8 @@ public class CommonMethods {
 			RATableType _raLeftTable = _tablePresent.get(current);
 			RATableType _raRightTable = _tablePresent.get(++current);
 			_raJoin.setBranch(_raLeftTable,_raRightTable);
+			_raLeftTable.setPrevious(_raJoin);
+			_raRightTable.setPrevious(_raJoin);
 			_crossJoinPresent.put(counter++,_raJoin);
 			
 			while(current < countTable){ 
@@ -344,6 +346,7 @@ public class CommonMethods {
 				RAJoinType _raTempJoin = new RAJoinType();
 				RAJoinType _insertedRAJoin = _crossJoinPresent.get((counter-1));
 				_raTempJoin.setBranch(_insertedRAJoin,_raRightTable);
+				_raRightTable.setPrevious(_raTempJoin);
 				_insertedRAJoin.setPrevious(_raTempJoin);
 				_crossJoinPresent.put(counter++,_raTempJoin);				
 			}			
@@ -375,14 +378,50 @@ public class CommonMethods {
 		_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
 		_raProjectType.setSelectExprs(selectClause);
 		
-		sendSelPredicateDown(_selectPredicatePresent.get(4));
-		System.out.println(_selectPredicatePresent.get(4).getContributedTable());
+		int index = 1;
+		while(index <= _selectPredicatePresent.size())
+			sendSelPredicateDown(_selectPredicatePresent.get(index++));
 		
-		//sendSelPredicateDown(_selectPredicatePresent.get(2));
-		//System.out.println(_selectPredicatePresent.get(2).getContributedTable());
+		index = 1 ;
+		while(index <= _selectPredicatePresent.size())
+			System.out.println(_selectPredicatePresent.get(index++).getUnderlyingJoin());
+		
+		
 		
 		return _raProjectType;
 	}
+	
+	private static void createNewConnection(IRAType root, IRAType selType){
+		RASelectType selectionType = (RASelectType)selType;
+		IRAType helper = selectionType.getUnderlyingJoin();
+		IRAType currentNext = selectionType.getNext();
+		IRAType currentPrevious = selectionType.getPrevious();
+		
+		//making changes in the connection		
+		selectionType.setNext(helper);
+		currentNext.setPrevious(selectionType.getPrevious());
+		
+		
+		if(helper.getType().equals("RA_JOIN_TYPE")){
+			
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	/*
 	
@@ -686,6 +725,10 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 				case 0:
 					outAttributes.add(new Attribute("Str", "att"+outCount));
 					break;
+					
+					//sendSelPredicateDown(_selectPredicatePresent.get(2));
+					//System.out.println(_selectPredicatePresent.get(2).getContributedTable());
+					
 				case 1:
 					outAttributes.add(new Attribute("Int", "att"+outCount));
 					break;				
