@@ -20,7 +20,7 @@ public class RATableType implements IRAType {
 	private int tupleCount;
 	private Map <String, TableData> res;
 	private int position; 
-	
+	private IRAType _previous;
 	
 	public RATableType(String tableName, String alias,boolean replace, int position) {
 		this.res = Interpreter.res;
@@ -115,6 +115,16 @@ public class RATableType implements IRAType {
 	 */
 	public int getPosition() {
 		return position;
+	}
+
+
+	public IRAType getPrevious() {
+		return _previous;
+	}
+
+
+	public void setPrevious(IRAType _previous) {
+		this._previous = _previous;
 	}
 	
 }
