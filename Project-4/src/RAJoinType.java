@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 
 
 /**
@@ -13,9 +15,11 @@ public class RAJoinType implements IRAType {
 	private IRAType _previous;
 //	private RAJoinType _raJoin;
  	private ReturnJoin _outputInfo;
+ 	private HashSet<String> underlyingTables;
  	
 	public RAJoinType (){
 		this.type = "RA_JOIN_TYPE";
+		this.underlyingTables = new HashSet<String>();
 	}
 	
 
@@ -35,8 +39,8 @@ public class RAJoinType implements IRAType {
 	public void setBranch(RATableType _raLeftTable, RATableType _raRightTable) {
 		this._left = _raLeftTable;
 		this._right = _raRightTable;
-//		this._raJoin = null;
-//		this._outattribs = new ArrayList<AttribJoin>();
+		this.underlyingTables.add(_raLeftTable.getAlias());
+		this.underlyingTables.add(_raRightTable.getAlias());
 	}
 
 	/**
@@ -46,37 +50,12 @@ public class RAJoinType implements IRAType {
 	public void setBranch(RAJoinType _insertedRAJoin,RATableType _raRightTable) {
 		this._left = _insertedRAJoin;
 		this._right = _raRightTable;
-//		this._raJoin = _insertedRAJoin;		
+		Iterator<String> tableIterator = _insertedRAJoin.getUnderlyingTables().iterator();
+		while (tableIterator.hasNext()){
+			this.underlyingTables.add(tableIterator.next());
+		}
+		this.underlyingTables.add(_raRightTable.getAlias());
 	}
-
-	/**
-	 * @return the _leftTable
-	 */
-	public IRAType get_leftTable() {
-		return _left;
-	}
-
-	/**
-	 * @param _leftTable the _leftTable to set
-	 */
-	public void set_leftTable(RATableType _leftTable) {
-		this._left = _leftTable;
-	}
-
-	/**
-	 * @return the _rightTable
-	 */
-	public IRAType get_rightTable() {
-		return _right;
-	}
-
-	/**
-	 * @param _rightTable the _rightTable to set
-	 */
-	public void set_rightTable(RATableType _rightTable) {
-		this._right = _rightTable;
-	}
-
 
 	/**
 	 * @return the value
@@ -97,7 +76,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @return the _left
 	 */
-	public IRAType get_left() {
+	public IRAType getLeft() {
 		return _left;
 	}
 
@@ -105,7 +84,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @param _left the _left to set
 	 */
-	public void set_left(IRAType _left) {
+	public void setLeft(IRAType _left) {
 		this._left = _left;
 	}
 
@@ -113,7 +92,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @return the _right
 	 */
-	public IRAType get_right() {
+	public IRAType getRight() {
 		return _right;
 	}
 
@@ -121,7 +100,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @param _right the _right to set
 	 */
-	public void set_right(IRAType _right) {
+	public void setRight(IRAType _right) {
 		this._right = _right;
 	}
 
@@ -129,7 +108,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @return the _previous
 	 */
-	public IRAType get_previous() {
+	public IRAType getPrevious() {
 		return _previous;
 	}
 
@@ -145,7 +124,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @return the _outputInfo
 	 */
-	public ReturnJoin get_outputInfo() {
+	public ReturnJoin getOutputInfo() {
 		return _outputInfo;
 	}
 
@@ -153,8 +132,24 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @param _outputInfo the _outputInfo to set
 	 */
-	public void set_outputInfo(ReturnJoin _outputInfo) {
+	public void setOutputInfo(ReturnJoin _outputInfo) {
 		this._outputInfo = _outputInfo;
+	}
+
+
+	/**
+	 * @return the underlyingTables
+	 */
+	public HashSet<String> getUnderlyingTables() {
+		return underlyingTables;
+	}
+
+
+	/**
+	 * @param underlyingTables the underlyingTables to set
+	 */
+	public void setUnderlyingTables(HashSet<String> underlyingTables) {
+		this.underlyingTables = underlyingTables;
 	}
 
 	/**
