@@ -204,3 +204,22 @@ WHERE
 
 __________________________________________________
  
+-- Testing the pushing of the joins
+SELECT 
+    r1.r_regionkey,
+    n1.n_regionkey,
+    s1.s_nationkey    
+FROM 
+    region AS r1,
+    nation AS n1,
+    supplier AS s1,
+    part AS p1,
+    orders AS o1
+WHERE 
+    (r1.r_regionkey = n1.n_regionkey OR p1.p_partkey = 12) and (n1.n_nationkey = 12 OR o1.o_custkey = 12 OR s1.s_nationkey = 12) and (n1.n_nationkey = s1.s_nationkey);
+__________________________________________________
+
+
+
+
+

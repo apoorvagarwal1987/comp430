@@ -20,6 +20,7 @@ public class CommonMethods {
 	static int nameCounter ;
 	static ArrayList<Expression> _selectionPredicates;
 	static HashSet<String> contributedTable;
+	static IRAType helper ;
 	
 	
 	static{
@@ -373,7 +374,13 @@ public class CommonMethods {
 		RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
 		_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
 		_raProjectType.setSelectExprs(selectClause);
-		sendSelPredicateDown(_selectPredicatePresent.get(1));
+		
+		sendSelPredicateDown(_selectPredicatePresent.get(4));
+		System.out.println(_selectPredicatePresent.get(4).getContributedTable());
+		
+		//sendSelPredicateDown(_selectPredicatePresent.get(2));
+		//System.out.println(_selectPredicatePresent.get(2).getContributedTable());
+		
 		return _raProjectType;
 	}
 	
@@ -813,11 +820,96 @@ oldJoinAttribts, String rightAlias, String rightTableName,
     	contributedTable.clear();
     	Expression selExpression = raSelectType.getSelectPredicate();
     	sendSelPredicateHelper(selExpression);
-    	System.out.println(contributedTable);
+    	Iterator<String> tablePresent = contributedTable.iterator();
+    	while(tablePresent.hasNext() ){
+    		raSelectType.getContributedTable().add(tablePresent.next());
+    	}
+    	String nextType = raSelectType.getNext().getType();
+    	IRAType tempIraType = raSelectType.getNext();
+    	while(true){    		
+    		if(nextType.equals("RA_JOIN_TYPE") || (nextType.equals("RA_TABLE_TYPE")))
+    			break;
+    		
+    		tempIraType = ((RASelectType)tempIraType).getNext();
+    		nextType = tempIraType.getType();
+    	}
     	
+    	if(nextType.equals("RA_TABLE_TYPE")){    		
+    	}    	
+    	else{
+    		suitableJoin(raSelectType, (RAJoinType) tempIraType);    			
+    	}    		
     }
     
-    public static void sendSelPredicateHelper(Expression exp){
+    private static void suitableJoin(RASelectType raSelectType, RAJoinType raJoinType){
+    		boolean status = true;
+    		int right = 1;
+    		int left = 1;
+    		Iterator<String> tableIterator = raJoinType.getUnderlyingTables().iterator();
+    		while(tableIterator.hasNext()){
+    			if(!raSelectType.getContributedTable().contains(tableIterator.next())){
+    				status = false;
+    				if(raJoinType.getLeft().getType().equals("RA_JOIN_TYPE")){
+    					Iterator<String> selectTableIterator = raSelectType.getContributedTable().iterator();
+    					while(selectTableIterator.hasNext()){
+    						if(!(((RAJoinType)raJoinType.getLeft()).getUnderlyingTables().contains(selectTableIterator.next())))
+    							left = 0;
+    					}
+    					right = isSuitableJoin(raSelectType, (RATableType) raJoinType.getRight());
+    					
+    					if(right == 1){
+    						int len1 = raSelectType.getContributedTable().size();
+    						if (len1 == 1)
+    							raSelectType.setUnderlyingJoin(raJoinType.getRight());
+    						
+    						else
+    							raSelectType.setUnderlyingJoin(raJoinType);    
+    						
+    						break;
+    					}   	
+    					
+    					else {
+    						int len1 = ((RAJoinType)raJoinType.getLeft()).getUnderlyingTables().size();
+    						int len2 = raSelectType.getContributedTable().size();
+    						if(len1 == len2)
+    							raSelectType.setUnderlyingJoin(raJoinType.getLeft());    						
+    						else
+    							suitableJoin(raSelectType, (RAJoinType) raJoinType.getLeft());    
+    						
+    						break;
+    					}    					    						
+    				}
+    				else{
+    					left = isSuitableJoin(raSelectType, (RATableType) raJoinType.getLeft());
+    					right = isSuitableJoin(raSelectType, (RATableType) raJoinType.getRight());
+    					
+    					if(left == 1)
+    						raSelectType.setUnderlyingJoin(raJoinType.getLeft());
+    					
+    					else
+    						raSelectType.setUnderlyingJoin(raJoinType.getRight());
+    					
+    					break;
+    				}
+    			}    				
+    		}
+    		if(status)
+    			raSelectType.setUnderlyingJoin(raJoinType);
+    }
+    
+    private static int isSuitableJoin (RASelectType raSelectType, RATableType raTableType){
+    	int status = 0;
+    	Iterator<String> selTableIterator = raSelectType.getContributedTable().iterator();
+    	while(selTableIterator.hasNext()){
+    		if(selTableIterator.next().equals(raTableType.getAlias())){
+    			status = 1;
+    		}
+    	}
+    	return status;
+    }
+    
+    
+    private static void sendSelPredicateHelper(Expression exp){
     	
     	if(exp.getType().equals("or") || isBinaryOperation(exp.getType())){
     		sendSelPredicateHelper(exp.getLeftSubexpression());

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * 
@@ -15,10 +16,15 @@ public class RASelectType implements IRAType {
 	private IRAType _next;
 	private ReturnJoin _outputInfo;
 	private IRAType _previous;
+	private HashSet<String> contributedTable;
+	private IRAType underlyingJoin;
+	
 	
 	public RASelectType (Expression selExpression){
 		this.type = "RA_SELECT_TYPE";		
 		this.selectPredicate = selExpression;
+		this.contributedTable = new HashSet<String>();
+		this.underlyingJoin = null;
 	}
 	/* (non-Javadoc)
 	 * @see IRAType#getType()
@@ -84,6 +90,30 @@ public class RASelectType implements IRAType {
 	 */
 	public void setPrevious(IRAType _previous) {
 		this._previous = _previous;
+	}
+	/**
+	 * @return the contributedTable
+	 */
+	public HashSet<String> getContributedTable() {
+		return contributedTable;
+	}
+	/**
+	 * @param contributedTable the contributedTable to set
+	 */
+	public void setContributedTable(HashSet<String> contributedTable) {
+		this.contributedTable = contributedTable;
+	}
+	/**
+	 * @return the underlyingJoin
+	 */
+	public IRAType getUnderlyingJoin() {
+		return underlyingJoin;
+	}
+	/**
+	 * @param underlyingJoin the underlyingJoin to set
+	 */
+	public void setUnderlyingJoin(IRAType underlyingJoin) {
+		this.underlyingJoin = underlyingJoin;
 	}
 
 	
