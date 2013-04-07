@@ -126,5 +126,23 @@ public class RATableType implements IRAType {
 	public void setPrevious(IRAType _previous) {
 		this._previous = _previous;
 	}
+
+	/* (non-Javadoc)
+	 * @see IRAType#getNext()
+	 */
+	@Override
+	public IRAType getNext() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see IRAType#setNext(IRAType)
+	 */
+	@Override
+	public void setNext(IRAType _next) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }

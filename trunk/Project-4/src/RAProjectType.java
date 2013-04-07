@@ -61,21 +61,11 @@ public class RAProjectType implements IRAType {
 		this._next = _next;
 	}
 
-
-	/* (non-Javadoc)
-	 * @see IRAType#getPrevious()
-	 */
-	@Override
 	public IRAType getPrevious() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-
-	/* (non-Javadoc)
-	 * @see IRAType#setPrevious(IRAType)
-	 */
-	@Override
 	public void setPrevious(IRAType _previous) {
 		// TODO Auto-generated method stub
 		
