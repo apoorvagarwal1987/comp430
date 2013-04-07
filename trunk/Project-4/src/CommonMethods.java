@@ -478,17 +478,17 @@ public class CommonMethods {
 	
 	
 	private static ReturnJoin execute(RASelectType current){
-		ReturnJoin nextOutput = null;
 		
 		if(current.getNext().getType().equals("RA_SELECT_TYPE")){
-			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
+			
+			ReturnJoin previousOutput = execute((RASelectType) current.getNext());
 
+			
+			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 			String outputFile= "src/out_"+nameCounter +".tbl";
 			String compiler = "g++";
 			String outputLocation = "src/cppDir/";
-			nameCounter++;
-			
-			nextOutput = execute((RASelectType) current.getNext());
+			nameCounter++;			
 			ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
 			current.set_outputInfo(_outputInfo);
 			return _outputInfo;
@@ -496,14 +496,15 @@ public class CommonMethods {
 		
 		}
 		else if (current.getNext().getType().equals("RA_JOIN_TYPE")){
-			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 			
+			ReturnJoin previousOutput = execute((RAJoinType) current.getNext());
+
+			
+			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();			
 			String outputFile= "src/out_"+nameCounter +".tbl";
 			String compiler = "g++";
 			String outputLocation = "src/cppDir/";
-			nameCounter++;
-			
-			nextOutput = execute((RAJoinType) current.getNext());
+			nameCounter++;			
 			ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
 			current.set_outputInfo(_outputInfo);
 			return _outputInfo;
