@@ -152,18 +152,17 @@ public class RAJoinType implements IRAType {
 		this.underlyingTables = underlyingTables;
 	}
 
-	/**
-	 * @return the _raJoin
-	 */
-/*	public IRAType get_raJoin() {
-		return _raJoin;
-	}*/
 
-	/**
-	 * @param _raJoin the _raJoin to set
-	 */
-	/*public void IRAType(IRAType _raJoin) {
-		this._raJoin = _raJoin;
-	}*/
+	public IRAType getNext() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setNext(IRAType _next) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 	
 }

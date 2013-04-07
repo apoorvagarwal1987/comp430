@@ -384,27 +384,74 @@ public class CommonMethods {
 		
 		index = 1 ;
 		while(index <= _selectPredicatePresent.size())
-			System.out.println(_selectPredicatePresent.get(index++).getUnderlyingJoin());
-		
-		
+			createNewConnection(_selectPredicatePresent.get(index));
 		
 		return _raProjectType;
 	}
 	
-	private static void createNewConnection(IRAType root, IRAType selType){
+	private static void createNewConnection(IRAType selType){
 		RASelectType selectionType = (RASelectType)selType;
 		IRAType helper = selectionType.getUnderlyingJoin();
-		IRAType currentNext = selectionType.getNext();
-		IRAType currentPrevious = selectionType.getPrevious();
+		IRAType selectionNext = selectionType.getNext();
+		IRAType selectionPrevious = selectionType.getPrevious();
 		
-		//making changes in the connection		
-		selectionType.setNext(helper);
-		currentNext.setPrevious(selectionType.getPrevious());
+		//making changes in the connection			
+		//Loop to check whether the helper join is not acted upon by any of the select statement
 		
-		
-		if(helper.getType().equals("RA_JOIN_TYPE")){
+		boolean movement = false;
+		IRAType tempPrev = helper.getPrevious();
+		while(true){
+			if (tempPrev == selType)
+				return;
 			
+			else if(tempPrev.getType().equals("RA_SELECT_TYPE")){
+				movement = true;
+				helper = tempPrev;
+				tempPrev = tempPrev.getPrevious();
+			}
+			else
+				break;
 		}
+		
+		if(!movement){
+			selectionType.setNext(helper);
+			IRAType helperPrevious = helper.getPrevious();
+			helper.setPrevious(selectionType);
+			selectionType.setPrevious(helperPrevious);
+			if(helperPrevious.getType().equals("RA_JOIN_TYPE")){
+				if(((RAJoinType)helperPrevious).getLeft()==helper)
+					((RAJoinType)helperPrevious).setLeft(selectionType);
+				
+				else
+					((RAJoinType)helperPrevious).setRight(selectionType);
+			}
+			
+			else
+				System.out.println(helperPrevious.getType());	
+			
+			selectionNext.setPrevious(selectionPrevious);
+			selectionPrevious.setNext(selectionNext);
+		}
+		
+		else{
+			selectionType.setNext(helper);
+			helper.setPrevious(selectionType);
+			selectionType.setPrevious(tempPrev);
+			
+			if(tempPrev.getType().equals("RA_JOIN_TYPE")){
+				if(((RAJoinType)tempPrev).getLeft()==helper)
+					((RAJoinType)tempPrev).setLeft(selectionType);
+				
+				else
+					((RAJoinType)tempPrev).setRight(selectionType);
+			}
+			else
+				System.out.println(tempPrev.getType());	
+			
+			selectionNext.setPrevious(selectionPrevious);
+			selectionPrevious.setNext(selectionNext);
+		}
+
 	}
 	
 	
@@ -858,8 +905,8 @@ oldJoinAttribts, String rightAlias, String rightTableName,
     
     public static void sendSelPredicateDown(RASelectType raSelectType){
     	
-    	IRAType next = raSelectType.getNext();
-    	IRAType previous = raSelectType.getPrevious();
+    	//IRAType next = raSelectType.getNext();
+    	//IRAType previous = raSelectType.getPrevious();
     	contributedTable.clear();
     	Expression selExpression = raSelectType.getSelectPredicate();
     	sendSelPredicateHelper(selExpression);
