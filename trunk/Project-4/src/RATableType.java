@@ -53,6 +53,13 @@ public class RATableType implements IRAType {
 		}		
 	}
 	
+	/**
+	 * @return the attributes
+	 */
+	public ArrayList<Attribute> getAttributes() {
+		return attributes;
+	}
+
 	public String getType() {
 		return type;
 	}

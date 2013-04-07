@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * @author apoorvagarwal
@@ -22,6 +24,8 @@ public class CommonMethods {
 	static HashSet<String> contributedTable;
 	static IRAType helper ;
 	
+	//This needs to be initialized during the call of the class
+	static Map <String, String> fromClause;
 	
 	static{
 		nameCounter = 1;
@@ -384,7 +388,7 @@ public class CommonMethods {
 		
 		index = 1 ;
 		while(index <= _selectPredicatePresent.size())
-			createNewConnection(_selectPredicatePresent.get(index));
+			createNewConnection(_selectPredicatePresent.get(index++));
 		
 		return _raProjectType;
 	}
@@ -455,17 +459,119 @@ public class CommonMethods {
 	}
 	
 	
+	public static void executeRATree(IRAType _root){
+		
+		String type = _root.getType();
+		
+		RASelectType raSelectType = null;
+		RAProjectType raProjectType = null;
+		
+		
+		if(type.equals("RA_SELECT_TYPE"))
+			raSelectType = (RASelectType) _root;
+		
+		else //if (type.equals("RA_PROJECT_TYPE"))
+			raProjectType = (RAProjectType) _root;
+		
+		
+	}
 	
 	
+	private static ReturnJoin execute(RASelectType current){
+		ReturnJoin nextOutput = null;
+		
+		if(current.getNext().getType().equals("RA_SELECT_TYPE")){
+			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
+
+			String outputFile= "src/out_"+nameCounter +".tbl";
+			String compiler = "g++";
+			String outputLocation = "src/cppDir/";
+			nameCounter++;
+			
+			nextOutput = execute((RASelectType) current.getNext());
+			ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
+			current.set_outputInfo(_outputInfo);
+			return _outputInfo;
+			 
+		
+		}
+		else if (current.getNext().getType().equals("RA_JOIN_TYPE")){
+			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
+			
+			String outputFile= "src/out_"+nameCounter +".tbl";
+			String compiler = "g++";
+			String outputLocation = "src/cppDir/";
+			nameCounter++;
+			
+			nextOutput = execute((RAJoinType) current.getNext());
+			ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
+			current.set_outputInfo(_outputInfo);
+			return _outputInfo;
+		}
+		else {
+			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
+			
+
+			RATableType next = (RATableType) current.getNext();
+			String tableName = next.getValue();
+			Map<String, AttInfo> tableMap = next.getAttributesInfo();
+			ArrayList <Attribute> inAttribute = CommonMethods.getTableAttributeInfo(next.getAlias(),tableName,true);
+			ArrayList <Expression> outExp = new ArrayList<Expression>();
+			
+			String infile = "src/"+tableName +".tbl" ;
+			String outputFile= "src/out_"+nameCounter +".tbl";
+			String compiler = "g++";
+			String outputLocation = "src/cppDir/";
+			nameCounter++;
+			
+			ArrayList<AttInfo> tempInfo = new ArrayList<AttInfo>();
+			for (Entry<String, AttInfo> entry : tableMap.entrySet()) {
+				  AttInfo value = entry.getValue();
+				  tempInfo.add(value);
+				}
+			int pos = 1 ;
+			Collections.sort(tempInfo, new AttInfoComparator());
+			ArrayList<ResultValue> outTypes = new ArrayList<ResultValue>();
+			for(AttInfo attInformation : tempInfo){				
+				String dataType = attInformation.getDataType();
+				if(dataType.equals("Int"))
+					outTypes.add(new ResultValue(1 , true));
+				
+				else if(dataType.equals("Str"))
+					outTypes.add(new ResultValue(0 ,true));
+				
+				else
+					outTypes.add(new ResultValue(2 , true));	
+				
+				joinOutAttribts.add(new AttribJoin(attInformation,pos++));
+				Expression exp = new Expression("identifier");
+				exp.setValue(""+attInformation.getAlias()+"."+attInformation.getAttName());
+				outExp.add(exp);				
+				
+			}
+			ArrayList <Attribute> outAttributes = CommonMethods.makeTypeOutAttributes(outTypes);
+			HashMap <String, String> exprs = makeSelectExpression(outAttributes, true, outExp, fromClause);			
+			String selection = CommonMethods.parseExpression(current.getSelectPredicate(), fromClause,true);			
+		    try {
+			      @SuppressWarnings("unused")
+			      Selection foo = new Selection (inAttribute, outAttributes, selection, exprs, infile, outputFile, 
+			    		  compiler, outputLocation );	
+			      
+			      ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
+			      current.set_outputInfo(_outputInfo);
+			      return _outputInfo;			      
+			    }
+		    catch (Exception e) {
+		    	System.out.println("Exception in the exeution of the ");
+		    	throw new RuntimeException (e);
+		    }		
+		   }		
+ 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
+	private static ReturnJoin execute(RAJoinType current){
+		
+		return null;
+	}
 	
 	
 	
