@@ -74,7 +74,8 @@ public class ExecuteQuery {
 			tableAttribute = CommonMethods.getTableAttributeInfo(alias,tableName,true);
 		}		
 		ArrayList <Attribute> selectExpTypes = CommonMethods.makeTypeOutAttributes(selTypes);
-		//HashMap <String, String> exprs = CommonMethods.makeSelectExpression(selectExpTypes,true);
+		//HashMap <String, String> exprs = 
+		//CommonMethods.makeSelectExpression(selectExpTypes,true);
 		
 		String selection = "(Int)1 == (Int) 1";
 		if(where!= null){
@@ -116,7 +117,9 @@ public class ExecuteQuery {
 //	    System.out.println(tableAttribute+"   \n"+selectExpTypes+"\n"+exprs);
 	    // run the selection operation
 	    try {
-	      //Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, compiler, outputLocation );
+	      //Selection foo = new Selection (tableAttribute,
+	    	//selectExpTypes, selection, exprs, tableUsed, 
+	    	//outputFile, compiler, outputLocation );
 
 	    } catch (Exception e) {
 	      throw new RuntimeException (e);
