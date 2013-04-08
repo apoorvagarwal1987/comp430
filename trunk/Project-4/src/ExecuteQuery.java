@@ -131,7 +131,6 @@ public class ExecuteQuery {
 	 * Function to execute the query with more than one table in FROM clause
 	 */
 	
-	//TODO STUB code need to fix this by Monday.
 	public void doJoin() {
 		//CommonMethods.executeRATree(myFrom, mySelect, where);
 		
@@ -148,7 +147,9 @@ public class ExecuteQuery {
 				break;
 			
 			default:
-				doJoin();
+				//doJoin();
+				CommonMethods.fromClause = myFrom;
+				CommonMethods.executeRATree(CommonMethods.createRATree(myFrom, mySelect, where));
 				break;				
 		}		
 	}	

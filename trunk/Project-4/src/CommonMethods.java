@@ -1,7 +1,6 @@
 /**
  * 
  */
-import java.awt.geom.CubicCurve2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,7 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * @author apoorvagarwal
@@ -390,6 +388,7 @@ public class CommonMethods {
 		while(index <= _selectPredicatePresent.size())
 			createNewConnection(_selectPredicatePresent.get(index++));
 		
+		System.out.println(_raProjectType);
 		return _raProjectType;
 	}
 	
@@ -548,7 +547,6 @@ public class CommonMethods {
 					outTypes.add(new ResultValue(2 , true));	
 				
 				inAttribute.add(new Attribute(dataType,""+attInformation.getAttinfo().getAlias()+"_"+attInformation.getAttinfo().getAttName()));
-				currentOutAttribts.add(new AttribJoin(attInformation.getAttinfo(),pos++));
 				Expression exp = new Expression("identifier");
 				exp.setValue(""+attInformation.getAttinfo().getAlias()+"."+attInformation.getAttinfo().getAttName());
 				outExp.add(exp);				
@@ -1107,7 +1105,7 @@ public class CommonMethods {
 		 * with the left and right "keywords"
 		 * in the select expressions.
 		 */
-		
+		//TODO
 		HashMap <String, String> tempExprs = makeSelectExpression(outAtts,false,selectExprs,fromClause);
 		Iterator<String> exprsIterator = tempExprs.keySet().iterator();
 		HashMap <String, String> exprs = new HashMap<String, String>();
@@ -1117,13 +1115,26 @@ public class CommonMethods {
 			Iterator<String> leftAliasIt = leftAlias.iterator();
 			while(leftAliasIt.hasNext()){
 				String tempAlias = leftAliasIt.next().toString();
-				selectionPredicates = selectionPredicates.replaceAll(tempAlias, "left");
+				String leftReplace = tempAlias+".";
+				//String rightReplace = rightAlias+".";
+				int lIndex = selectionPredicates.indexOf(leftReplace);
+				//int rIndex = selectionPredicates.indexOf(rightReplace);
+				if(lIndex != -1)
+					selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+//				if (rIndex != -1)
+//					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+//				
+//				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "left.");
 			}
 			
 			Iterator<String> rightAliasIt = rightAlias.iterator();
 			while(rightAliasIt.hasNext()){
 				String tempAlias = rightAliasIt.next().toString();
-				selectionPredicates = selectionPredicates.replaceAll(tempAlias, "right");
+				String rightReplace = tempAlias+".";
+				int rIndex = selectionPredicates.indexOf(rightReplace);
+				if (rIndex != -1)
+					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "right.");
 			}
 			
 			exprs.put(tempExp,selectionPredicates);
@@ -1204,12 +1215,20 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 			String tempExp = exprsIterator.next().toString();
 			String selectionPredicates = tempExprs.get(tempExp);
 			Iterator<String> aliasIt = leftAlias.iterator();
+			
+			String rightReplace = rightAlias+".";
 			while(aliasIt.hasNext()){
 				String tempAlias = aliasIt.next().toString();
-				selectionPredicates = selectionPredicates.replaceAll(tempAlias, "left");
-				//leftAlias.iterator().remove();
+				String leftReplace = tempAlias+".";
+				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "left.");
+				int lIndex = selectionPredicates.indexOf(leftReplace);
+				int rIndex = selectionPredicates.indexOf(rightReplace);
+				if(lIndex != -1)
+					selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+				if (rIndex != -1)
+					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
 			}
-			selectionPredicates = selectionPredicates.replaceAll(rightAlias, "right");
+			//selectionPredicates = selectionPredicates.replaceFirst(""+rightAlias+".", "right.");
 			exprs.put(tempExp,selectionPredicates);
 		}
 		ArrayList <String> leftHash = new ArrayList <String> ();
@@ -1331,8 +1350,16 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 		while(exprsIterator.hasNext()){
 			String tempExp = exprsIterator.next().toString();
 			String selectionPredicates = tempExprs.get(tempExp);
-			selectionPredicates = selectionPredicates.replaceAll(leftAlias, "left");
-			selectionPredicates = selectionPredicates.replaceAll(rightAlias, "right");
+			String leftReplace = leftAlias+".";
+			String rightReplace = rightAlias+".";
+			int lIndex = selectionPredicates.indexOf(leftReplace);
+			int rIndex = selectionPredicates.indexOf(rightReplace);
+			
+			if(lIndex != -1)
+				selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+			if (rIndex != -1)
+				selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+			
 			exprs.put(tempExp,selectionPredicates);
 		}
 		
