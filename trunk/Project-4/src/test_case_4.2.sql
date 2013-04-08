@@ -216,10 +216,55 @@ FROM
     part AS p1,
     orders AS o1
 WHERE 
-    (r1.r_regionkey = n1.n_regionkey OR p1.p_partkey = 12) and (n1.n_nationkey = 12 OR o1.o_custkey = 12 OR s1.s_nationkey = 12) and (n1.n_nationkey = s1.s_nationkey);
+    (r1.r_regionkey = n1.n_regionkey OR p1.p_partkey = 12) and 
+    (n1.n_nationkey = 12 OR o1.o_custkey = 12 OR s1.s_nationkey = 12) and 
+    (n1.n_nationkey = s1.s_nationkey) and 
+    (s1.s_nationkey = 19) and
+    (o1.o_custkey = 5);
+__________________________________________________
+select
+    "supplier name was " + s.s_name
+from
+    supplier as s,
+    lineitem as l1,
+    lineitem as l2,
+    orders as o,
+    nation as n
+where
+    (s.s_suppkey = l1.l_suppkey)
+    and (o.o_orderkey = l1.l_orderkey)
+    and (o.o_orderstatus = "F")
+    and (l1.l_receiptdate > l1.l_commitdate)
+    and (l2.l_orderkey = l1.l_orderkey)
+    and (not l2.l_suppkey = l1.l_suppkey);
 __________________________________________________
 
 
+select
+    "supplier name was " + s.s_name
+from
+    supplier as s,
+    lineitem as l1,
+    lineitem as l2,
+    orders as o,
+    nation as n 
+where
+    (s.s_suppkey = l1.l_suppkey)
+    and (o.o_orderkey = l1.l_orderkey)
+    and (o.o_orderstatus = "F")
+    and (l1.l_receiptdate > l1.l_commitdate)
+    and (l2.l_orderkey = l1.l_orderkey)
+    and (not l2.l_suppkey = l1.l_suppkey);
 
+    __________________________________________________
 
+select
+    "supplier name was " + s.s_name
+from
+    supplier as s,
+    lineitem as l1,
+    lineitem as l2
+where
+    (s.s_suppkey = l1.l_suppkey);
 
+__________________________________________________

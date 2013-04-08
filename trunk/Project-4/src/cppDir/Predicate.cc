@@ -1,1 +1,1 @@
-return r1_r_name < r2_r_name;
+return (Int)1 == (Int)1;
