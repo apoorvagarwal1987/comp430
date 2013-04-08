@@ -70,13 +70,13 @@ public class RASelectType implements IRAType {
 	/**
 	 * @return the _outputInfo
 	 */
-	public ReturnJoin get_outputInfo() {
+	public ReturnJoin getOutputInfo() {
 		return _outputInfo;
 	}
 	/**
 	 * @param _outputInfo the _outputInfo to set
 	 */
-	public void set_outputInfo(ReturnJoin _outputInfo) {
+	public void setOutputInfo(ReturnJoin _outputInfo) {
 		this._outputInfo = _outputInfo;
 	}
 	/**

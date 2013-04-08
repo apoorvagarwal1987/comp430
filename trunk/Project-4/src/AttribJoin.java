@@ -25,7 +25,7 @@ public class AttribJoin {
 	/**
 	 * @return the _attinfo
 	 */
-	public AttInfo get_attinfo() {
+	public AttInfo getAttinfo() {
 		return _attinfo;
 	}
 

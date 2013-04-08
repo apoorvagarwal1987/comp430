@@ -479,36 +479,80 @@ public class CommonMethods {
 	
 	private static ReturnJoin execute(RASelectType current){
 		
-		if(current.getNext().getType().equals("RA_SELECT_TYPE")){
+		//CASE 1: The case SELECT statement is followed by another SELECT statement.
+		//CASE 2: The case SELECT statement is followed by another CROSS JOIN statement.
+		if((current.getNext().getType().equals("RA_SELECT_TYPE"))|| (current.getNext().getType().equals("RA_JOIN_TYPE"))){
+			ReturnJoin nextOutput = null;
+			int nextType = 0;
+			if (current.getNext().getType().equals("RA_SELECT_TYPE")){
+				nextOutput = execute((RASelectType) current.getNext());
+				nextType = 1;
+			}
 			
-			ReturnJoin previousOutput = execute((RASelectType) current.getNext());
-
-			
-			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
+			else{
+				nextOutput = execute((RAJoinType) current.getNext());
+				nextType = 2;
+			}
 			String outputFile= "src/out_"+nameCounter +".tbl";
 			String compiler = "g++";
 			String outputLocation = "src/cppDir/";
-			nameCounter++;			
-			ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
-			current.set_outputInfo(_outputInfo);
-			return _outputInfo;
-			 
+			nameCounter++;				
+			
+			ArrayList <Expression> outExp = new ArrayList<Expression>();
+			ArrayList<AttribJoin> currentOutAttribts = nextOutput.getJoinOutAttribts();
+			String infile = nextOutput.getOutputFile();
+			Collections.sort(currentOutAttribts,new AttribJoinComparator());
+			
+			ArrayList <Attribute> inAttribute = new ArrayList<Attribute>();
+			ArrayList<ResultValue> outTypes = new ArrayList<ResultValue>();
+			Iterator<AttribJoin> currentAtt = currentOutAttribts.iterator();
+			int pos =1;
+			while(currentAtt.hasNext() ){	
+				AttribJoin attInformation = currentAtt.next();
+				String dataType = attInformation.getAttinfo().getDataType();
+				if(dataType.equals("Int"))
+					outTypes.add(new ResultValue(1 , true));				
+				else if(dataType.equals("Str"))
+					outTypes.add(new ResultValue(0 ,true));				
+				else
+					outTypes.add(new ResultValue(2 , true));	
+				
+				inAttribute.add(new Attribute(dataType,""+attInformation.getAttinfo().getAlias()+"_"+attInformation.getAttinfo().getAttName()));
+				currentOutAttribts.add(new AttribJoin(attInformation.getAttinfo(),pos++));
+				Expression exp = new Expression("identifier");
+				exp.setValue(""+attInformation.getAttinfo().getAlias()+"."+attInformation.getAttinfo().getAttName());
+				outExp.add(exp);				
+			}
+			
+			ArrayList <Attribute> outAttributes = CommonMethods.makeTypeOutAttributes(outTypes);
+			HashMap <String, String> exprs = makeSelectExpression(outAttributes, true, outExp, fromClause);			
+			String selection = CommonMethods.parseExpression(current.getSelectPredicate(), fromClause,true);			
+		    try {
+			      @SuppressWarnings("unused")
+			      Selection foo = new Selection (inAttribute, outAttributes, selection, exprs, infile, outputFile, 
+			    		  compiler, outputLocation );	
+			      
+			      ReturnJoin _outputInfo = new ReturnJoin(currentOutAttribts, outputFile);
+			      current.setOutputInfo(_outputInfo);
+			      return _outputInfo;			      
+			    }
+		    catch (Exception e) {
+		    	
+		    	if (nextType == 1)
+		    		System.out.println("Exception in the execution of the SELECT: "+ 
+		    					current.getSelectPredicate().print() + " over the SELECT: "
+		    						+ ((RASelectType) current.getNext()).getSelectPredicate().print());
+		    	else
+		    		System.out.println("Exception in the execution of the SELECT: "+ 
+	    					current.getSelectPredicate().print() + " over the CROSS Join with underlying table Aliases : "
+	    						+ ((RAJoinType) current.getNext()).getUnderlyingTables());
+		    	
+		    	throw new RuntimeException (e);
+		    }		
+		}
+	
+		// CASE 3: Where There is a TABLE under the select predicate
 		
-		}
-		else if (current.getNext().getType().equals("RA_JOIN_TYPE")){
-			
-			ReturnJoin previousOutput = execute((RAJoinType) current.getNext());
-
-			
-			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();			
-			String outputFile= "src/out_"+nameCounter +".tbl";
-			String compiler = "g++";
-			String outputLocation = "src/cppDir/";
-			nameCounter++;			
-			ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
-			current.set_outputInfo(_outputInfo);
-			return _outputInfo;
-		}
 		else {
 			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 			
@@ -559,11 +603,12 @@ public class CommonMethods {
 			    		  compiler, outputLocation );	
 			      
 			      ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
-			      current.set_outputInfo(_outputInfo);
+			      current.setOutputInfo(_outputInfo);
 			      return _outputInfo;			      
 			    }
 		    catch (Exception e) {
-		    	System.out.println("Exception in the exeution of the ");
+		    	System.out.println("Exception in the execution of the Selection:"+ 
+		    					current.getSelectPredicate().print() + " over the table:" + tableName);
 		    	throw new RuntimeException (e);
 		    }		
 		   }		
@@ -782,7 +827,7 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 		Collections.sort(oldJoinAttribts,new AttribJoinComparator());
 		Iterator<AttribJoin> _leftAttributes = oldJoinAttribts.iterator();
 		while(_leftAttributes.hasNext()){
-			AttInfo attribute = _leftAttributes.next().get_attinfo();
+			AttInfo attribute = _leftAttributes.next().getAttinfo();
 			inAttsLeft.add(new Attribute(attribute.getDataType(),attribute.getAttName()));
 		}
 		
