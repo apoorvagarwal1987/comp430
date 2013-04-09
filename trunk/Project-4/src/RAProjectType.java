@@ -14,6 +14,8 @@ public class RAProjectType implements IRAType {
 	private IRAType _next;
 	private ArrayList <Expression> selectExprs;
 	private ReturnJoin _outputInfo;
+	private ArrayList<String> groupBy;
+	
 	/**
 	 * @param _iraType
 	 */
@@ -70,5 +72,23 @@ public class RAProjectType implements IRAType {
 		// TODO Auto-generated method stub
 		
 	}
+
+
+	/**
+	 * @return the groupBy
+	 */
+	public ArrayList<String> getGroupBy() {
+		return groupBy;
+	}
+
+
+	/**
+	 * @param groupBy the groupBy to set
+	 */
+	public void setGroupBy(ArrayList<String> groupBy) {
+		this.groupBy = groupBy;
+	}
+
+
 
 }
