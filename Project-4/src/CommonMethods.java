@@ -1473,10 +1473,6 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 				case 0:
 					outAttributes.add(new Attribute("Str", "att"+outCount));
 					break;
-					
-					//sendSelPredicateDown(_selectPredicatePresent.get(2));
-					//System.out.println(_selectPredicatePresent.get(2).getContributedTable());
-					
 				case 1:
 					outAttributes.add(new Attribute("Int", "att"+outCount));
 					break;				
