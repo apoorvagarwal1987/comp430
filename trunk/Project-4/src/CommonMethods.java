@@ -593,8 +593,7 @@ public class CommonMethods {
 				AggFunc tempAggFunc = new AggFunc(funcName, newExpr); 
 				exprs.put(attributes.next().getName(),tempAggFunc);
 			}		
-		}			
-		
+		}				
 		return exprs;
 	}
 
@@ -658,11 +657,11 @@ public class CommonMethods {
 			      if (nextType == 1)
 			    		System.out.println("SUCCESSFUL execution of the SELECT: "+ 
 			    					current.getSelectPredicate().print() + " over the SELECT: "
-			    						+ ((RASelectType) current.getNext()).getSelectPredicate().print());
+			    						+ ((RASelectType) current.getNext()).getSelectPredicate().print() +"  Output in: " + outputFile );
 			    	else
 			    		System.out.println("SUCCESSFUL execution of the SELECT: "+ 
 		    					current.getSelectPredicate().print() + " over the CROSS Join with underlying table Aliases : "
-		    						+ ((RAJoinType) current.getNext()).getUnderlyingTables());
+		    						+ ((RAJoinType) current.getNext()).getUnderlyingTables()  +"  Output in: " + outputFile);
 			      
 			      File delfile = new File(infile); 
 			      
@@ -682,11 +681,11 @@ public class CommonMethods {
 		    	if (nextType == 1)
 		    		System.out.println("Exception in the execution of the SELECT: "+ 
 		    					current.getSelectPredicate().print() + " over the SELECT: "
-		    						+ ((RASelectType) current.getNext()).getSelectPredicate().print());
+		    						+ ((RASelectType) current.getNext()).getSelectPredicate().print()  +"  Output in: " + outputFile);
 		    	else
 		    		System.out.println("Exception in the execution of the SELECT: "+ 
 	    					current.getSelectPredicate().print() + " over the CROSS Join with underlying table Aliases : "
-	    						+ ((RAJoinType) current.getNext()).getUnderlyingTables());
+	    						+ ((RAJoinType) current.getNext()).getUnderlyingTables()  +"  Output in: " + outputFile);
 		    	
 		    	throw new RuntimeException (e);
 		    }		
@@ -1018,11 +1017,11 @@ public class CommonMethods {
 		      if (nextType == 1)
 		    		System.out.println("SUCCESSFUL execution of the JOIN Operation over JOIN: "+ 
 		    				((RAJoinType)current.getLeft()).getUnderlyingTables() + " and the SELECT: "
-		    						+ ((RASelectType) current.getRight()).getSelectPredicate().print());
+		    						+ ((RASelectType) current.getRight()).getSelectPredicate().print()  +"  Output in: " + noutputFile);
 		    	else
 		    		System.out.println("SUCCESSFUL execution of the Join Operation over SELECT: "+ 
 		    				((RASelectType) current.getLeft()).getSelectPredicate().print()  + " AND SELECT: "
-	    						+ ((RASelectType) current.getRight()).getSelectPredicate().print());
+	    						+ ((RASelectType) current.getRight()).getSelectPredicate().print()  +"  Output in: " + noutputFile);
 			 
 		      
 		      File delfileLeft = new File(outputFileLeft); 
