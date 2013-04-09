@@ -258,13 +258,20 @@ where
 
     __________________________________________________
 
+
+--Under Debugging mode
 select
     "supplier name was " + s.s_name
 from
     supplier as s,
     lineitem as l1,
-    lineitem as l2
+    lineitem as l2,
+    orders as o
 where
-    (s.s_suppkey = l1.l_suppkey);
+    (s.s_suppkey = l1.l_suppkey)
+    and (o.o_orderkey = l1.l_orderkey)
+    and (o.o_orderstatus = "F")
+    and (l1.l_receiptdate > l1.l_commitdate)
+    and (not l2.l_suppkey = l1.l_suppkey);
 
 __________________________________________________
