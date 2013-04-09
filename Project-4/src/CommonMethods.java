@@ -422,9 +422,67 @@ public class CommonMethods {
 			_raProjectType.setGroupBy(groupbyClause);
 			
 			System.out.println(_raProjectType);
+			
+			mergeNodes(_raProjectType);
+			
 			return _raProjectType;
 		}
 	}
+	
+	private static void mergeNodes(IRAType current){
+		String ctype = current.getType();
+		
+		if (ctype.equals("RA_JOIN_TYPE")){
+			mergeNodes(((RAJoinType)current).getLeft());
+			mergeNodes(((RAJoinType)current).getRight());
+		}
+		
+		else if(ctype.equals("RA_SELECT_TYPE")){
+			String ntype = current.getNext().getType();
+			if (ntype.equals("RA_JOIN_TYPE")){
+				Expression selExp = ((RASelectType)current).getSelectPredicate();
+				if(selExp.getType().equals("equals")){
+					((RAJoinType)current.getNext()).setSelectionPredicate(selExp);
+					
+					IRAType currentPrevious = current.getPrevious();
+					IRAType currentNext = current.getNext(); 
+					
+					if(currentPrevious.getType().equals("RA_SELECT_TYPE")){
+						currentPrevious.setNext(currentNext);
+						currentNext.setPrevious(currentPrevious);
+					}
+					else if (currentPrevious.getType().equals("RA_JOIN_TYPE")){
+						if(((RAJoinType)currentPrevious).getLeft() == current){
+							((RAJoinType)currentPrevious).setLeft(currentNext);
+						}
+						else
+							((RAJoinType)currentPrevious).setRight(currentNext);
+						
+						currentNext.setPrevious(currentPrevious);
+					}
+					else{
+						System.out.println("SERIOUS ERROR undefined Tree structure");
+					}
+					
+					mergeNodes(current.getNext());				
+				}
+				else
+					mergeNodes(current.getNext());
+			}
+			else
+				mergeNodes(current.getNext());
+		}
+		
+		else if (ctype.equals("RA_PROJECT_TYPE")){
+			mergeNodes(current.getNext());
+		}
+		
+		
+		else{
+			
+		}
+	}
+	
 	
 	private static void createNewConnection(IRAType selType){
 		RASelectType selectionType = (RASelectType)selType;
@@ -816,7 +874,7 @@ public class CommonMethods {
 				joinOutAttribts.add(_attribJoin);
 			}						
 			 String outputFile = joinExecution(raLTableType.getAlias(), raLTableType.getValue(), raRTableType.getAlias(),
-							raRTableType.getValue(),selTypes,selectExprs,fromClause);
+							raRTableType.getValue(),selTypes,selectExprs,fromClause,current.getSelectionPredicate());
 			 ReturnJoin _outputInfo = new ReturnJoin( joinOutAttribts,  outputFile);
 			 current.setOutputInfo(_outputInfo);
 			 
@@ -904,7 +962,7 @@ public class CommonMethods {
 			}
 			
 			String noutputFile = joinExecution(leftAlias,prevOutputFile,oldJoinAttribtsLeft, _raRTableType.getAlias(),
-					_raRTableType.getValue(),selTypes,selectExprs,fromClause);
+					_raRTableType.getValue(),selTypes,selectExprs,fromClause,current.getSelectionPredicate());
 			
 			 if (nextType == 1)
 		    		System.out.println("SUCCESSFUL execution of the JOIN Operation over JOIN: "+ 
@@ -1005,7 +1063,7 @@ public class CommonMethods {
 			}
 			
 			String noutputFile = joinExecution(leftAlias, outputFileLeft , oldJoinAttribtsLeft, rightAlias,
-					outputFileRight,oldJoinAttribtsRight , selTypes, selectExprs , fromClause);
+					outputFileRight,oldJoinAttribtsRight , selTypes, selectExprs , fromClause,current.getSelectionPredicate());
 			
 		      if (nextType == 1)
 		    		System.out.println("SUCCESSFUL execution of the JOIN Operation over JOIN: "+ 
@@ -1100,7 +1158,7 @@ public class CommonMethods {
 					
 	
 			String noutputFile = joinExecution(_raLTableType.getAlias(), _raLTableType.getValue(),oldJoinAttribtsRight,
-					rightAlias,prevOutputFileRight,selTypes,selectExprs,fromClause);
+					rightAlias,prevOutputFileRight,selTypes,selectExprs,fromClause,current.getSelectionPredicate());
 			
 			
 			/**
@@ -1131,188 +1189,7 @@ public class CommonMethods {
 			return null;
 		}
 	}	
-	
-	
-	/*
-	
-	public static void executeRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
-							Expression whereClause){
-		ReturnJoin finalJoin  = null;
-		RAProjectType _raProjectType = (RAProjectType)createRATree(fromClause, selectClause, whereClause); 
-		RASelectType _raSelectType = _raProjectType.get_raSelect();
-		RAJoinType _raJoinType = (RAJoinType) _raSelectType.get_raJoin();
-		if(_raJoinType.getType().equals("RA_JOIN_TYPE")){
-			finalJoin = raJoinHelper(_raJoinType,fromClause);
-			System.out.println("Total Joins: "+finalJoin.getOutputFile());
-		}	
-		raExecuteSelection(finalJoin,fromClause,_raProjectType,_raSelectType);
-	}
-
-	private static void raExecuteSelection (ReturnJoin finalJoin, Map<String, String> fromClause, RAProjectType _raRaProjectType, RASelectType _raSelectType){
-		String outputFile= "src/out_"+nameCounter +".tbl";
-		String compiler = "g++";
-		String outputLocation = "src/cppDir/";
-		nameCounter++;
 		
-		ArrayList <Attribute> tableAttribute = new ArrayList<Attribute>();
-		ArrayList<AttribJoin> totalJoins = finalJoin.getJoinOutAttribts();
-		Collections.sort(totalJoins,new AttribJoinComparator());
-		Iterator<AttribJoin> totalJoinsIt = totalJoins.iterator();
-		while (totalJoinsIt.hasNext()){
-			AttInfo attrib = totalJoinsIt.next().get_attinfo();
-			tableAttribute.add(new Attribute(attrib.getDataType(),""+attrib.getAlias()+"_"+attrib.getAttName()));
-		}
-		ArrayList<ResultValue> selResultValue = new ArrayList<ResultValue>();
-		for(Expression exp : _raRaProjectType.getSelectExprs()){
-			selResultValue.add(validateTypeExpression(exp, fromClause));
-		}
-		ArrayList <Attribute> selectExpTypes = CommonMethods.makeTypeOutAttributes(selResultValue);
-		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes, true, _raRaProjectType.getSelectExprs(), fromClause);
-		String selection = parseExpression(_raSelectType.getSelectPredicate(), fromClause,true);
-		String tableUsed = finalJoin.getOutputFile();
-	    try {
-		      @SuppressWarnings("unused")
-		      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, 
-		    		  								outputFile, compiler, outputLocation );
-		      System.out.println("Final output: "+outputFile);
-		      nameCounter = 0;
-		    } 
-	   catch (Exception e) {
-		      throw new RuntimeException (e);
-       }
-	}
-	
-	private static ReturnJoin raJoinHelper(RAJoinType _raJoinType, Map<String, String> fromClause){
-		
-		ArrayList<ResultValue> selTypes = new ArrayList<ResultValue>();
-		ArrayList<Expression> selectExprs = new ArrayList<Expression>();
-		
-		//Case 1 : When the join is between cross product of the tables and the underlying table
-		if(_raJoinType.get_raJoin()!= null){
-			ReturnJoin _returnJoin =  raJoinHelper(_raJoinType.get_raJoin(),fromClause);
-			HashSet<String> leftAlias = new HashSet<String>();
-			ArrayList<AttribJoin> oldJoinAttribts = _returnJoin.getJoinOutAttribts();
-			String outputFile = _returnJoin.getOutputFile();
-			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();		
-			Collections.sort(oldJoinAttribts, new AttribJoinComparator());
-			int index = 1;
-			Iterator<AttribJoin> oldAttributes = oldJoinAttribts.iterator();
-			while (oldAttributes.hasNext()){
-				AttInfo attrib = oldAttributes.next().get_attinfo();
-				ResultValue _rv = new ResultValue(-1, true);
-				if(attrib.getDataType().equals("Int"))
-					_rv.setType(1);
-				else if(attrib.getDataType().equals("Str"))
-					_rv.setType(0);				
-				else
-					_rv.setType(2);
-				
-				selTypes.add(_rv);
-				Expression _exp = new Expression("identifier");
-				_exp.setValue("" + attrib.getAlias()+"."+attrib.getAttName());
-				leftAlias.add(attrib.getAlias());
-				selectExprs.add(_exp);
-				AttribJoin _attribJoin = new AttribJoin(attrib,index++);
-				joinOutAttribts.add(_attribJoin);
-			}
-			
-			ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();
-			RATableType _raRTableType = _raJoinType.get_rightTable();
-			Map<String, AttInfo> _rightTableAttributes = _raRTableType.getAttributesInfo();
-			for(String att : _rightTableAttributes.keySet()){
-				tempData.add(_rightTableAttributes.get(att));		
-			}
-			Collections.sort(tempData, new AttInfoComparator());
-			for (AttInfo attrib : tempData){
-				ResultValue _rv = new ResultValue(-1, true);
-				if(attrib.getDataType().equals("Int"))
-					_rv.setType(1);
-				else if(attrib.getDataType().equals("Str"))
-					_rv.setType(0);				
-				else
-					_rv.setType(2);
-				
-				selTypes.add(_rv);
-				Expression _exp = new Expression("identifier");
-				_exp.setValue("" + _raRTableType.getAlias()+"."+attrib.getAttName());
-				selectExprs.add(_exp);
-				
-				AttribJoin _attribJoin = new AttribJoin(attrib,index++);
-				joinOutAttribts.add(_attribJoin);
-			}
-			
-			String noutputFile = joinExecution(leftAlias,outputFile,oldJoinAttribts, _raRTableType.getAlias(),
-					_raRTableType.getValue(),selTypes,selectExprs,fromClause);
-			
-			return (new ReturnJoin( joinOutAttribts,  noutputFile));
-		}
-		//Case 2:  Where the underlying code is all table attributes and doing simple cross join			
-		if((_raJoinType.get_leftTable()!= null) && (_raJoinType.get_rightTable() != null) ){
-			RATableType _raLTableType = _raJoinType.get_leftTable();
-			RATableType _raRTableType = _raJoinType.get_rightTable();
-			
-			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
-			Map<String, AttInfo> _leftTableAttributes = _raLTableType.getAttributesInfo();
-			Map<String, AttInfo> _rightTableAttributes = _raRTableType.getAttributesInfo();
-			
-			
-			//Code to let output the all the attributes from the left side of the table.			
-			ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();
-			for(String att : _leftTableAttributes.keySet()){
-				tempData.add(_leftTableAttributes.get(att));		
-			}
-			Collections.sort(tempData, new AttInfoComparator());
-			int index = 1;
-			for (AttInfo attrib : tempData){
-				ResultValue _rv = new ResultValue(-1, true);
-				if(attrib.getDataType().equals("Int"))
-					_rv.setType(1);
-				else if(attrib.getDataType().equals("Str"))
-					_rv.setType(0);				
-				else
-					_rv.setType(2);
-				
-				selTypes.add(_rv);
-				Expression _exp = new Expression("identifier");
-				_exp.setValue("" + _raLTableType.getAlias()+"."+attrib.getAttName());
-				selectExprs.add(_exp);
-				AttribJoin _attribJoin = new AttribJoin(attrib,index++);
-				joinOutAttribts.add(_attribJoin);
-			}
-			
-			//Code to let output the all the attributes from the right side of the table.
-			tempData.clear();
-			for(String att : _rightTableAttributes.keySet()){
-				tempData.add(_rightTableAttributes.get(att));		
-			}
-			Collections.sort(tempData, new AttInfoComparator());
-			for (AttInfo attrib : tempData){
-				ResultValue _rv = new ResultValue(-1, true);
-				if(attrib.getDataType().equals("Int"))
-					_rv.setType(1);
-				else if(attrib.getDataType().equals("Str"))
-					_rv.setType(0);				
-				else
-					_rv.setType(2);
-				
-				selTypes.add(_rv);
-				Expression _exp = new Expression("identifier");
-				_exp.setValue("" + _raRTableType.getAlias()+"."+attrib.getAttName());
-				selectExprs.add(_exp);
-				
-				AttribJoin _attribJoin = new AttribJoin(attrib,index++);
-				joinOutAttribts.add(_attribJoin);
-			}						
-			 String outputFile = joinExecution(_raLTableType.getAlias(), _raLTableType.getValue(), _raRTableType.getAlias(),
-							_raRTableType.getValue(),selTypes,selectExprs,fromClause);
-			 
-			 return (new ReturnJoin( joinOutAttribts,  outputFile));
-		}
-		return null;		
-	}
-	
-	*/
-	
 	/**
 	 * @param Alias
 	 * @param leftTableName
@@ -1326,7 +1203,7 @@ public class CommonMethods {
 	 */
 	private static String joinExecution(String leftAlias, String leftTableName,	ArrayList<AttribJoin> oldJoinAttribtsRight,
 			HashSet<String> rightAlias, String outputFileRight,	ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
-			Map<String, String> fromClause) {
+			Map<String, String> fromClause,Expression where) {
 		
 		
 		String noutputFile= "src/out_"+nameCounter+".tbl";
@@ -1375,6 +1252,23 @@ public class CommonMethods {
 			}
 			exprs.put(tempExp,selectionPredicates);
 		}
+		
+		//TODO
+		Expression lExp = where.getLeftSubexpression();
+		Expression rExp = where.getRightSubexpression();
+		String leftKey;
+		String rightKey;
+		if(lExp.getType().equals("identifier")){
+			leftKey = lExp.getValue();
+		}
+				
+		if(rExp.getType().equals("identifier")){
+			rightKey = rExp.getValue();
+		}
+		
+		
+		
+		
 		ArrayList <String> leftHash = new ArrayList <String> ();
 //		leftHash.add ("o_custkey");
 		
@@ -1422,7 +1316,7 @@ public class CommonMethods {
 	 */
 	private static String joinExecution(HashSet<String> leftAlias, 	String outputFileLeft, ArrayList<AttribJoin> oldJoinAttribtsLeft,
 			HashSet<String> rightAlias, String outputFileRight, ArrayList<AttribJoin> oldJoinAttribtsRight, ArrayList<ResultValue> selTypes, 
-			ArrayList<Expression> selectExprs, 	Map<String, String> fromClause2) {
+			ArrayList<Expression> selectExprs, 	Map<String, String> fromClause2,Expression where) {
 		
 		
 		String noutputFile= "src/out_"+nameCounter+".tbl";
@@ -1532,7 +1426,7 @@ public class CommonMethods {
 	private static String joinExecution(HashSet<String> leftAlias, String outputFile,ArrayList<AttribJoin> 
 oldJoinAttribts, String rightAlias, String rightTableName,
 			ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
-			Map<String, String> fromClause) {
+			Map<String, String> fromClause,Expression where) {
 		
 		String noutputFile= "src/out_"+nameCounter+".tbl";
 		String compiler = "g++";
@@ -1674,7 +1568,9 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 	 * @param fromClause 
 	 */
 	public static String joinExecution(String leftAlias, String leftTableName,String rightAlias, 
-											String rightTableName,ArrayList<ResultValue> selTypes,ArrayList<Expression> selectExprs, Map<String, String> fromClause){
+											String rightTableName,ArrayList<ResultValue> selTypes,
+											ArrayList<Expression> selectExprs, 
+											Map<String, String> fromClause, Expression where){
 		
 		String outputFile= "src/out_"+nameCounter +".tbl";
 		String compiler = "g++";

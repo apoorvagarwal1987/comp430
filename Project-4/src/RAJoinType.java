@@ -16,6 +16,7 @@ public class RAJoinType implements IRAType {
 //	private RAJoinType _raJoin;
  	private ReturnJoin _outputInfo;
  	private HashSet<String> underlyingTables;
+ 	private Expression selectionPredicate;
  	
 	public RAJoinType (){
 		this.type = "RA_JOIN_TYPE";
@@ -161,6 +162,22 @@ public class RAJoinType implements IRAType {
 	public void setNext(IRAType _next) {
 		// TODO Auto-generated method stub
 		
+	}
+
+
+	/**
+	 * @return the selectionPredicate
+	 */
+	public Expression getSelectionPredicate() {
+		return selectionPredicate;
+	}
+
+
+	/**
+	 * @param selectionPredicate the selectionPredicate to set
+	 */
+	public void setSelectionPredicate(Expression selectionPredicate) {
+		this.selectionPredicate = selectionPredicate;
 	}
 
 
