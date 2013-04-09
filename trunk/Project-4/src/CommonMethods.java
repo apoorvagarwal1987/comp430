@@ -1,6 +1,7 @@
 /**
  * 
  */
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -562,8 +563,29 @@ public class CommonMethods {
 			      
 			      ReturnJoin _outputInfo = new ReturnJoin(currentOutAttribts, outputFile);
 			      current.setOutputInfo(_outputInfo);
+			      
+			      if (nextType == 1)
+			    		System.out.println("SUCCESSFUL execution of the SELECT: "+ 
+			    					current.getSelectPredicate().print() + " over the SELECT: "
+			    						+ ((RASelectType) current.getNext()).getSelectPredicate().print());
+			    	else
+			    		System.out.println("SUCCESSFUL execution of the SELECT: "+ 
+		    					current.getSelectPredicate().print() + " over the CROSS Join with underlying table Aliases : "
+		    						+ ((RAJoinType) current.getNext()).getUnderlyingTables());
+			      
+			      File delfile = new File(infile); 
+			      
+			      if(delfile.delete()){
+		    			System.out.println(delfile.getName() + " is deleted!");
+		    		}else{
+		    			System.out.println("Delete operation is failed.");
+		    		}
+			      
+			      
 			      return _outputInfo;			      
 			    }
+		    
+		    
 		    catch (Exception e) {
 		    	
 		    	if (nextType == 1)
@@ -632,6 +654,11 @@ public class CommonMethods {
 			      
 			      ReturnJoin _outputInfo = new ReturnJoin(joinOutAttribts, outputFile);
 			      current.setOutputInfo(_outputInfo);
+			      
+			      System.out.println("SUCCESSFUL execution of the Selection:"+ 
+	    					current.getSelectPredicate().print() + " over the table:" + tableName + " Result file :" + outputFile);
+			      
+			      
 			      return _outputInfo;			      
 			    }
 		    catch (Exception e) {
@@ -639,7 +666,7 @@ public class CommonMethods {
 		    					current.getSelectPredicate().print() + " over the table:" + tableName);
 		    	throw new RuntimeException (e);
 		    }		
-		   }		
+		}		
  	}
 	
 	private static ReturnJoin execute(RAJoinType current){
@@ -710,6 +737,11 @@ public class CommonMethods {
 			 ReturnJoin _outputInfo = new ReturnJoin( joinOutAttribts,  outputFile);
 			 current.setOutputInfo(_outputInfo);
 			 
+
+			 System.out.println("SUCCESSFUL execution of the JOIN operation between TABLE: "+ 
+					 raLTableType.getValue() + " over the TABLE: "
+ 						+ raRTableType.getValue() + " Result file :" + outputFile);
+			 
 			 return _outputInfo;
 		}
 		
@@ -725,15 +757,21 @@ public class CommonMethods {
 			ArrayList<Expression> selectExprs = new ArrayList<Expression>();
 			ReturnJoin previousOutput ;
 			
-			if (left.getType().equals("RA_JOIN_TYPE"))
-				previousOutput =  execute((RAJoinType)current.getLeft());
+			int nextType = 0;
 			
-			else
+			if (left.getType().equals("RA_JOIN_TYPE")){
+				previousOutput =  execute((RAJoinType)current.getLeft());
+				nextType =1;
+			}
+			
+			else{
 				previousOutput = execute ((RASelectType) current.getLeft());
+				nextType = 2;
+			}
 			
 			HashSet<String> leftAlias = new HashSet<String>();
 			ArrayList<AttribJoin> oldJoinAttribtsLeft = previousOutput.getJoinOutAttribts();
-			String outputFile = previousOutput.getOutputFile();
+			String prevOutputFile = previousOutput.getOutputFile();
 			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();		
 			Collections.sort(oldJoinAttribtsLeft, new AttribJoinComparator());
 			int index = 1;
@@ -782,15 +820,33 @@ public class CommonMethods {
 				joinOutAttribts.add(_attribJoin);
 			}
 			
-			String noutputFile = joinExecution(leftAlias,outputFile,oldJoinAttribtsLeft, _raRTableType.getAlias(),
+			String noutputFile = joinExecution(leftAlias,prevOutputFile,oldJoinAttribtsLeft, _raRTableType.getAlias(),
 					_raRTableType.getValue(),selTypes,selectExprs,fromClause);
 			
+			 if (nextType == 1)
+		    		System.out.println("SUCCESSFUL execution of the JOIN Operation over JOIN: "+ 
+		    				((RAJoinType)current.getLeft()).getUnderlyingTables() + " and the TABLE: "
+		    						+  _raRTableType.getValue());
+		    	else
+		    		System.out.println("SUCCESSFUL execution of the Join Operation over SELECT: "+ 
+		    				((RASelectType) current.getLeft()).getSelectPredicate().print()  + " AND TABLE: "
+	    						+ _raRTableType.getValue());
+			 
+		      
+		      File delfileLeft = new File(prevOutputFile); 
+		      
+		      if(delfileLeft.delete()){
+	    			System.out.println(delfileLeft.getName() + " is deleted!");
+	    		}else{
+	    			System.out.println( delfileLeft.getName()  + " Delete operation is failed.");
+	    		}
+						
 			return (new ReturnJoin( joinOutAttribts,  noutputFile));
 			
 		}
 		
-		// CASE 2: Case where the underlying type under the JOIN are simple JOIN - SELECT Type
-		// CASE 3: Case where the underlying type under the JOIN are simple SELECT - SELECT Type
+		// CASE 4: Case where the underlying type under the JOIN are simple SELECT - SELECT Type
+		// CASE 5: Case where the underlying type under the JOIN are simple JOIN - SELECT Type
 		
 		else if((left.getType().equals("RA_SELECT_TYPE") && right.getType().equals("RA_SELECT_TYPE"))
 				||
@@ -800,14 +856,18 @@ public class CommonMethods {
 			ArrayList<Expression> selectExprs = new ArrayList<Expression>();
 			ReturnJoin previousOutputLeft ;
 			ReturnJoin previousOutputRight ;
+			int nextType = 0;
 			
-			if (left.getType().equals("RA_JOIN_TYPE"))
+			if (left.getType().equals("RA_JOIN_TYPE")){
 				previousOutputLeft =  execute((RAJoinType)current.getLeft());
-			
-			else
+				nextType = 1;
+			}
+			else{
 				previousOutputLeft = execute ((RASelectType) current.getLeft());
+				nextType = 2;
+			}
+			previousOutputRight = execute ((RASelectType) current.getRight());			
 			
-			previousOutputRight = execute ((RASelectType) current.getRight());
 			
 			//Collecting information from the output of the LEFT branch of the JOIN Statement
 			HashSet<String> leftAlias = new HashSet<String>();
@@ -864,6 +924,34 @@ public class CommonMethods {
 			String noutputFile = joinExecution(leftAlias, outputFileLeft , oldJoinAttribtsLeft, rightAlias,
 					outputFileRight,oldJoinAttribtsRight , selTypes, selectExprs , fromClause);
 			
+		      if (nextType == 1)
+		    		System.out.println("SUCCESSFUL execution of the JOIN Operation over JOIN: "+ 
+		    				((RAJoinType)current.getLeft()).getUnderlyingTables() + " and the SELECT: "
+		    						+ ((RASelectType) current.getRight()).getSelectPredicate().print());
+		    	else
+		    		System.out.println("SUCCESSFUL execution of the Join Operation over SELECT: "+ 
+		    				((RASelectType) current.getLeft()).getSelectPredicate().print()  + " AND SELECT: "
+	    						+ ((RASelectType) current.getRight()).getSelectPredicate().print());
+			 
+		      
+		      File delfileLeft = new File(outputFileLeft); 
+		      
+		      if(delfileLeft.delete()){
+	    			System.out.println(delfileLeft.getName() + " is deleted!");
+	    		}else{
+	    			System.out.println( delfileLeft.getName()  + " Delete operation is failed.");
+	    		}
+			
+		      
+		      File delfileRight = new File(outputFileRight); 
+		      
+		      if(delfileRight.delete()){
+	    			System.out.println(delfileRight.getName() + " is deleted!");
+	    		}else{
+	    			System.out.println( delfileRight.getName()  + " Delete operation is failed.");
+	    		}
+		      
+		      
 			return (new ReturnJoin( joinOutAttribts,  noutputFile));
 			
 		}		
@@ -1105,7 +1193,6 @@ public class CommonMethods {
 		 * with the left and right "keywords"
 		 * in the select expressions.
 		 */
-		//TODO
 		HashMap <String, String> tempExprs = makeSelectExpression(outAtts,false,selectExprs,fromClause);
 		Iterator<String> exprsIterator = tempExprs.keySet().iterator();
 		HashMap <String, String> exprs = new HashMap<String, String>();
@@ -1116,15 +1203,9 @@ public class CommonMethods {
 			while(leftAliasIt.hasNext()){
 				String tempAlias = leftAliasIt.next().toString();
 				String leftReplace = tempAlias+".";
-				//String rightReplace = rightAlias+".";
 				int lIndex = selectionPredicates.indexOf(leftReplace);
-				//int rIndex = selectionPredicates.indexOf(rightReplace);
 				if(lIndex != -1)
 					selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
-//				if (rIndex != -1)
-//					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
-//				
-//				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "left.");
 			}
 			
 			Iterator<String> rightAliasIt = rightAlias.iterator();
@@ -1158,7 +1239,11 @@ public class CommonMethods {
 	    	
 	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
 	    		  leftTablePath, rightTablePath, noutputFile, compiler, outputLocation);
-	      System.out.println(foo);
+	      
+	      System.out.println("Computation JOIN Operation over TABLE: "+ 
+  				leftTablePath + " and the TABLE: "
+  						+  rightTablePath + "and the result in "+ noutputFile );
+	      
 	      return noutputFile;
 	      
 	    } 
@@ -1220,7 +1305,6 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 			while(aliasIt.hasNext()){
 				String tempAlias = aliasIt.next().toString();
 				String leftReplace = tempAlias+".";
-				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "left.");
 				int lIndex = selectionPredicates.indexOf(leftReplace);
 				int rIndex = selectionPredicates.indexOf(rightReplace);
 				if(lIndex != -1)
@@ -1228,7 +1312,6 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 				if (rIndex != -1)
 					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
 			}
-			//selectionPredicates = selectionPredicates.replaceFirst(""+rightAlias+".", "right.");
 			exprs.put(tempExp,selectionPredicates);
 		}
 		ArrayList <String> leftHash = new ArrayList <String> ();
@@ -1250,7 +1333,11 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 	    	
 	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
 	    		  leftTablePath, rightTablePath, noutputFile, compiler, outputLocation);
-	      System.out.println(foo);
+	      
+	      System.out.println("Computation JOIN Operation over TABLE: "+ 
+  				leftTablePath + " and the TABLE: "
+  						+  rightTablePath + "and the result in "+ noutputFile );
+	      
 	      return noutputFile;
 	      
 	    } 
@@ -1383,7 +1470,11 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 	    	
 	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
 	    		  leftTablePath, rightTablePath, outputFile, compiler, outputLocation);
-	      System.out.println(foo);
+
+	      System.out.println("Computation JOIN Operation over TABLE: "+ 
+  				leftTablePath + " and the TABLE: "
+  						+  rightTablePath + "and the result in "+ outputFile );
+	      
 	      return outputFile;
 	      
 	    } 
