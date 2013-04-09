@@ -294,24 +294,29 @@ public class CommonMethods {
 				 // System.out.println("Error: "+exp.getValue() +"  is not the valid attribute of the table");
 				  return (new ResultValue(-1, false));
 			  }
+			  
 			  if(retType.equals("Str"))
-				  return (new ResultValue(0, true));			  
+				  return (new ResultValue(0, true));
+			  
 			  else if (retType.equals("Int"))
 				  return (new ResultValue(1, true));
+			  
 			  else
 				  return (new ResultValue(2, true));
 		  }
 		  
 		  if(exp.getType().equals("literal string"))
 			   return (new ResultValue(0, true));
+		  
 		  else if (exp.getType().equals("literal int"))
 			   return (new ResultValue(1, true));
+		  
 		  else
 			  return (new ResultValue(2, true));
 		  }
 		
 	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
-										Expression whereClause){
+										Expression whereClause, String groupBy){
 		
 		// First creating the leaf nodes which is basically the
 		// tables present in the from clause of the query.		
@@ -354,6 +359,9 @@ public class CommonMethods {
 			RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
 			_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
 			_raProjectType.setSelectExprs(selectClause);
+			ArrayList<String> groupbyClause = new ArrayList<String>();
+			groupbyClause.add(groupBy);
+			_raProjectType.setGroupBy(groupbyClause);
 			
 			System.out.println(_raProjectType);
 			return _raProjectType;
@@ -408,6 +416,10 @@ public class CommonMethods {
 			index = 1 ;
 			while(index <= _selectPredicatePresent.size())
 				createNewConnection(_selectPredicatePresent.get(index++));
+			
+			ArrayList<String> groupbyClause = new ArrayList<String>();
+			groupbyClause.add(groupBy);
+			_raProjectType.setGroupBy(groupbyClause);
 			
 			System.out.println(_raProjectType);
 			return _raProjectType;
@@ -509,24 +521,41 @@ public class CommonMethods {
 		ArrayList <Attribute> tableAttribute = new ArrayList<Attribute>();
 		ArrayList<AttribJoin> totalJoins = previousOutput.getJoinOutAttribts();
 		Collections.sort(totalJoins,new AttribJoinComparator());
+		
 		Iterator<AttribJoin> totalJoinsIt = totalJoins.iterator();
 		while (totalJoinsIt.hasNext()){
 			AttInfo attrib = totalJoinsIt.next().getAttinfo();
 			tableAttribute.add(new Attribute(attrib.getDataType(),""+attrib.getAlias()+"_"+attrib.getAttName()));
 		}
+		
 		ArrayList<ResultValue> selResultValue = new ArrayList<ResultValue>();
 		for(Expression exp : ((RAProjectType)_root).getSelectExprs()){
 			selResultValue.add(validateTypeExpression(exp, fromClause));
 		}
+		
 		ArrayList <Attribute> selectExpTypes = CommonMethods.makeTypeOutAttributes(selResultValue);
-		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes, true, ((RAProjectType)_root).getSelectExprs(), fromClause);
+		
+	//	HashMap <String, String> exprs = makeSelectExpression(selectExpTypes, true, ((RAProjectType)_root).getSelectExprs(), fromClause);
+		
+		HashMap<String,AggFunc> aggsSelect = makeProjectExpression(selectExpTypes, true, ((RAProjectType)_root).getSelectExprs(), fromClause);
+		
+		ArrayList <String> groupingAtts = new ArrayList <String> ();
+		String groupAtt = ((RAProjectType)_root).getGroupBy().get(0);
+		if(groupAtt != null){
+			groupAtt = groupAtt.replace('.', '_');
+			groupingAtts.add(groupAtt);
+		}
+		
+		
 		String selection = "(Int)1 == (Int)1";//parseExpression(_raSelectType.getSelectPredicate(), fromClause,true);
 		String tableUsed = previousOutput.getOutputFile();
 	    try {
 		      @SuppressWarnings("unused")
-		      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, 
-		    		  								outputFile, compiler, outputLocation );
+		      Grouping foo = new Grouping (tableAttribute, selectExpTypes, groupingAtts, aggsSelect, 
+		    		  tableUsed, outputFile,compiler, outputLocation); 
+
 		      System.out.println("Final output: "+outputFile);
+		      
 		      nameCounter = 0;
 		    } 
 	   catch (Exception e) {
@@ -535,6 +564,40 @@ public class CommonMethods {
 	}
 	
 	
+	/**
+	 * @param selectExpTypes
+	 * @param skip
+	 * @param selectExprs
+	 * @param fromClause2
+	 * @return
+	 */
+	private static HashMap<String, AggFunc> makeProjectExpression(ArrayList<Attribute> selectExpTypes,
+			boolean skip, ArrayList<Expression> selectExprs, Map<String, String> fromClause2) {
+		
+		HashMap <String, AggFunc> exprs = new HashMap <String, AggFunc> ();
+		Iterator<Attribute> attributes = selectExpTypes.iterator();
+		Iterator<Expression> selExprs = selectExprs.iterator();
+		while(attributes.hasNext()){
+			Expression exp = selExprs.next();
+			String selExpression = CommonMethods.parseExpression(exp,fromClause,skip);	
+			if(!isUnaryOperation(exp.getType())){
+				AggFunc tempAggFunc = new AggFunc("none", selExpression); 
+				exprs.put(attributes.next().getName(),tempAggFunc);
+			}
+				
+			else{
+				String funcName = exp.getType();
+				int start = selExpression.indexOf('(');
+				int end = selExpression.lastIndexOf(')');
+				String newExpr = selExpression.substring(start+1 ,end);
+				AggFunc tempAggFunc = new AggFunc(funcName, newExpr); 
+				exprs.put(attributes.next().getName(),tempAggFunc);
+			}		
+		}			
+		
+		return exprs;
+	}
+
 	private static ReturnJoin execute(RASelectType current){
 		
 		//CASE 1: The case SELECT statement is followed by another SELECT statement.
