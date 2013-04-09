@@ -332,6 +332,31 @@ public class CommonMethods {
 		counter = 1;		
 		int countTable = _tablePresent.size();
 		if(countTable == 1){
+			RATableType _raJoinTop = _tablePresent.get(counter); 
+	  		int current = 1;
+			if(whereClause != null){			
+				traverseSelExpression(createSelPredicate(whereClause));
+				for(Expression exp : _selectionPredicates){
+					RASelectType _raSelectTemp = new RASelectType(exp);
+					_selectPredicatePresent.put(current++,_raSelectTemp);
+				}
+				current = 1;
+				RASelectType _raSelect = _selectPredicatePresent.get(current++);
+				_raSelect.setNext(_raJoinTop);
+				_raJoinTop.setPrevious(_raSelect);			
+				while(current <= _selectPredicatePresent.size()){
+					_selectPredicatePresent.get(current-1).setPrevious(_selectPredicatePresent.get(current));
+					_selectPredicatePresent.get(current).setNext(_selectPredicatePresent.get(current-1));
+					current++;
+				}
+			}	
+			
+			RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
+			_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
+			_raProjectType.setSelectExprs(selectClause);
+			
+			System.out.println(_raProjectType);
+			return _raProjectType;
 			
 		}		
 		else{
@@ -352,45 +377,48 @@ public class CommonMethods {
 				_raRightTable.setPrevious(_raTempJoin);
 				_insertedRAJoin.setPrevious(_raTempJoin);
 				_crossJoinPresent.put(counter++,_raTempJoin);				
-			}			
+			}		
+			RAJoinType _raJoinTop = _crossJoinPresent.get(counter-1); 
+	  		current = 1;
+			if(whereClause != null){			
+				traverseSelExpression(createSelPredicate(whereClause));
+				for(Expression exp : _selectionPredicates){
+					RASelectType _raSelectTemp = new RASelectType(exp);
+					_selectPredicatePresent.put(current++,_raSelectTemp);
+				}
+				current = 1;
+				RASelectType _raSelect = _selectPredicatePresent.get(current++);
+				_raSelect.setNext(_raJoinTop);
+				_raJoinTop.setPrevious(_raSelect);			
+				while(current <= _selectPredicatePresent.size()){
+					_selectPredicatePresent.get(current-1).setPrevious(_selectPredicatePresent.get(current));
+					_selectPredicatePresent.get(current).setNext(_selectPredicatePresent.get(current-1));
+					current++;
+				}
+			}	
+			
+			RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
+			_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
+			_raProjectType.setSelectExprs(selectClause);
+			
+			int index = 1;
+			while(index <= _selectPredicatePresent.size())
+				sendSelPredicateDown(_selectPredicatePresent.get(index++));
+			
+			index = 1 ;
+			while(index <= _selectPredicatePresent.size())
+				createNewConnection(_selectPredicatePresent.get(index++));
+			
+			System.out.println(_raProjectType);
+			return _raProjectType;
 		}
 		
 		
 		// Creating part of the sub tree where nodes would be holding the 
 		// data of the selection predicates.
-		RAJoinType _raJoinTop = _crossJoinPresent.get(counter-1); 
-		int current = 1;
-		if(whereClause != null){			
-			traverseSelExpression(createSelPredicate(whereClause));
-			for(Expression exp : _selectionPredicates){
-				RASelectType _raSelectTemp = new RASelectType(exp);
-				_selectPredicatePresent.put(current++,_raSelectTemp);
-			}
-			current = 1;
-			RASelectType _raSelect = _selectPredicatePresent.get(current++);
-			_raSelect.setNext(_raJoinTop);
-			_raJoinTop.setPrevious(_raSelect);			
-			while(current <= _selectPredicatePresent.size()){
-				_selectPredicatePresent.get(current-1).setPrevious(_selectPredicatePresent.get(current));
-				_selectPredicatePresent.get(current).setNext(_selectPredicatePresent.get(current-1));
-				current++;
-			}
-		}	
+
 		
-		RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
-		_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
-		_raProjectType.setSelectExprs(selectClause);
-		
-		int index = 1;
-		while(index <= _selectPredicatePresent.size())
-			sendSelPredicateDown(_selectPredicatePresent.get(index++));
-		
-		index = 1 ;
-		while(index <= _selectPredicatePresent.size())
-			createNewConnection(_selectPredicatePresent.get(index++));
-		
-		System.out.println(_raProjectType);
-		return _raProjectType;
+
 	}
 	
 	private static void createNewConnection(IRAType selType){

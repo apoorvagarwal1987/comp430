@@ -143,7 +143,8 @@ public class ExecuteQuery {
 	public void execution() {
 		switch(myFrom.size()){
 			case 1:
-				doSelection();
+				CommonMethods.fromClause = myFrom;
+				CommonMethods.executeRATree(CommonMethods.createRATree(myFrom, mySelect, where));
 				break;
 			
 			default:
