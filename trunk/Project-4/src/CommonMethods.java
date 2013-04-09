@@ -424,13 +424,6 @@ public class CommonMethods {
 			System.out.println(_raProjectType);
 			return _raProjectType;
 		}
-		
-		
-		// Creating part of the sub tree where nodes would be holding the 
-		// data of the selection predicates.
-
-		
-
 	}
 	
 	private static void createNewConnection(IRAType selType){
@@ -1045,8 +1038,96 @@ public class CommonMethods {
 			return (new ReturnJoin( joinOutAttribts,  noutputFile));
 			
 		}		
+		// CASE 6: Case where the underlying type under the JOIN are TABLE and  SELECT  Type
+		else if ((left.getType().equals("RA_TABLE_TYPE") && right.getType().equals("RA_SELECT_TYPE"))){
+		
+			ArrayList<ResultValue> selTypes = new ArrayList<ResultValue>();
+			ArrayList<Expression> selectExprs = new ArrayList<Expression>();
+			ReturnJoin previousOutputRight ;
+			previousOutputRight = execute ((RASelectType) current.getRight());
+			
+			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();		
+			int index = 1;
+	
+			ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();
+			RATableType _raLTableType = (RATableType) ((RAJoinType)current).getLeft();
+			Map<String, AttInfo> _leftTableAttributes = _raLTableType.getAttributesInfo();
+			for(String att : _leftTableAttributes.keySet()){
+				tempData.add(_leftTableAttributes.get(att));		
+			}
+			Collections.sort(tempData, new AttInfoComparator());
+			for (AttInfo attrib : tempData){
+				ResultValue _rv = new ResultValue(-1, true);
+				if(attrib.getDataType().equals("Int"))
+					_rv.setType(1);
+				else if(attrib.getDataType().equals("Str"))
+					_rv.setType(0);				
+				else
+					_rv.setType(2);
+				
+				selTypes.add(_rv);
+				Expression _exp = new Expression("identifier");
+				_exp.setValue("" + _raLTableType.getAlias()+"."+attrib.getAttName());
+				selectExprs.add(_exp);
+				
+				AttribJoin _attribJoin = new AttribJoin(attrib,index++);
+				joinOutAttribts.add(_attribJoin);
+			}
+			
+			HashSet<String> rightAlias = new HashSet<String>();
+			ArrayList<AttribJoin> oldJoinAttribtsRight = previousOutputRight.getJoinOutAttribts();
+			String prevOutputFileRight = previousOutputRight.getOutputFile();
+			Collections.sort(oldJoinAttribtsRight, new AttribJoinComparator());
+			Iterator<AttribJoin> oldAttributes = oldJoinAttribtsRight.iterator();
+			while (oldAttributes.hasNext()){
+				AttInfo attrib = oldAttributes.next().getAttinfo();
+				ResultValue rv = new ResultValue(-1, true);
+				if(attrib.getDataType().equals("Int"))
+					rv.setType(1);
+				else if(attrib.getDataType().equals("Str"))
+					rv.setType(0);				
+				else
+					rv.setType(2);
+				
+				selTypes.add(rv);
+				Expression _exp = new Expression("identifier");
+				_exp.setValue("" + attrib.getAlias()+"."+attrib.getAttName());
+				rightAlias.add(attrib.getAlias());
+				selectExprs.add(_exp);
+				AttribJoin _attribJoin = new AttribJoin(attrib,index++);
+				joinOutAttribts.add(_attribJoin);
+			}
+					
+	
+			String noutputFile = joinExecution(_raLTableType.getAlias(), _raLTableType.getValue(),oldJoinAttribtsRight,
+					rightAlias,prevOutputFileRight,selTypes,selectExprs,fromClause);
+			
+			
+			/**
+			 * (HashSet<String> leftAlias, String outputFile,ArrayList<AttribJoin> 
+	oldJoinAttribts, String rightAlias, String rightTableName,
+				ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
+				Map<String, String> fromClause) 
+			 */
+			
+			  System.out.println("SUCCESSFUL execution of the Join Operation over TABLE: "+ 
+					  _raLTableType.getValue()  + " AND SELECT: "
+						+ ((RASelectType) current.getRight()).getSelectPredicate().print() +" the output is : "+ noutputFile);
+			 
+		      
+		      File delfileLeft = new File(prevOutputFileRight); 
+		      
+		      if(delfileLeft.delete()){
+	    			System.out.println(delfileLeft.getName() + " is deleted!");
+	    		}else{
+	    			System.out.println( delfileLeft.getName()  + " Delete operation is failed.");
+	    		}
+					
+		return (new ReturnJoin( joinOutAttribts,  noutputFile));
+		
+	}
 		else{
-			System.out.println("SERIOUS ERROR");
+			System.out.println("SERIOUS ERROR" + current.getUnderlyingTables());
 			return null;
 		}
 	}	
@@ -1232,6 +1313,101 @@ public class CommonMethods {
 	
 	*/
 	
+	/**
+	 * @param Alias
+	 * @param leftTableName
+	 * @param oldJoinAttribtsRight
+	 * @param Alias
+	 * @param outputFileRight
+	 * @param selTypes
+	 * @param selectExprs
+	 * @param fromClause
+	 * @return
+	 */
+	private static String joinExecution(String leftAlias, String leftTableName,	ArrayList<AttribJoin> oldJoinAttribtsRight,
+			HashSet<String> rightAlias, String outputFileRight,	ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
+			Map<String, String> fromClause) {
+		
+		
+		String noutputFile= "src/out_"+nameCounter+".tbl";
+		String compiler = "g++";
+		String outputLocation = "src/cppDir/";
+		nameCounter ++;		
+		
+		ArrayList <Attribute> inAttsLeft = getTableAttributeInfo(leftAlias, leftTableName,false);
+		ArrayList <Attribute> outAtts =  makeTypeOutAttributes(selTypes);		
+		String leftTablePath = "src/"+leftTableName+".tbl";
+		String rightTablePath = outputFileRight;		
+		
+		ArrayList <Attribute> inAttsRight = new ArrayList<Attribute>();
+		Collections.sort(oldJoinAttribtsRight,new AttribJoinComparator());
+		Iterator<AttribJoin> _rightAttributes = oldJoinAttribtsRight.iterator();
+		while(_rightAttributes.hasNext()){
+			AttInfo attribute = _rightAttributes.next().getAttinfo();
+			inAttsRight.add(new Attribute(attribute.getDataType(),attribute.getAttName()));
+		}	
+
+		
+		/*
+		 * Code to replace the alias
+		 * with the left and right "keywords"
+		 * in the select expressions.
+		 */
+		
+		HashMap <String, String> tempExprs = makeSelectExpression(outAtts,false,selectExprs,fromClause);
+		Iterator<String> exprsIterator = tempExprs.keySet().iterator();
+		HashMap <String, String> exprs = new HashMap<String, String>();
+		while(exprsIterator.hasNext()){
+			String tempExp = exprsIterator.next().toString();
+			String selectionPredicates = tempExprs.get(tempExp);
+			Iterator<String> aliasIt = rightAlias.iterator();
+			
+			String leftReplace = leftAlias+".";
+			while(aliasIt.hasNext()){
+				String tempAlias = aliasIt.next().toString();
+				String rightReplace = tempAlias+".";
+				int lIndex = selectionPredicates.indexOf(leftReplace);
+				int rIndex = selectionPredicates.indexOf(rightReplace);
+				if(lIndex != -1)
+					selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+				if (rIndex != -1)
+					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+			}
+			exprs.put(tempExp,selectionPredicates);
+		}
+		ArrayList <String> leftHash = new ArrayList <String> ();
+//		leftHash.add ("o_custkey");
+		
+	    ArrayList <String> rightHash = new ArrayList <String> ();
+//	    rightHash.add ("c_custkey");
+	    
+	    
+		String wherePredicate = "(Int)1 == (Int) 1";
+	/*	if(where!= null){
+			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
+			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
+			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
+		}
+		*/
+		 // run the join
+	    try {
+	    	
+	      @SuppressWarnings("unused")
+	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
+	    		  leftTablePath, rightTablePath, noutputFile, compiler, outputLocation);
+	      
+	      System.out.println("Computation JOIN Operation over TABLE: "+ 
+  				leftTablePath + " and the TABLE: "
+  						+  rightTablePath + "and the result in "+ noutputFile );
+	      
+	      return noutputFile;
+	      
+	    } 
+	    catch (Exception e) {
+	      throw new RuntimeException (e);
+	    }		
+	}
+
 	/**
 	 * @param leftAlias
 	 * @param outputFileLeft
@@ -1469,7 +1645,8 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 		int outCount = 1;
 		Iterator<ResultValue> rv = selTypes.iterator();
 		while(rv.hasNext()){
-			switch((rv.next()).getType()){
+			int type = (rv.next()).getType();
+			switch(type){
 				case 0:
 					outAttributes.add(new Attribute("Str", "att"+outCount));
 					break;
@@ -1480,7 +1657,7 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 					outAttributes.add(new Attribute("Float", "att"+outCount));
 					break;
 				default:
-					System.out.println("Serious ERROR");
+					System.out.println("Serious ERROR Unknown Type :" + type );
 					System.exit(-1);
 			}
 			outCount++;
