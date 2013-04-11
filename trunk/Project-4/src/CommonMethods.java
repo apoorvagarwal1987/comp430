@@ -428,7 +428,7 @@ public class CommonMethods {
 			mergeSelSelNodes(_raProjectType);
 			System.out.println(_raProjectType);
 			
-			//mergeSelJoinNodes(_raProjectType);
+			mergeSelJoinNodes(_raProjectType);
 			
 			return _raProjectType;
 		}
