@@ -12,7 +12,7 @@ import java.util.HashSet;
 public class RASelectType implements IRAType {
 	private String type;
 	private String value;
-	private Expression selectPredicate;
+	private ArrayList<Expression> selectPredicate;
 	private IRAType _next;
 	private ReturnJoin _outputInfo;
 	private IRAType _previous;
@@ -20,9 +20,9 @@ public class RASelectType implements IRAType {
 	private IRAType underlyingJoin;
 	
 	
-	public RASelectType (Expression selExpression){
+	public RASelectType (){
 		this.type = "RA_SELECT_TYPE";		
-		this.selectPredicate = selExpression;
+		this.selectPredicate = new ArrayList<Expression>();
 		this.contributedTable = new HashSet<String>();
 		this.underlyingJoin = null;
 	}
@@ -45,14 +45,14 @@ public class RASelectType implements IRAType {
 	/**
 	 * @return the selectPredicate
 	 */
-	public Expression getSelectPredicate() {
+	public ArrayList<Expression> getSelectPredicate() {
 		return selectPredicate;
 	}
 	/**
 	 * @param selectPredicate the selectPredicate to set
 	 */
 	public void setSelectPredicate(Expression selectPredicate) {
-		this.selectPredicate = selectPredicate;
+		this.selectPredicate.add( selectPredicate);
 	}
 	/**
 	 * @return the _next

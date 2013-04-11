@@ -22,6 +22,7 @@ public class CommonMethods {
 	static ArrayList<Expression> _selectionPredicates;
 	static HashSet<String> contributedTable;
 	static IRAType helper ;
+	static boolean merge ;
 	
 	//This needs to be initialized during the call of the class
 	static Map <String, String> fromClause;
@@ -29,7 +30,8 @@ public class CommonMethods {
 	static{
 		nameCounter = 1;
 		_selectionPredicates = new ArrayList<Expression>();
-		contributedTable = new HashSet<String>();				
+		contributedTable = new HashSet<String>();			
+		merge = false;
 	}
 	
 	/**
@@ -342,7 +344,8 @@ public class CommonMethods {
 			if(whereClause != null){			
 				traverseSelExpression(createSelPredicate(whereClause));
 				for(Expression exp : _selectionPredicates){
-					RASelectType _raSelectTemp = new RASelectType(exp);
+					RASelectType _raSelectTemp = new RASelectType();
+					_raSelectTemp.setSelectPredicate(exp);
 					_selectPredicatePresent.put(current++,_raSelectTemp);
 				}
 				current = 1;
@@ -362,7 +365,7 @@ public class CommonMethods {
 			ArrayList<String> groupbyClause = new ArrayList<String>();
 			groupbyClause.add(groupBy);
 			_raProjectType.setGroupBy(groupbyClause);
-			
+			mergeSelSelNodes(_raProjectType);
 			System.out.println(_raProjectType);
 			return _raProjectType;
 			
@@ -391,7 +394,8 @@ public class CommonMethods {
 			if(whereClause != null){			
 				traverseSelExpression(createSelPredicate(whereClause));
 				for(Expression exp : _selectionPredicates){
-					RASelectType _raSelectTemp = new RASelectType(exp);
+					RASelectType _raSelectTemp = new RASelectType();
+					_raSelectTemp.setSelectPredicate(exp);
 					_selectPredicatePresent.put(current++,_raSelectTemp);
 				}
 				current = 1;
@@ -421,33 +425,89 @@ public class CommonMethods {
 			groupbyClause.add(groupBy);
 			_raProjectType.setGroupBy(groupbyClause);
 			
+			mergeSelSelNodes(_raProjectType);
 			System.out.println(_raProjectType);
 			
-			mergeNodes(_raProjectType);
+			//mergeSelJoinNodes(_raProjectType);
 			
 			return _raProjectType;
 		}
 	}
 	
-	private static void mergeNodes(IRAType current){
+	/**
+	 * @param _raProjectType
+	 */
+	private static void mergeSelSelNodes(IRAType current) {
 		String ctype = current.getType();
 		
 		if (ctype.equals("RA_JOIN_TYPE")){
-			mergeNodes(((RAJoinType)current).getLeft());
-			mergeNodes(((RAJoinType)current).getRight());
+			mergeSelSelNodes(((RAJoinType)current).getLeft());
+			mergeSelSelNodes(((RAJoinType)current).getRight());
+		}
+		
+		else if(ctype.equals("RA_SELECT_TYPE")){
+			String ntype = current.getNext().getType();
+			if (ntype.equals("RA_SELECT_TYPE")){
+				merge = true;
+				ArrayList<Expression> currSelExp = ((RASelectType)current).getSelectPredicate();
+				for(Expression exp: currSelExp){
+					((RASelectType)current.getNext()).setSelectPredicate(exp);
+				}
+				
+				IRAType currentPrevious = current.getPrevious();
+				IRAType currentNext = current.getNext(); 
+				
+				if(currentPrevious.getType().equals("RA_SELECT_TYPE") || currentPrevious.getType().equals("RA_PROJECT_TYPE") ){
+					currentPrevious.setNext(currentNext);
+					currentNext.setPrevious(currentPrevious);
+				}				
+				else if (currentPrevious.getType().equals("RA_JOIN_TYPE")){
+					
+					if(((RAJoinType)currentPrevious).getLeft() == current){
+						((RAJoinType)currentPrevious).setLeft(currentNext);
+					}
+					else
+						((RAJoinType)currentPrevious).setRight(currentNext);
+					
+					currentNext.setPrevious(currentPrevious);
+				}
+				else{
+					System.out.println("SERIOUS ERROR undefined Tree structure");
+				}
+				
+				mergeSelSelNodes(current.getNext());				
+			}
+			else if (!ntype.equals("RA_TABLE_TYPE"))
+				mergeSelSelNodes(current.getNext());
+		}	
+		else{
+			if (!current.getNext().equals("RA_TABLE_TYPE"))
+				mergeSelSelNodes(current.getNext());
+		}		
+	}
+
+	private static void mergeSelJoinNodes(IRAType current){
+		String ctype = current.getType();
+		
+		if (ctype.equals("RA_JOIN_TYPE")){
+			mergeSelJoinNodes(((RAJoinType)current).getLeft());
+			mergeSelJoinNodes(((RAJoinType)current).getRight());
 		}
 		
 		else if(ctype.equals("RA_SELECT_TYPE")){
 			String ntype = current.getNext().getType();
 			if (ntype.equals("RA_JOIN_TYPE")){
-				Expression selExp = ((RASelectType)current).getSelectPredicate();
-				if(selExp.getType().equals("equals")){
+				Expression selExp = ((RASelectType)current).getSelectPredicate().get(0);
+				if(selExp.getType().equals("equals") && 
+						selExp.getLeftSubexpression().getType().equals("identifier")
+						&& selExp.getRightSubexpression().getType().equals("identifier")
+						){
 					((RAJoinType)current.getNext()).setSelectionPredicate(selExp);
 					
 					IRAType currentPrevious = current.getPrevious();
 					IRAType currentNext = current.getNext(); 
 					
-					if(currentPrevious.getType().equals("RA_SELECT_TYPE")){
+					if(currentPrevious.getType().equals("RA_SELECT_TYPE")|| currentPrevious.getType().equals("RA_PROJECT_TYPE") ){
 						currentPrevious.setNext(currentNext);
 						currentNext.setPrevious(currentPrevious);
 					}
@@ -464,17 +524,17 @@ public class CommonMethods {
 						System.out.println("SERIOUS ERROR undefined Tree structure");
 					}
 					
-					mergeNodes(current.getNext());				
+					mergeSelJoinNodes(current.getNext());				
 				}
 				else
-					mergeNodes(current.getNext());
+					mergeSelJoinNodes(current.getNext());
 			}
 			else
-				mergeNodes(current.getNext());
+				mergeSelJoinNodes(current.getNext());
 		}
 		
 		else if (ctype.equals("RA_PROJECT_TYPE")){
-			mergeNodes(current.getNext());
+			mergeSelJoinNodes(current.getNext());
 		}
 		
 		
@@ -554,8 +614,7 @@ public class CommonMethods {
 		
 		String type = _root.getNext().getType();
 		
-		RASelectType raSelectType = null;
-		RAProjectType raProjectType = null;
+
 		ReturnJoin previousOutput = null;
 		
 		if(type.equals("RA_SELECT_TYPE"))
@@ -695,9 +754,27 @@ public class CommonMethods {
 			}
 			
 			ArrayList <Attribute> outAttributes = CommonMethods.makeTypeOutAttributes(outTypes);
-			HashMap <String, String> exprs = makeSelectExpression(outAttributes, true, outExp, fromClause);			
-			String selection = CommonMethods.parseExpression(current.getSelectPredicate(), fromClause,true);			
-		    try {
+			HashMap <String, String> exprs = makeSelectExpression(outAttributes, true, outExp, fromClause);		
+			
+			ArrayList<Expression> currentExpression = current.getSelectPredicate();
+			int expCount = currentExpression.size();
+			int index = 0;
+			ArrayList<String> selectionList = new ArrayList<String>(); 
+					CommonMethods.parseExpression(current.getSelectPredicate().get(0), fromClause,true);
+			while(index < expCount){
+				String nselection = "(" + CommonMethods.parseExpression(current.getSelectPredicate().get(index++), fromClause,true) + ")" ;
+				selectionList.add(nselection);
+			}
+			String selection;	
+			index = 0;
+			selection = "(" + selectionList.get(index++) + ")";
+			while(index < expCount){
+				String nsel = "(" + selectionList.get(index++) + ")";
+				selection = selection + "&&" + nsel;
+			}
+		    
+			
+			try {
 			      @SuppressWarnings("unused")
 			      Selection foo = new Selection (inAttribute, outAttributes, selection, exprs, infile, outputFile, 
 			    		  compiler, outputLocation );	
@@ -707,11 +784,11 @@ public class CommonMethods {
 			      
 			      if (nextType == 1)
 			    		System.out.println("SUCCESSFUL execution of the SELECT: "+ 
-			    					current.getSelectPredicate().print() + " over the SELECT: "
-			    						+ ((RASelectType) current.getNext()).getSelectPredicate().print() +"  Output in: " + outputFile );
+			    					current.getSelectPredicate() + " over the SELECT: "
+			    						+ ((RASelectType) current.getNext()).getSelectPredicate() +"  Output in: " + outputFile );
 			    	else
 			    		System.out.println("SUCCESSFUL execution of the SELECT: "+ 
-		    					current.getSelectPredicate().print() + " over the CROSS Join with underlying table Aliases : "
+		    					current.getSelectPredicate() + " over the CROSS Join with underlying table Aliases : "
 		    						+ ((RAJoinType) current.getNext()).getUnderlyingTables()  +"  Output in: " + outputFile);
 			      
 			      File delfile = new File(infile); 
@@ -731,11 +808,11 @@ public class CommonMethods {
 		    	
 		    	if (nextType == 1)
 		    		System.out.println("Exception in the execution of the SELECT: "+ 
-		    					current.getSelectPredicate().print() + " over the SELECT: "
-		    						+ ((RASelectType) current.getNext()).getSelectPredicate().print()  +"  Output in: " + outputFile);
+		    					current.getSelectPredicate() + " over the SELECT: "
+		    						+ ((RASelectType) current.getNext()).getSelectPredicate()  +"  Output in: " + outputFile);
 		    	else
 		    		System.out.println("Exception in the execution of the SELECT: "+ 
-	    					current.getSelectPredicate().print() + " over the CROSS Join with underlying table Aliases : "
+	    					current.getSelectPredicate() + " over the CROSS Join with underlying table Aliases : "
 	    						+ ((RAJoinType) current.getNext()).getUnderlyingTables()  +"  Output in: " + outputFile);
 		    	
 		    	throw new RuntimeException (e);
@@ -787,8 +864,27 @@ public class CommonMethods {
 			}
 			ArrayList <Attribute> outAttributes = CommonMethods.makeTypeOutAttributes(outTypes);
 			HashMap <String, String> exprs = makeSelectExpression(outAttributes, true, outExp, fromClause);			
-			String selection = CommonMethods.parseExpression(current.getSelectPredicate(), fromClause,true);			
-		    try {
+			//String selection = CommonMethods.parseExpression(current.getSelectPredicate(), fromClause,true);			
+		    
+			
+			ArrayList<Expression> currentExpression = current.getSelectPredicate();
+			int expCount = currentExpression.size();
+			int index = 0;
+			ArrayList<String> selectionList = new ArrayList<String>(); 
+					CommonMethods.parseExpression(current.getSelectPredicate().get(0), fromClause,true);
+			while(index < expCount){
+				String nselection = "(" + CommonMethods.parseExpression(current.getSelectPredicate().get(index++), fromClause,true) + ")" ;
+				selectionList.add(nselection);
+			}
+			String selection;	
+			index = 0;
+			selection = "(" + selectionList.get(index++) + ")";
+			while(index < expCount){
+				String nsel = "(" + selectionList.get(index++) + ")";
+				selection = selection + "&&" + nsel;
+			}
+			
+			try {
 			      @SuppressWarnings("unused")
 			      Selection foo = new Selection (inAttribute, outAttributes, selection, exprs, infile, outputFile, 
 			    		  compiler, outputLocation );	
@@ -797,14 +893,14 @@ public class CommonMethods {
 			      current.setOutputInfo(_outputInfo);
 			      
 			      System.out.println("SUCCESSFUL execution of the Selection:"+ 
-	    					current.getSelectPredicate().print() + " over the table:" + tableName + " Result file :" + outputFile);
+	    					current.getSelectPredicate() + " over the table:" + tableName + " Result file :" + outputFile);
 			      
 			      
 			      return _outputInfo;			      
 			    }
 		    catch (Exception e) {
 		    	System.out.println("Exception in the execution of the Selection:"+ 
-		    					current.getSelectPredicate().print() + " over the table:" + tableName);
+		    					current.getSelectPredicate() + " over the table:" + tableName);
 		    	throw new RuntimeException (e);
 		    }		
 		}		
@@ -970,7 +1066,7 @@ public class CommonMethods {
 		    						+  _raRTableType.getValue());
 		    	else
 		    		System.out.println("SUCCESSFUL execution of the Join Operation over SELECT: "+ 
-		    				((RASelectType) current.getLeft()).getSelectPredicate().print()  + " AND TABLE: "
+		    				((RASelectType) current.getLeft()).getSelectPredicate()  + " AND TABLE: "
 	    						+ _raRTableType.getValue());
 			 
 		      
@@ -1068,11 +1164,11 @@ public class CommonMethods {
 		      if (nextType == 1)
 		    		System.out.println("SUCCESSFUL execution of the JOIN Operation over JOIN: "+ 
 		    				((RAJoinType)current.getLeft()).getUnderlyingTables() + " and the SELECT: "
-		    						+ ((RASelectType) current.getRight()).getSelectPredicate().print()  +"  Output in: " + noutputFile);
+		    						+ ((RASelectType) current.getRight()).getSelectPredicate()  +"  Output in: " + noutputFile);
 		    	else
 		    		System.out.println("SUCCESSFUL execution of the Join Operation over SELECT: "+ 
-		    				((RASelectType) current.getLeft()).getSelectPredicate().print()  + " AND SELECT: "
-	    						+ ((RASelectType) current.getRight()).getSelectPredicate().print()  +"  Output in: " + noutputFile);
+		    				((RASelectType) current.getLeft()).getSelectPredicate()  + " AND SELECT: "
+	    						+ ((RASelectType) current.getRight()).getSelectPredicate()  +"  Output in: " + noutputFile);
 			 
 		      
 		      File delfileLeft = new File(outputFileLeft); 
@@ -1170,7 +1266,7 @@ public class CommonMethods {
 			
 			  System.out.println("SUCCESSFUL execution of the Join Operation over TABLE: "+ 
 					  _raLTableType.getValue()  + " AND SELECT: "
-						+ ((RASelectType) current.getRight()).getSelectPredicate().print() +" the output is : "+ noutputFile);
+						+ ((RASelectType) current.getRight()).getSelectPredicate() +" the output is : "+ noutputFile);
 			 
 		      
 		      File delfileLeft = new File(prevOutputFileRight); 
@@ -1253,30 +1349,42 @@ public class CommonMethods {
 			exprs.put(tempExp,selectionPredicates);
 		}
 		
-		//TODO
-		Expression lExp = where.getLeftSubexpression();
-		Expression rExp = where.getRightSubexpression();
-		String leftKey;
-		String rightKey;
-		if(lExp.getType().equals("identifier")){
-			leftKey = lExp.getValue();
-		}
-				
-		if(rExp.getType().equals("identifier")){
-			rightKey = rExp.getValue();
-		}
-		
-		
-		
 		
 		ArrayList <String> leftHash = new ArrayList <String> ();
-//		leftHash.add ("o_custkey");
+
 		
 	    ArrayList <String> rightHash = new ArrayList <String> ();
-//	    rightHash.add ("c_custkey");
+
 	    
+	    String wherePredicate = "(Int)1 == (Int) 1";
 	    
-		String wherePredicate = "(Int)1 == (Int) 1";
+		//TODO
+	    if(where!= null){
+			Expression lExp = where.getLeftSubexpression();
+			Expression rExp = where.getRightSubexpression();
+			String leftKey;
+			String rightKey;
+			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
+			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);		
+			leftHash.add(leftKey);
+			rightHash.add(rightKey);
+			String leftReplace = leftAlias+".";
+			Iterator<String> aliasIt = rightAlias.iterator();
+			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
+			while(aliasIt.hasNext()){
+				String tempAlias = aliasIt.next().toString();
+				String rightReplace = tempAlias+".";
+				int lIndex = wherePredicate.indexOf(leftReplace);
+				int rIndex = wherePredicate.indexOf(rightReplace);
+				if(lIndex != -1)
+					leftKey = wherePredicate.replaceFirst(leftReplace, "left.");
+				if (rIndex != -1)
+					rightKey = wherePredicate.replaceFirst(rightReplace, "right.");
+				}		
+	    }
+
+		
+	    
 	/*	if(where!= null){
 			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
 			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
@@ -1394,9 +1502,41 @@ public class CommonMethods {
 			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
 		}
 		*/
+		
+	    if(where!= null){
+			Expression lExp = where.getLeftSubexpression();
+			Expression rExp = where.getRightSubexpression();
+			String leftKey;
+			String rightKey;
+			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
+			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);
+			leftHash.add(leftKey);
+			rightHash.add(rightKey);
+			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
+			Iterator<String> leftAliasIt = leftAlias.iterator();
+			while(leftAliasIt.hasNext()){
+				String tempAlias = leftAliasIt.next().toString();
+				String leftReplace = tempAlias+".";
+				int lIndex = wherePredicate.indexOf(leftReplace);
+				if(lIndex != -1)
+					wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
+			}
+			
+			Iterator<String> rightAliasIt = rightAlias.iterator();
+			while(rightAliasIt.hasNext()){
+				String tempAlias = rightAliasIt.next().toString();
+				String rightReplace = tempAlias+".";
+				int rIndex = wherePredicate.indexOf(rightReplace);
+				if (rIndex != -1)
+					wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "right.");
+			}		
+	    }
+		
 		 // run the join
 	    try {
 	    	
+	      @SuppressWarnings("unused")
 	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
 	    		  leftTablePath, rightTablePath, noutputFile, compiler, outputLocation);
 	      
@@ -1488,6 +1628,33 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
 		}
 		*/
+		
+	    if(where!= null){
+			Expression lExp = where.getLeftSubexpression();
+			Expression rExp = where.getRightSubexpression();
+			String leftKey;
+			String rightKey;
+			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
+			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);
+			leftHash.add(leftKey);
+			rightHash.add(rightKey);
+			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
+			Iterator<String> aliasIt = leftAlias.iterator();
+			
+			String rightReplace = rightAlias+".";
+			while(aliasIt.hasNext()){
+				String tempAlias = aliasIt.next().toString();
+				String leftReplace = tempAlias+".";
+				int lIndex = wherePredicate.indexOf(leftReplace);
+				int rIndex = wherePredicate.indexOf(rightReplace);
+				if(lIndex != -1)
+					wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
+				if (rIndex != -1)
+					wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+			}		
+	    }
+		
+		
 		 // run the join
 	    try {
 	    	
@@ -1567,7 +1734,7 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 	 * @param rightTableName
 	 * @param fromClause 
 	 */
-	public static String joinExecution(String leftAlias, String leftTableName,String rightAlias, 
+	private static String joinExecution(String leftAlias, String leftTableName,String rightAlias, 
 											String rightTableName,ArrayList<ResultValue> selTypes,
 											ArrayList<Expression> selectExprs, 
 											Map<String, String> fromClause, Expression where){
@@ -1624,6 +1791,29 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
 		}
 		*/
+		
+	    if(where!= null){
+			Expression lExp = where.getLeftSubexpression();
+			Expression rExp = where.getRightSubexpression();
+			String leftKey;
+			String rightKey;
+			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
+			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);
+			leftHash.add(leftKey);
+			rightHash.add(rightKey);
+			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
+			
+			String leftReplace = leftAlias+".";
+			String rightReplace = rightAlias+".";
+			int lIndex = wherePredicate.indexOf(leftReplace);
+			int rIndex = wherePredicate.indexOf(rightReplace);
+			
+			if(lIndex != -1)
+				wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
+			if (rIndex != -1)
+				wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+			
+	    }
 		 // run the join
 	    try {
 	    	
@@ -1690,7 +1880,7 @@ oldJoinAttribts, String rightAlias, String rightTableName,
     	//IRAType next = raSelectType.getNext();
     	//IRAType previous = raSelectType.getPrevious();
     	contributedTable.clear();
-    	Expression selExpression = raSelectType.getSelectPredicate();
+    	Expression selExpression = raSelectType.getSelectPredicate().get(0);
     	sendSelPredicateHelper(selExpression);
     	Iterator<String> tablePresent = contributedTable.iterator();
     	while(tablePresent.hasNext() ){
