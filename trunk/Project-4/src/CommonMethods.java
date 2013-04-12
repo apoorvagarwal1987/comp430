@@ -425,10 +425,14 @@ public class CommonMethods {
 			groupbyClause.add(groupBy);
 			_raProjectType.setGroupBy(groupbyClause);
 			
+			
+			System.out.println(_raProjectType);
+
+			mergeSelJoinNodes(_raProjectType);
 			mergeSelSelNodes(_raProjectType);
 			System.out.println(_raProjectType);
 			
-			mergeSelJoinNodes(_raProjectType);
+			
 			
 			return _raProjectType;
 		}
@@ -457,7 +461,8 @@ public class CommonMethods {
 				IRAType currentPrevious = current.getPrevious();
 				IRAType currentNext = current.getNext(); 
 				
-				if(currentPrevious.getType().equals("RA_SELECT_TYPE") || currentPrevious.getType().equals("RA_PROJECT_TYPE") ){
+				if(currentPrevious.getType().equals("RA_SELECT_TYPE") ||
+						currentPrevious.getType().equals("RA_PROJECT_TYPE") ){
 					currentPrevious.setNext(currentNext);
 					currentNext.setPrevious(currentPrevious);
 				}				
@@ -481,7 +486,7 @@ public class CommonMethods {
 				mergeSelSelNodes(current.getNext());
 		}	
 		else{
-			if (!current.getNext().equals("RA_TABLE_TYPE"))
+			if (!ctype.equals("RA_TABLE_TYPE")&&!current.getNext().equals("RA_TABLE_TYPE"))
 				mergeSelSelNodes(current.getNext());
 		}		
 	}
@@ -1335,18 +1340,14 @@ public class CommonMethods {
 			String selectionPredicates = tempExprs.get(tempExp);
 			Iterator<String> aliasIt = rightAlias.iterator();
 			
-			String leftReplace = leftAlias+".";
+			String leftReplace = leftAlias+"\\.";
 			while(aliasIt.hasNext()){
 				String tempAlias = aliasIt.next().toString();
-				String rightReplace = tempAlias+".";
-				int lIndex = selectionPredicates.indexOf(leftReplace);
-				int rIndex = selectionPredicates.indexOf(rightReplace);
-				if(lIndex != -1)
-					selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
-				if (rIndex != -1)
-					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
-			}
-			exprs.put(tempExp,selectionPredicates);
+				String rightReplace = tempAlias+"\\.";
+				selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+				selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+				exprs.put(tempExp,selectionPredicates);				
+			}			
 		}
 		
 		
@@ -1360,27 +1361,44 @@ public class CommonMethods {
 	    
 		//TODO
 	    if(where!= null){
-			Expression lExp = where.getLeftSubexpression();
-			Expression rExp = where.getRightSubexpression();
-			String leftKey;
-			String rightKey;
-			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
-			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);		
-			leftHash.add(leftKey);
-			rightHash.add(rightKey);
-			String leftReplace = leftAlias+".";
+
+	    	String leftReplace = leftAlias+"\\.";
 			Iterator<String> aliasIt = rightAlias.iterator();
 			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
 			while(aliasIt.hasNext()){
 				String tempAlias = aliasIt.next().toString();
-				String rightReplace = tempAlias+".";
+				String rightReplace = tempAlias+"\\.";
 				int lIndex = wherePredicate.indexOf(leftReplace);
 				int rIndex = wherePredicate.indexOf(rightReplace);
-				if(lIndex != -1)
-					leftKey = wherePredicate.replaceFirst(leftReplace, "left.");
-				if (rIndex != -1)
-					rightKey = wherePredicate.replaceFirst(rightReplace, "right.");
-				}		
+				
+				wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
+				wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+				
+				if(wherePredicate.indexOf("left.") != -1){
+					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
+					int finalpos = tempString.indexOf(' ');
+					if (finalpos == -1)
+						tempString = tempString.substring(tempString.indexOf('.')+1);					
+					else
+						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+					
+					//change 2
+					if(leftHash.size() == 0 )
+						leftHash.add(tempString);
+				}
+				
+				if (wherePredicate.indexOf("right.") != -1){
+					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
+					int finalpos = tempString.indexOf(' ');
+					if (finalpos == -1)
+						tempString = tempString.substring(tempString.indexOf('.')+1);					
+					else
+						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+					
+					if(rightHash.size() == 0 )
+						rightHash.add(tempString);		
+				}
+			}
 	    }
 
 		
@@ -1470,22 +1488,16 @@ public class CommonMethods {
 			Iterator<String> leftAliasIt = leftAlias.iterator();
 			while(leftAliasIt.hasNext()){
 				String tempAlias = leftAliasIt.next().toString();
-				String leftReplace = tempAlias+".";
-				int lIndex = selectionPredicates.indexOf(leftReplace);
-				if(lIndex != -1)
-					selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+				String leftReplace = tempAlias+"\\.";
+				selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
 			}
 			
 			Iterator<String> rightAliasIt = rightAlias.iterator();
 			while(rightAliasIt.hasNext()){
 				String tempAlias = rightAliasIt.next().toString();
-				String rightReplace = tempAlias+".";
-				int rIndex = selectionPredicates.indexOf(rightReplace);
-				if (rIndex != -1)
-					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
-				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "right.");
-			}
-			
+				String rightReplace = tempAlias+"\\.";
+				selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+			}			
 			exprs.put(tempExp,selectionPredicates);
 		}
 		ArrayList <String> leftHash = new ArrayList <String> ();
@@ -1504,32 +1516,45 @@ public class CommonMethods {
 		*/
 		
 	    if(where!= null){
-			Expression lExp = where.getLeftSubexpression();
-			Expression rExp = where.getRightSubexpression();
-			String leftKey;
-			String rightKey;
-			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
-			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);
-			leftHash.add(leftKey);
-			rightHash.add(rightKey);
 			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
 			Iterator<String> leftAliasIt = leftAlias.iterator();
 			while(leftAliasIt.hasNext()){
 				String tempAlias = leftAliasIt.next().toString();
-				String leftReplace = tempAlias+".";
-				int lIndex = wherePredicate.indexOf(leftReplace);
-				if(lIndex != -1)
-					wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
+				String leftReplace = tempAlias+"\\.";
+
+				wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
+				if (wherePredicate.indexOf("left.") != -1){
+					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
+					int finalpos = tempString.indexOf(' ');
+					
+					//----
+					if (finalpos == -1)
+						tempString = tempString.substring(tempString.indexOf('.')+1);					
+					else
+						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+					//change 3
+					if(leftHash.size() == 0)
+						leftHash.add(tempString);
+				}
+				
 			}
 			
 			Iterator<String> rightAliasIt = rightAlias.iterator();
 			while(rightAliasIt.hasNext()){
 				String tempAlias = rightAliasIt.next().toString();
-				String rightReplace = tempAlias+".";
-				int rIndex = wherePredicate.indexOf(rightReplace);
-				if (rIndex != -1)
-					wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
-				//selectionPredicates = selectionPredicates.replaceFirst(""+tempAlias+".", "right.");
+				String rightReplace = tempAlias+"\\.";
+				wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+				if (wherePredicate.indexOf("right.") != -1){
+					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
+					int finalpos = tempString.indexOf(' ');
+					if (finalpos == -1)
+						tempString = tempString.substring(tempString.indexOf('.')+1);					
+					else
+						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+					
+					if(rightHash.size() == 0)
+						rightHash.add(tempString);
+				}			
 			}		
 	    }
 		
@@ -1601,18 +1626,14 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 			String selectionPredicates = tempExprs.get(tempExp);
 			Iterator<String> aliasIt = leftAlias.iterator();
 			
-			String rightReplace = rightAlias+".";
+			String rightReplace = rightAlias+"\\.";
 			while(aliasIt.hasNext()){
 				String tempAlias = aliasIt.next().toString();
-				String leftReplace = tempAlias+".";
-				int lIndex = selectionPredicates.indexOf(leftReplace);
-				int rIndex = selectionPredicates.indexOf(rightReplace);
-				if(lIndex != -1)
-					selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
-				if (rIndex != -1)
-					selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+				String leftReplace = tempAlias+"\\.";
+				selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");		
+				selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+				exprs.put(tempExp,selectionPredicates);
 			}
-			exprs.put(tempExp,selectionPredicates);
 		}
 		ArrayList <String> leftHash = new ArrayList <String> ();
 //		leftHash.add ("o_custkey");
@@ -1636,21 +1657,43 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 			String rightKey;
 			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
 			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);
-			leftHash.add(leftKey);
-			rightHash.add(rightKey);
+			//leftHash.add(leftKey);
+			//rightHash.add(rightKey);
 			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
 			Iterator<String> aliasIt = leftAlias.iterator();
 			
-			String rightReplace = rightAlias+".";
+			String rightReplace = rightAlias+"\\.";
 			while(aliasIt.hasNext()){
 				String tempAlias = aliasIt.next().toString();
-				String leftReplace = tempAlias+".";
-				int lIndex = wherePredicate.indexOf(leftReplace);
-				int rIndex = wherePredicate.indexOf(rightReplace);
-				if(lIndex != -1)
-					wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
-				if (rIndex != -1)
-					wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+				String leftReplace = tempAlias+"\\.";
+				
+				wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");				
+				if (wherePredicate.indexOf("left.") != -1){
+					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
+					int finalpos = tempString.indexOf(' ');
+					
+					//----
+					if (finalpos == -1)
+						tempString = tempString.substring(tempString.indexOf('.')+1);					
+					else
+						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+					//change 3
+					if(leftHash.size() == 0)
+						leftHash.add(tempString);
+				}
+				
+				wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+				if (wherePredicate.indexOf("right.") != -1){
+					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
+					int finalpos = tempString.indexOf(' ');
+					if (finalpos == -1)
+						tempString = tempString.substring(tempString.indexOf('.')+1);					
+					else
+						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+					
+					if(rightHash.size() == 0)
+						rightHash.add(tempString);
+				}
 			}		
 	    }
 		
@@ -1673,6 +1716,131 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 	    }
 	}
 
+		/**
+	 * 
+	 * @param leftAlias
+	 * @param leftTableName
+	 * @param rightAlias
+	 * @param rightTableName
+	 * @param fromClause 
+	 */
+	private static String joinExecution(String leftAlias, String leftTableName,String rightAlias, 
+											String rightTableName,ArrayList<ResultValue> selTypes,
+											ArrayList<Expression> selectExprs, 
+											Map<String, String> fromClause, Expression where){
+		
+		String outputFile= "src/out_"+nameCounter +".tbl";
+		String compiler = "g++";
+		String outputLocation = "src/cppDir/";
+		nameCounter++;
+		
+		ArrayList <Attribute> inAttsLeft = getTableAttributeInfo(leftAlias, leftTableName,false);
+		ArrayList <Attribute> inAttsRight = getTableAttributeInfo(rightAlias, rightTableName,false);
+		ArrayList <Attribute> outAtts =  makeTypeOutAttributes(selTypes);
+		
+		
+		String leftTablePath = "src/"+leftTableName+".tbl";
+		String rightTablePath = "src/"+rightTableName+".tbl";
+		
+		/*
+		 * Code to replace the alias
+		 * with the left and right "keywords"
+		 * in the select expressions.
+		 */
+		HashMap <String, String> tempExprs = makeSelectExpression(outAtts,false,selectExprs,fromClause);
+		Iterator<String> exprsIterator = tempExprs.keySet().iterator();
+		HashMap <String, String> exprs = new HashMap<String, String>();
+		while(exprsIterator.hasNext()){
+			String tempExp = exprsIterator.next().toString();
+			String selectionPredicates = tempExprs.get(tempExp);
+			String leftReplace = leftAlias+"\\.";
+			String rightReplace = rightAlias+"\\.";
+			int lIndex = selectionPredicates.indexOf(leftReplace);
+			int rIndex = selectionPredicates.indexOf(rightReplace);
+			selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+			selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+			
+			/*if(lIndex != -1)
+				selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
+			if (rIndex != -1)
+				selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
+			*/
+			exprs.put(tempExp,selectionPredicates);
+		}
+		
+		
+		ArrayList <String> leftHash = new ArrayList <String> ();
+//		leftHash.add ("o_custkey");
+		
+	    ArrayList <String> rightHash = new ArrayList <String> ();
+//	    rightHash.add ("c_custkey");
+	    
+	    
+		String wherePredicate = "(Int)1 == (Int) 1";
+	/*	if(where!= null){
+			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
+			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
+			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
+		}
+		*/
+		
+	    if(where!= null){
+
+			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
+			
+			String leftReplace = leftAlias+"\\.";
+			String rightReplace = rightAlias+"\\.";
+
+			wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
+			wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
+			
+			if (wherePredicate.indexOf("left.") != -1){
+				String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
+				int finalpos = tempString.indexOf(' ');
+				if (finalpos == -1)
+					tempString = tempString.substring(tempString.indexOf('.')+1);					
+				else
+					tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+	
+				//change 4	
+				if(leftHash.size() == 0)
+					leftHash.add(tempString);
+			}
+			
+			if (wherePredicate.indexOf("right.")!= -1){
+				String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
+				int finalpos = tempString.indexOf(' ');
+				if (finalpos == -1)
+					tempString = tempString.substring(tempString.indexOf('.')+1);					
+				else
+					tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+				
+				if(rightHash.size() == 0)
+					rightHash.add(tempString);
+				
+			}
+			
+	    }
+		 // run the join
+	    try {
+	    	
+	      @SuppressWarnings("unused")
+	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
+	    		  leftTablePath, rightTablePath, outputFile, compiler, outputLocation);
+
+	      System.out.println("Computation JOIN Operation over TABLE: "+ 
+  				leftTablePath + " and the TABLE: "
+  						+  rightTablePath + "and the result in "+ outputFile );
+	      
+	      return outputFile;
+	      
+	    } 
+	    catch (Exception e) {
+	      throw new RuntimeException (e);
+	    }
+	}
+	
+	
 	/**
 	 * 
 	 * @param alias
@@ -1726,111 +1894,7 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 		return outAttributes;
 	}
 	
-	/**
-	 * 
-	 * @param leftAlias
-	 * @param leftTableName
-	 * @param rightAlias
-	 * @param rightTableName
-	 * @param fromClause 
-	 */
-	private static String joinExecution(String leftAlias, String leftTableName,String rightAlias, 
-											String rightTableName,ArrayList<ResultValue> selTypes,
-											ArrayList<Expression> selectExprs, 
-											Map<String, String> fromClause, Expression where){
-		
-		String outputFile= "src/out_"+nameCounter +".tbl";
-		String compiler = "g++";
-		String outputLocation = "src/cppDir/";
-		nameCounter++;
-		
-		ArrayList <Attribute> inAttsLeft = getTableAttributeInfo(leftAlias, leftTableName,false);
-		ArrayList <Attribute> inAttsRight = getTableAttributeInfo(rightAlias, rightTableName,false);
-		ArrayList <Attribute> outAtts =  makeTypeOutAttributes(selTypes);
-		
-		
-		String leftTablePath = "src/"+leftTableName+".tbl";
-		String rightTablePath = "src/"+rightTableName+".tbl";
-		
-		/*
-		 * Code to replace the alias
-		 * with the left and right "keywords"
-		 * in the select expressions.
-		 */
-		HashMap <String, String> tempExprs = makeSelectExpression(outAtts,false,selectExprs,fromClause);
-		Iterator<String> exprsIterator = tempExprs.keySet().iterator();
-		HashMap <String, String> exprs = new HashMap<String, String>();
-		while(exprsIterator.hasNext()){
-			String tempExp = exprsIterator.next().toString();
-			String selectionPredicates = tempExprs.get(tempExp);
-			String leftReplace = leftAlias+".";
-			String rightReplace = rightAlias+".";
-			int lIndex = selectionPredicates.indexOf(leftReplace);
-			int rIndex = selectionPredicates.indexOf(rightReplace);
-			
-			if(lIndex != -1)
-				selectionPredicates = selectionPredicates.replaceFirst(leftReplace, "left.");
-			if (rIndex != -1)
-				selectionPredicates = selectionPredicates.replaceFirst(rightReplace, "right.");
-			
-			exprs.put(tempExp,selectionPredicates);
-		}
-		
-		
-		ArrayList <String> leftHash = new ArrayList <String> ();
-//		leftHash.add ("o_custkey");
-		
-	    ArrayList <String> rightHash = new ArrayList <String> ();
-//	    rightHash.add ("c_custkey");
-	    
-	    
-		String wherePredicate = "(Int)1 == (Int) 1";
-	/*	if(where!= null){
-			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
-			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
-			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
-		}
-		*/
-		
-	    if(where!= null){
-			Expression lExp = where.getLeftSubexpression();
-			Expression rExp = where.getRightSubexpression();
-			String leftKey;
-			String rightKey;
-			leftKey = lExp.getValue().substring(lExp.getValue().indexOf('.')+1);		
-			rightKey = rExp.getValue().substring(rExp.getValue().indexOf('.')+1);
-			leftHash.add(leftKey);
-			rightHash.add(rightKey);
-			wherePredicate = CommonMethods.parseExpression(where, fromClause,false);
-			
-			String leftReplace = leftAlias+".";
-			String rightReplace = rightAlias+".";
-			int lIndex = wherePredicate.indexOf(leftReplace);
-			int rIndex = wherePredicate.indexOf(rightReplace);
-			
-			if(lIndex != -1)
-				wherePredicate = wherePredicate.replaceFirst(leftReplace, "left.");
-			if (rIndex != -1)
-				wherePredicate = wherePredicate.replaceFirst(rightReplace, "right.");
-			
-	    }
-		 // run the join
-	    try {
-	    	
-	      Join foo = new Join (inAttsLeft, inAttsRight, outAtts, leftHash, rightHash, wherePredicate, exprs, 
-	    		  leftTablePath, rightTablePath, outputFile, compiler, outputLocation);
-
-	      System.out.println("Computation JOIN Operation over TABLE: "+ 
-  				leftTablePath + " and the TABLE: "
-  						+  rightTablePath + "and the result in "+ outputFile );
-	      
-	      return outputFile;
-	      
-	    } 
-	    catch (Exception e) {
-	      throw new RuntimeException (e);
-	    }
-	}
+	
 	
 	/**
 	 * 
