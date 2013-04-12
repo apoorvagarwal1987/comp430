@@ -328,10 +328,17 @@ public class CommonMethods {
 
 		Iterator<String> aliases = fromClause.keySet().iterator();
 		int counter = 1;
+		ArrayList<RATableType> tableOrder = new ArrayList<RATableType>();
 		while(aliases.hasNext()){
 			String alias = aliases.next().toString();
 			String tableName = fromClause.get(alias);
-			_tablePresent.put(counter,new RATableType(tableName,alias,true, counter++));
+			tableOrder.add(new RATableType(tableName,alias,true, counter++));
+		}
+		
+		Collections.sort(tableOrder, new TableOrderComparator());
+		counter = 1;
+		for(RATableType tableType : tableOrder){
+			_tablePresent.put(counter++,tableType);
 		}		
 
 		//Creating all the join in the query 
