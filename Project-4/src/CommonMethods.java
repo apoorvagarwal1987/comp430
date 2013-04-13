@@ -322,52 +322,83 @@ public class CommonMethods {
 		
 		// First creating the leaf nodes which is basically the
 		// tables present in the from clause of the query.		
-		Map<Integer, RATableType> _tablePresent = new HashMap<Integer, RATableType>();
-		Map<Integer, RAJoinType> _crossJoinPresent = new HashMap<Integer, RAJoinType>();	
-		Map<Integer, RASelectType> _selectPredicatePresent = new HashMap<Integer, RASelectType>();
-
+		Map<Integer, RATableType> tablePresent = new HashMap<Integer, RATableType>();
+		Map<Integer, RAJoinType> crossJoinPresent = new HashMap<Integer, RAJoinType>();	
+		Map<Integer, RASelectType> selectPredicatePresent = new HashMap<Integer, RASelectType>();
+		Map<String,RATableType> tableMap = new HashMap<String, RATableType>();
 		Iterator<String> aliases = fromClause.keySet().iterator();
 		int counter = 1;
 		ArrayList<RATableType> tableOrder = new ArrayList<RATableType>();
 		while(aliases.hasNext()){
 			String alias = aliases.next().toString();
 			String tableName = fromClause.get(alias);
-			tableOrder.add(new RATableType(tableName,alias,true, counter++));
+			RATableType tempRaTableType = new RATableType(tableName,alias,true, counter++);
+			tableMap.put(alias, tempRaTableType);
+		}
+		if(whereClause != null)
+			traverseSelExpression(createSelPredicate(whereClause));
+		
+		for (Expression exp : _selectionPredicates){	
+			if(exp.getType().equals("equals")){
+				Expression lExp = exp.getLeftSubexpression();
+				Expression rExp = exp.getRightSubexpression();
+				if(lExp.getType().equals("identifier") && rExp.getType().equals("identifier")){
+					String lExpId = lExp.getValue();
+					String rExpId = rExp.getValue();
+					String lAlias = lExpId.substring(0,lExpId.indexOf('.'));
+					String rAlias = rExpId.substring(0,rExpId.indexOf('.'));
+					
+					RATableType lTableType = tableMap.get(lAlias);
+					lTableType.setJoinCount(1);
+					tableMap.put(lAlias, lTableType);
+					
+					RATableType rTableType = tableMap.get(rAlias);
+					rTableType.setJoinCount(1);
+					tableMap.put(rAlias, rTableType);
+					
+				}
+			}
+		}
+		_selectionPredicates.clear();
+		
+		Iterator<String> tableAlias = tableMap.keySet().iterator();
+		while(tableAlias.hasNext()){
+			tableOrder.add(tableMap.get(tableAlias.next()));
 		}
 		
 		Collections.sort(tableOrder, new TableOrderComparator());
 		counter = 1;
 		for(RATableType tableType : tableOrder){
-			_tablePresent.put(counter++,tableType);
+			tablePresent.put(counter++,tableType);
 		}		
 
 		//Creating all the join in the query 
 		// starting with the basic cross joins in the query
 		counter = 1;		
-		int countTable = _tablePresent.size();
+		int countTable = tablePresent.size();
 		if(countTable == 1){
-			RATableType _raJoinTop = _tablePresent.get(counter); 
+			RATableType _raJoinTop = tablePresent.get(counter); 
 	  		int current = 1;
 			if(whereClause != null){			
 				traverseSelExpression(createSelPredicate(whereClause));
 				for(Expression exp : _selectionPredicates){
 					RASelectType _raSelectTemp = new RASelectType();
 					_raSelectTemp.setSelectPredicate(exp);
-					_selectPredicatePresent.put(current++,_raSelectTemp);
+					selectPredicatePresent.put(current++,_raSelectTemp);
 				}
 				current = 1;
-				RASelectType _raSelect = _selectPredicatePresent.get(current++);
+				RASelectType _raSelect = selectPredicatePresent.get(current++);
 				_raSelect.setNext(_raJoinTop);
 				_raJoinTop.setPrevious(_raSelect);			
-				while(current <= _selectPredicatePresent.size()){
-					_selectPredicatePresent.get(current-1).setPrevious(_selectPredicatePresent.get(current));
-					_selectPredicatePresent.get(current).setNext(_selectPredicatePresent.get(current-1));
+				while(current <= selectPredicatePresent.size()){
+					selectPredicatePresent.get(current-1).setPrevious(selectPredicatePresent.get(current));
+					selectPredicatePresent.get(current).setNext(selectPredicatePresent.get(current-1));
 					current++;
 				}
 			}	
 			
-			RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
-			_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
+			RAProjectType _raProjectType = new RAProjectType(selectPredicatePresent.get(current-1));
+			selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
 			_raProjectType.setSelectExprs(selectClause);
 			ArrayList<String> groupbyClause = new ArrayList<String>();
 			groupbyClause.add(groupBy);
@@ -380,53 +411,53 @@ public class CommonMethods {
 		else{
 			int current = 1;
 			RAJoinType _raJoin = new RAJoinType();
-			RATableType _raLeftTable = _tablePresent.get(current);
-			RATableType _raRightTable = _tablePresent.get(++current);
+			RATableType _raLeftTable = tablePresent.get(current);
+			RATableType _raRightTable = tablePresent.get(++current);
 			_raJoin.setBranch(_raLeftTable,_raRightTable);
 			_raLeftTable.setPrevious(_raJoin);
 			_raRightTable.setPrevious(_raJoin);
-			_crossJoinPresent.put(counter++,_raJoin);
+			crossJoinPresent.put(counter++,_raJoin);
 			
 			while(current < countTable){ 
-				_raRightTable = _tablePresent.get(++current);
+				_raRightTable = tablePresent.get(++current);
 				RAJoinType _raTempJoin = new RAJoinType();
-				RAJoinType _insertedRAJoin = _crossJoinPresent.get((counter-1));
+				RAJoinType _insertedRAJoin = crossJoinPresent.get((counter-1));
 				_raTempJoin.setBranch(_insertedRAJoin,_raRightTable);
 				_raRightTable.setPrevious(_raTempJoin);
 				_insertedRAJoin.setPrevious(_raTempJoin);
-				_crossJoinPresent.put(counter++,_raTempJoin);				
+				crossJoinPresent.put(counter++,_raTempJoin);				
 			}		
-			RAJoinType _raJoinTop = _crossJoinPresent.get(counter-1); 
+			RAJoinType _raJoinTop = crossJoinPresent.get(counter-1); 
 	  		current = 1;
 			if(whereClause != null){			
 				traverseSelExpression(createSelPredicate(whereClause));
 				for(Expression exp : _selectionPredicates){
 					RASelectType _raSelectTemp = new RASelectType();
 					_raSelectTemp.setSelectPredicate(exp);
-					_selectPredicatePresent.put(current++,_raSelectTemp);
+					selectPredicatePresent.put(current++,_raSelectTemp);
 				}
 				current = 1;
-				RASelectType _raSelect = _selectPredicatePresent.get(current++);
+				RASelectType _raSelect = selectPredicatePresent.get(current++);
 				_raSelect.setNext(_raJoinTop);
 				_raJoinTop.setPrevious(_raSelect);			
-				while(current <= _selectPredicatePresent.size()){
-					_selectPredicatePresent.get(current-1).setPrevious(_selectPredicatePresent.get(current));
-					_selectPredicatePresent.get(current).setNext(_selectPredicatePresent.get(current-1));
+				while(current <= selectPredicatePresent.size()){
+					selectPredicatePresent.get(current-1).setPrevious(selectPredicatePresent.get(current));
+					selectPredicatePresent.get(current).setNext(selectPredicatePresent.get(current-1));
 					current++;
 				}
 			}	
 			
-			RAProjectType _raProjectType = new RAProjectType(_selectPredicatePresent.get(current-1));
-			_selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
+			RAProjectType _raProjectType = new RAProjectType(selectPredicatePresent.get(current-1));
+			selectPredicatePresent.get(current-1).setPrevious(_raProjectType);
 			_raProjectType.setSelectExprs(selectClause);
 			
 			int index = 1;
-			while(index <= _selectPredicatePresent.size())
-				sendSelPredicateDown(_selectPredicatePresent.get(index++));
+			while(index <= selectPredicatePresent.size())
+				sendSelPredicateDown(selectPredicatePresent.get(index++));
 			
 			index = 1 ;
-			while(index <= _selectPredicatePresent.size())
-				createNewConnection(_selectPredicatePresent.get(index++));
+			while(index <= selectPredicatePresent.size())
+				createNewConnection(selectPredicatePresent.get(index++));
 			
 			ArrayList<String> groupbyClause = new ArrayList<String>();
 			groupbyClause.add(groupBy);
@@ -445,6 +476,27 @@ public class CommonMethods {
 		}
 	}
 	
+	/**
+	 * @param tableMap
+	 * @param selectClause
+	 */
+	private static void analyzeTableOrder(Map<String, RATableType> tableMap, ArrayList<Expression> selectClause) {
+		for (Expression exp : selectClause){	
+			if(exp.getType().equals("equals")){
+				Expression lExp = exp.getLeftSubexpression();
+				Expression rExp = exp.getRightSubexpression();
+				if(lExp.getType().equals("identifier") && rExp.getType().equals("identifier")){
+					String lExpId = lExp.getValue();
+					String rExpId = rExp.getValue();
+					String lAlias = lExpId.substring(0,lExpId.indexOf('.'));
+					String rAlias = rExpId.substring(0,rExpId.indexOf('.'));
+					tableMap.get(lAlias).setJoinCount(1);
+					tableMap.get(rAlias).setJoinCount(1);
+				}
+			}
+		}
+	}
+
 	/**
 	 * @param _raProjectType
 	 */

@@ -18,6 +18,7 @@ public class RATableType implements IRAType {
 	private ArrayList <Attribute> attributes;
 	private Map<String, AttInfo> attributesInfo;
 	private int tupleCount;
+	private int joinCount;
 	private Map <String, TableData> res;
 	private int position; 
 	private IRAType _previous;
@@ -150,6 +151,20 @@ public class RATableType implements IRAType {
 	public void setNext(IRAType _next) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	/**
+	 * @return the joinCount
+	 */
+	public int getJoinCount() {
+		return joinCount;
+	}
+
+	/**
+	 * @param joinCount the joinCount to set
+	 */
+	public void setJoinCount(int joinCount) {
+		this.joinCount += joinCount;
 	}
 	
 }
