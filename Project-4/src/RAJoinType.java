@@ -16,11 +16,12 @@ public class RAJoinType implements IRAType {
 //	private RAJoinType _raJoin;
  	private ReturnJoin _outputInfo;
  	private HashSet<String> underlyingTables;
- 	private Expression selectionPredicate;
+ 	private ArrayList<Expression> selectionPredicate;
  	
 	public RAJoinType (){
 		this.type = "RA_JOIN_TYPE";
 		this.underlyingTables = new HashSet<String>();
+		this.selectionPredicate = new ArrayList<Expression>();
 	}
 	
 
@@ -168,7 +169,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @return the selectionPredicate
 	 */
-	public Expression getSelectionPredicate() {
+	public ArrayList<Expression> getSelectionPredicate() {
 		return selectionPredicate;
 	}
 
@@ -177,9 +178,10 @@ public class RAJoinType implements IRAType {
 	 * @param selectionPredicate the selectionPredicate to set
 	 */
 	public void setSelectionPredicate(Expression selectionPredicate) {
-		this.selectionPredicate = selectionPredicate;
+		this.selectionPredicate.add(selectionPredicate);
 	}
 
 
+	
 	
 }

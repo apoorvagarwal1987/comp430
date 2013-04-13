@@ -31,7 +31,7 @@ public class CommonMethods {
 		nameCounter = 1;
 		_selectionPredicates = new ArrayList<Expression>();
 		contributedTable = new HashSet<String>();			
-		merge = false;
+		merge = true;
 	}
 	
 	/**
@@ -403,7 +403,11 @@ public class CommonMethods {
 			ArrayList<String> groupbyClause = new ArrayList<String>();
 			groupbyClause.add(groupBy);
 			_raProjectType.setGroupBy(groupbyClause);
-			mergeSelSelNodes(_raProjectType);
+			
+			while(merge){
+				merge = false;
+				mergeSelJoinNodes(_raProjectType);
+			}
 			System.out.println(_raProjectType);
 			return _raProjectType;
 			
@@ -466,7 +470,10 @@ public class CommonMethods {
 			
 			System.out.println(_raProjectType);
 
-			mergeSelJoinNodes(_raProjectType);
+			while(merge){
+				merge = false;
+				mergeSelJoinNodes(_raProjectType);
+			}
 			mergeSelSelNodes(_raProjectType);
 			System.out.println(_raProjectType);
 			
@@ -511,7 +518,6 @@ public class CommonMethods {
 		else if(ctype.equals("RA_SELECT_TYPE")){
 			String ntype = current.getNext().getType();
 			if (ntype.equals("RA_SELECT_TYPE")){
-				merge = true;
 				ArrayList<Expression> currSelExp = ((RASelectType)current).getSelectPredicate();
 				for(Expression exp: currSelExp){
 					((RASelectType)current.getNext()).setSelectPredicate(exp);
@@ -562,33 +568,32 @@ public class CommonMethods {
 			String ntype = current.getNext().getType();
 			if (ntype.equals("RA_JOIN_TYPE")){
 				Expression selExp = ((RASelectType)current).getSelectPredicate().get(0);
-				if(selExp.getType().equals("equals") && 
-						selExp.getLeftSubexpression().getType().equals("identifier")
+				if(selExp.getType().equals("equals") && selExp.getLeftSubexpression().getType().equals("identifier")
 						&& selExp.getRightSubexpression().getType().equals("identifier")
 						){
-					((RAJoinType)current.getNext()).setSelectionPredicate(selExp);
-					
-					IRAType currentPrevious = current.getPrevious();
-					IRAType currentNext = current.getNext(); 
-					
-					if(currentPrevious.getType().equals("RA_SELECT_TYPE")|| currentPrevious.getType().equals("RA_PROJECT_TYPE") ){
-						currentPrevious.setNext(currentNext);
-						currentNext.setPrevious(currentPrevious);
-					}
-					else if (currentPrevious.getType().equals("RA_JOIN_TYPE")){
-						if(((RAJoinType)currentPrevious).getLeft() == current){
-							((RAJoinType)currentPrevious).setLeft(currentNext);
-						}
-						else
-							((RAJoinType)currentPrevious).setRight(currentNext);
-						
-						currentNext.setPrevious(currentPrevious);
-					}
-					else{
-						System.out.println("SERIOUS ERROR undefined Tree structure");
-					}
-					
-					mergeSelJoinNodes(current.getNext());				
+							((RAJoinType)current.getNext()).setSelectionPredicate(selExp);
+							merge = true;
+							IRAType currentPrevious = current.getPrevious();
+							IRAType currentNext = current.getNext(); 
+							
+							if(currentPrevious.getType().equals("RA_SELECT_TYPE")|| currentPrevious.getType().equals("RA_PROJECT_TYPE") ){
+								currentPrevious.setNext(currentNext);
+								currentNext.setPrevious(currentPrevious);
+							}
+							else if (currentPrevious.getType().equals("RA_JOIN_TYPE")){
+								if(((RAJoinType)currentPrevious).getLeft() == current){
+									((RAJoinType)currentPrevious).setLeft(currentNext);
+								}
+								else
+									((RAJoinType)currentPrevious).setRight(currentNext);
+								
+								currentNext.setPrevious(currentPrevious);
+							}
+							else{
+								System.out.println("SERIOUS ERROR undefined Tree structure");
+							}
+							
+							mergeSelJoinNodes(current.getNext());				
 				}
 				else
 					mergeSelJoinNodes(current.getNext());
@@ -1363,7 +1368,7 @@ public class CommonMethods {
 	 */
 	private static String joinExecution(String leftAlias, String leftTableName,	ArrayList<AttribJoin> oldJoinAttribtsRight,
 			HashSet<String> rightAlias, String outputFileRight,	ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
-			Map<String, String> fromClause,Expression where) {
+			Map<String, String> fromClause,ArrayList<Expression> whereClauses) {
 		
 		
 		String noutputFile= "src/out_"+nameCounter+".tbl";
@@ -1414,74 +1419,97 @@ public class CommonMethods {
 	    ArrayList <String> rightHash = new ArrayList <String> ();
 
 	    
-	    String wherePredicate = "(Int)1 == (Int) 1";
+	    String wherePredicate = null;
 	    
-		//TODO
-	    if(where!= null){
+	    Map<Integer,String> tempLHash = new HashMap<Integer, String>();
+	    Map<Integer,String> tempRHash = new HashMap<Integer, String>();
+	    String nwherePredicate ;
 
-	    	Expression lExp = where.getLeftSubexpression();
-	    	Expression rExp = where.getRightSubexpression();
-	    	
-	    	String convert_1 = replace(lExp.getValue(),leftAlias,"left");
-	    	if(convert_1.indexOf("left")!= -1){
-	    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
-				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}	    				
+	    int selCount = 0;
+	    if(whereClauses.size()!= 0){
+	    	Expression where = whereClauses.get(selCount++);
+		    while(where!= null){
+	
+		    	Expression lExp = where.getLeftSubexpression();
+		    	Expression rExp = where.getRightSubexpression();
+		    	
+		    	String convert_1 = replace(lExp.getValue(),leftAlias,"left");
+		    	if(convert_1.indexOf("left")!= -1){
+		    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
+		    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+		    		if(nwherePredicate.indexOf("left.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempLHash.get(selCount-1)==null )
+							tempLHash.put(selCount-1, tempString);
+					}
+		    		if (nwherePredicate.indexOf("right.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempRHash.get(selCount-1) == null )
+							tempRHash.put(selCount-1, tempString);		
+					}	    				
+		    	}
+		    	
+		    	else{
+		    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
+		    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
+		    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+		    		if(nwherePredicate.indexOf("left.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempLHash.get(selCount-1)== null )
+							tempLHash.put(selCount-1, tempString);
+					}
+		    		if (nwherePredicate.indexOf("right.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempRHash.get(selCount-1) == null )
+							tempRHash.put(selCount-1, tempString);			
+					}	 
+		    	}
+		    if (wherePredicate == null )	
+		    	wherePredicate = nwherePredicate;
+		    
+		    else
+		    	wherePredicate = wherePredicate + " && " + nwherePredicate;
+		    
+		    if(selCount<whereClauses.size())
+		    	where = whereClauses.get(selCount++);
+		    else 
+		    	break;
 	    	}
-	    	
-	    	else{
-	    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
-	    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
-				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}	 
-	    	}
-	    }
-
-
+		    
+		    int count = 0;
+		    while(count < selCount){
+		    	leftHash.add(tempLHash.get(count));
+		    	rightHash.add(tempRHash.get(count));
+		    	count++;
+		    }
+	    }	    
+	    
+	    if(wherePredicate == null )
+	    	wherePredicate = "(Int)1 == (Int) 1";
 		 // run the join
 	    try {
 	    	
@@ -1515,7 +1543,7 @@ public class CommonMethods {
 	 */
 	private static String joinExecution(HashSet<String> leftAlias, 	String outputFileLeft, ArrayList<AttribJoin> oldJoinAttribtsLeft,
 			HashSet<String> rightAlias, String outputFileRight, ArrayList<AttribJoin> oldJoinAttribtsRight, ArrayList<ResultValue> selTypes, 
-			ArrayList<Expression> selectExprs, 	Map<String, String> fromClause2,Expression where) {
+			ArrayList<Expression> selectExprs, 	Map<String, String> fromClause2,ArrayList<Expression> whereClauses) {
 		
 		
 		String noutputFile= "src/out_"+nameCounter+".tbl";
@@ -1569,73 +1597,96 @@ public class CommonMethods {
 //	    rightHash.add ("c_custkey");
 	    
 	    
-		String wherePredicate = "(Int)1 == (Int) 1";
-
+		String wherePredicate = null;
 		
-	    if(where!= null){
-	    	Expression lExp = where.getLeftSubexpression();
-	    	Expression rExp = where.getRightSubexpression();
-	    	
-	    	String convert_1 = replace(lExp.getValue(),leftAlias,"left");
-	    	if(convert_1.indexOf("left")!= -1){
-	    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
-				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}	    				
+	    Map<Integer,String> tempLHash = new HashMap<Integer, String>();
+	    Map<Integer,String> tempRHash = new HashMap<Integer, String>();
+	    String nwherePredicate ;
+		
+	    int selCount = 0;
+	    if(whereClauses.size()!= 0){
+	    	Expression where = whereClauses.get(selCount++);
+			    while(where!= null){
+			    	Expression lExp = where.getLeftSubexpression();
+			    	Expression rExp = where.getRightSubexpression();
+			    	
+			    	String convert_1 = replace(lExp.getValue(),leftAlias,"left");
+			    	if(convert_1.indexOf("left")!= -1){
+			    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
+			    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+			    		if(nwherePredicate.indexOf("left.") != -1){
+							String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+							int finalpos = tempString.indexOf(' ');
+							if (finalpos == -1)
+								tempString = tempString.substring(tempString.indexOf('.')+1);					
+							else
+								tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+							
+							if(tempLHash.get(selCount-1)== null )
+								tempLHash.put(selCount-1, tempString);
+						}
+			    		if (nwherePredicate.indexOf("right.") != -1){
+							String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+							int finalpos = tempString.indexOf(' ');
+							if (finalpos == -1)
+								tempString = tempString.substring(tempString.indexOf('.')+1);					
+							else
+								tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+							
+							if(tempRHash.get(selCount-1) == null )
+								tempRHash.put(selCount-1, tempString);		
+						}	    				
+			    	}
+			    	
+			    	else{
+			    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
+			    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
+			    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+			    		if(nwherePredicate.indexOf("left.") != -1){
+							String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+							int finalpos = tempString.indexOf(' ');
+							if (finalpos == -1)
+								tempString = tempString.substring(tempString.indexOf('.')+1);					
+							else
+								tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+							
+							if(tempLHash.get(selCount-1)==null )
+								tempLHash.put(selCount-1, tempString);
+						}
+			    		if (nwherePredicate.indexOf("right.") != -1){
+							String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+							int finalpos = tempString.indexOf(' ');
+							if (finalpos == -1)
+								tempString = tempString.substring(tempString.indexOf('.')+1);					
+							else
+								tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+							
+							if(tempRHash.get(selCount-1) == null )
+								tempRHash.put(selCount-1, tempString);			
+						}
+					}		    	 
+		    	if (wherePredicate == null)	
+			    	wherePredicate = nwherePredicate;
+				    
+			    else
+			    	wherePredicate = wherePredicate + " && " + nwherePredicate;
+		    	
+			    if(selCount<whereClauses.size())
+			    	where = whereClauses.get(selCount++);
+			    else 
+			    	break;
+		    	}
+			    
+			    int count = 0;
+			    while(count < selCount){
+			    	leftHash.add(tempLHash.get(count));
+			    	rightHash.add(tempRHash.get(count));
+			    	count++;
+			    }
 	    	}
-	    	
-	    	else{
-	    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
-	    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
-				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}
-			}
-
-	    }
-		
+	    
+	    if(wherePredicate == null)
+	    	wherePredicate = "(Int)1 == (Int) 1";
 		 // run the join
 	    try {
 	    	
@@ -1669,7 +1720,7 @@ public class CommonMethods {
 	private static String joinExecution(HashSet<String> leftAlias, String outputFile,ArrayList<AttribJoin> 
 oldJoinAttribts, String rightAlias, String rightTableName,
 			ArrayList<ResultValue> selTypes, ArrayList<Expression> selectExprs,
-			Map<String, String> fromClause,Expression where) {
+			Map<String, String> fromClause,ArrayList<Expression> whereClauses) {
 		
 		String noutputFile= "src/out_"+nameCounter+".tbl";
 		String compiler = "g++";
@@ -1718,78 +1769,98 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 //	    rightHash.add ("c_custkey");
 	    
 	    
-		String wherePredicate = "(Int)1 == (Int) 1";
-	/*	if(where!= null){
-			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
-			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
-			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
-		}
-		*/
+		String wherePredicate = null;
+
 		
-	    if(where!= null){
-			Expression lExp = where.getLeftSubexpression();
-			Expression rExp = where.getRightSubexpression();
-			
-			String convert_1 = replace(lExp.getValue(),leftAlias,"left");
-	    	if(convert_1.indexOf("left")!= -1){
-	    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
+	    Map<Integer,String> tempLHash = new HashMap<Integer, String>();
+	    Map<Integer,String> tempRHash = new HashMap<Integer, String>();
+	    String nwherePredicate ;
+
+	    int selCount = 0;
+	    if(whereClauses.size()!= 0){
+	    	Expression where = whereClauses.get(selCount++);
+		    while(where!= null){
+				Expression lExp = where.getLeftSubexpression();
+				Expression rExp = where.getRightSubexpression();
+				
+				String convert_1 = replace(lExp.getValue(),leftAlias,"left");
+		    	if(convert_1.indexOf("left")!= -1){
+		    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
+		    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+		    		if(nwherePredicate.indexOf("left.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempLHash.get(selCount-1)== null )
+							tempLHash.put(selCount-1, tempString);
+					}
+		    		if (nwherePredicate.indexOf("right.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempRHash.get(selCount-1) == null )
+							tempRHash.put(selCount-1, tempString);	
+					}	    				
+		    	}
+				
+		    	else{
+		    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
+		    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
+		    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+		    		if(nwherePredicate.indexOf("left.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempLHash.get(selCount-1)==null )
+							tempLHash.put(selCount-1, tempString);
+					}
+		    		if (nwherePredicate.indexOf("right.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempRHash.get(selCount-1) == null )
+							tempRHash.put(selCount-1, tempString);		
+					}
 				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}	    				
-	    	}
-			
-	    	else{
-	    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
-	    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
-				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}
-			}
-			
+		    
+		    	 if (wherePredicate == null )	
+				    	wherePredicate = nwherePredicate;
+				    
+			     else
+			    	wherePredicate = wherePredicate + " && " + nwherePredicate;
+		    	 
+			    if(selCount<whereClauses.size())
+			    	where = whereClauses.get(selCount++);
+			    else 
+			    	break;
+		    }
+		    int count = 0;
+		    while(count < selCount){
+		    	leftHash.add(tempLHash.get(count));
+		    	rightHash.add(tempRHash.get(count));
+		    	count++;
+		    }
 
 	    }		
+	    
+	    if(wherePredicate == null )
+	    	wherePredicate = "(Int)1 == (Int) 1";
 		 // run the join
 	    try {
 	    	
@@ -1819,7 +1890,7 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 	private static String joinExecution(String leftAlias, String leftTableName,String rightAlias, 
 											String rightTableName,ArrayList<ResultValue> selTypes,
 											ArrayList<Expression> selectExprs, 
-											Map<String, String> fromClause, Expression where){
+											Map<String, String> fromClause, ArrayList<Expression> whereClauses){
 		
 		String outputFile= "src/out_"+nameCounter +".tbl";
 		String compiler = "g++";
@@ -1858,79 +1929,97 @@ oldJoinAttribts, String rightAlias, String rightTableName,
 //	    rightHash.add ("c_custkey");
 	    
 	    
-		String wherePredicate = "(Int)1 == (Int) 1";
-	/*	if(where!= null){
-			wherePredicate = CommonMethods.parseExpression(where, myFrom,false);
-			wherePredicate = wherePredicate.replaceAll(leftAlias, "left");
-			wherePredicate = wherePredicate.replaceAll(rightAlias, "right");
-		}
-		*/
-		
-	    if(where!= null){
+		String wherePredicate = null;
+	
+		Map<Integer,String> tempLHash = new HashMap<Integer, String>();
+	    Map<Integer,String> tempRHash = new HashMap<Integer, String>();
+	    String nwherePredicate ;
 
-			Expression lExp = where.getLeftSubexpression();
-			Expression rExp = where.getRightSubexpression();
-	    	
-			String convert_1 = replace(lExp.getValue(),leftAlias,"left");
-	    	if(convert_1.indexOf("left")!= -1){
-	    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
-				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}	    				
-	    	}
-	    	
-	    	else{
-	    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
-	    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
-	    		wherePredicate = "" + convert_1 + " == " + convert_2;
-	    		if(wherePredicate.indexOf("left.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("left."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					//change 2
-					if(leftHash.size() == 0 )
-						leftHash.add(tempString);
-				}
-	    		if (wherePredicate.indexOf("right.") != -1){
-					String tempString = wherePredicate.substring(wherePredicate.indexOf("right."));
-					int finalpos = tempString.indexOf(' ');
-					if (finalpos == -1)
-						tempString = tempString.substring(tempString.indexOf('.')+1);					
-					else
-						tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
-					
-					if(rightHash.size() == 0 )
-						rightHash.add(tempString);		
-				}
-			}
+	    int selCount = 0;
+	    if(whereClauses.size()!= 0){
+	    	Expression where = whereClauses.get(selCount++);
+		    while(where!= null){
 
-			
+				Expression lExp = where.getLeftSubexpression();
+				Expression rExp = where.getRightSubexpression();
+		    	
+				String convert_1 = replace(lExp.getValue(),leftAlias,"left");
+		    	if(convert_1.indexOf("left")!= -1){
+		    		String convert_2 = replace(rExp.getValue(),rightAlias,"right");
+		    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+		    		if(nwherePredicate.indexOf("left.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempLHash.get(selCount-1)==null )
+							tempLHash.put(selCount-1, tempString);
+					}
+		    		if (nwherePredicate.indexOf("right.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempRHash.get(selCount-1) == null )
+							tempRHash.put(selCount-1, tempString);	
+					}	    				
+		    	}
+		    	
+		    	else{
+		    		convert_1 = replace(lExp.getValue(),rightAlias,"right");
+		    		String convert_2 = replace(rExp.getValue(),leftAlias,"left");
+		    		nwherePredicate = "" + convert_1 + " == " + convert_2;
+		    		if(nwherePredicate.indexOf("left.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("left."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempLHash.get(selCount-1)==null )
+							tempLHash.put(selCount-1, tempString);
+					}
+		    		if (nwherePredicate.indexOf("right.") != -1){
+						String tempString = nwherePredicate.substring(nwherePredicate.indexOf("right."));
+						int finalpos = tempString.indexOf(' ');
+						if (finalpos == -1)
+							tempString = tempString.substring(tempString.indexOf('.')+1);					
+						else
+							tempString = tempString.substring(tempString.indexOf('.')+1,finalpos);
+						
+						if(tempRHash.get(selCount-1) == null )
+							tempRHash.put(selCount-1, tempString);	
+					}
+				}
+		    	if (wherePredicate == null )	
+			    	wherePredicate = nwherePredicate;
+			    
+			    else
+			    	wherePredicate = wherePredicate + " && " + nwherePredicate;
+		    	
+			    if(selCount<whereClauses.size())
+			    	where = whereClauses.get(selCount++);
+			    else 
+			    	break;
+		    }
+		    
+		    int count = 0;
+		    while(count < selCount){
+		    	leftHash.add(tempLHash.get(count));
+		    	rightHash.add(tempRHash.get(count));
+		    	count++;
+		    }
 	    }
+	    
+	    if(wherePredicate == null )
+	    	wherePredicate = "(Int)1 == (Int) 1";
 		 // run the join
 	    try {
 	    	
