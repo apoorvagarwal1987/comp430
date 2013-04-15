@@ -166,5 +166,10 @@ public class RATableType implements IRAType {
 	public void setJoinCount(int joinCount) {
 		this.joinCount += joinCount;
 	}
+
+
+	public void setTupleCount(int tupleCount) {
+				
+	}
 	
 }

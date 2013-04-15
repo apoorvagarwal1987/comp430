@@ -43,6 +43,22 @@ public class Expression {
 		return rightSubexpression;
 	}
 
+	private int priority;
+	
+	/**
+	 * @return the priority
+	 */
+	public int getPriority() {
+		return priority;
+	}
+
+	/**
+	 * @param priority the priority to set
+	 */
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+
 	private Expression rightSubexpression;
   
   // prints the expression
