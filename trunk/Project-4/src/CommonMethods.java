@@ -2133,7 +2133,6 @@ oldJoinAttribts, String rightAlias, String rightTableName,
                     traverseSelExpression(selectExpression.getRightExpression());                        
             }
             else{
-                    System.out.println(selectExpression.getExpression().print());
                     _selectionPredicates.add(selectExpression.getExpression());
             }
     }

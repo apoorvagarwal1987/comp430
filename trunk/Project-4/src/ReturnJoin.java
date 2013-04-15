@@ -10,6 +10,7 @@ import java.util.ArrayList;
  */
 public class ReturnJoin  {
 
+	
 	private ArrayList<AttribJoin> joinOutAttribts;
 	private String outputFile;
 	

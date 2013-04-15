@@ -15,7 +15,7 @@ public class RAProjectType implements IRAType {
 	private ArrayList <Expression> selectExprs;
 	private ReturnJoin _outputInfo;
 	private ArrayList<String> groupBy;
-	
+	private int tupleCount;
 	/**
 	 * @param _iraType
 	 */
@@ -87,6 +87,21 @@ public class RAProjectType implements IRAType {
 	 */
 	public void setGroupBy(ArrayList<String> groupBy) {
 		this.groupBy = groupBy;
+	}
+
+
+
+	public int getTupleCount() {
+		return tupleCount;
+	}
+
+
+	/* (non-Javadoc)
+	 * @see IRAType#setTupleCount(int)
+	 */
+	@Override
+	public void setTupleCount(int tupleCount) {
+		this.tupleCount = tupleCount;		
 	}
 
 

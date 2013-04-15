@@ -18,8 +18,22 @@ public class RASelectType implements IRAType {
 	private IRAType _previous;
 	private HashSet<String> contributedTable;
 	private IRAType underlyingJoin;
+	private int tupleCount;	
 	
 	
+	
+	/**
+	 * @return the tupleCount
+	 */
+	public int getTupleCount() {
+		return tupleCount;
+	}
+	/**
+	 * @param tupleCount the tupleCount to set
+	 */
+	public void setTupleCount(int tupleCount) {
+		this.tupleCount = tupleCount;
+	}
 	public RASelectType (){
 		this.type = "RA_SELECT_TYPE";		
 		this.selectPredicate = new ArrayList<Expression>();
