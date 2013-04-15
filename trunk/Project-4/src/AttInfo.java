@@ -14,6 +14,21 @@ class AttInfo {
 	private String attName;
 	private String alias;
 	private String tableName;
+	private int outputCount;
+
+	/**
+	 * @return the outputCount
+	 */
+	public int getOutputCount() {
+		return outputCount;
+	}
+
+	/**
+	 * @param outputCount the outputCount to set
+	 */
+	public void setOutputCount(int outputCount) {
+		this.outputCount = outputCount;
+	}
 
 	public AttInfo (int numDistinctVals, String myType, int whichAtt, String attName) {
 		valueCount = numDistinctVals;
