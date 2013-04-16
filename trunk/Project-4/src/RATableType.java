@@ -18,7 +18,7 @@ public class RATableType implements IRAType {
 	private ArrayList <Attribute> attributes;
 	private Map<String, AttInfo> attributesInfo;
 	private double tupleCount;
-	private int joinCount;
+	private int joinPriority;
 	private Map <String, TableData> res;
 	private int position; 
 	private IRAType _previous;
@@ -28,7 +28,7 @@ public class RATableType implements IRAType {
 		this.value = tableName;
 		this.alias = alias;
 		this.type = "RA_TABLE_TYPE";
-		
+		this.joinPriority = 0;
 		// publishing the attribute of the table in the objects of the RA Table-type		
 		this.attributesInfo = new HashMap<String, AttInfo>();
 		Map<String, AttInfo> tattributesInfo = res.get(tableName).getAttributes();		
@@ -156,15 +156,15 @@ public class RATableType implements IRAType {
 	/**
 	 * @return the joinCount
 	 */
-	public int getJoinCount() {
-		return joinCount;
+	public int getjoinPriority() {
+		return joinPriority;
 	}
 
 	/**
 	 * @param joinCount the joinCount to set
 	 */
-	public void setJoinCount(int joinCount) {
-		this.joinCount += joinCount;
+	public void setjoinPriority(int joinPriority) {
+		this.joinPriority += joinPriority;
 	}
 
 
