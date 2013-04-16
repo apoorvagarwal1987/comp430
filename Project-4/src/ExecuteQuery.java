@@ -139,9 +139,9 @@ public class ExecuteQuery {
 	 */
 	public void execution() {
 		CommonMethods.fromClause = myFrom;
-//		CommonMethods.executeRATree(CommonMethods.createRATree(myFrom, mySelect, where,att));
+		CommonMethods.executeRATree(CommonMethods.analysisRATree(myFrom, mySelect, where, att));
 //		CommonMethods.createRATree(myFrom, mySelect, where ,att);
-		CommonMethods.analysisRATree(myFrom, mySelect, where, att);
+		//CommonMethods.analysisRATree(myFrom, mySelect, where, att);
 		
 	}	
 }

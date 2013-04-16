@@ -317,7 +317,7 @@ public class CommonMethods {
 			  return (new ResultValue(2, true));
 		  }
 		
-	public static void analysisRATree(Map <String, String> fromClause, ArrayList <Expression> selectClause,
+	public static IRAType analysisRATree(Map <String, String> fromClause, ArrayList <Expression> selectClause,
 			Expression whereClause, String groupBy){
 		
 		int counter = 1;
@@ -342,6 +342,7 @@ public class CommonMethods {
 			root = null;
 		}
 		System.out.println(root.getTupleCount());
+		return root;
 	}
 	
 	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
