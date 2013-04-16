@@ -320,31 +320,49 @@ public class CommonMethods {
 	public static void analysisRATree(Map <String, String> fromClause, ArrayList <Expression> selectClause,
 			Expression whereClause, String groupBy){
 		
-		IRAType root = createRATree(fromClause, selectClause, whereClause ,groupBy);
-		ReturnJoin costedJoin = CostingRA.costing(root);
-		System.out.println(costedJoin);
-
-	}
-	
-	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
-										Expression whereClause, String groupBy){
-		
-		// First creating the leaf nodes which is basically the
-		// tables present in the from clause of the query.		
-		Map<Integer, RATableType> tablePresent = new HashMap<Integer, RATableType>();
-		Map<Integer, RAJoinType> crossJoinPresent = new HashMap<Integer, RAJoinType>();	
-		Map<Integer, RASelectType> selectPredicatePresent = new HashMap<Integer, RASelectType>();
+		int counter = 1;
 		Map<String,RATableType> tableMap = new HashMap<String, RATableType>();
 		Iterator<String> aliases = fromClause.keySet().iterator();
-		int counter = 1;
-		ArrayList<RATableType> tableOrder = new ArrayList<RATableType>();
 		while(aliases.hasNext()){
 			String alias = aliases.next().toString();
 			String tableName = fromClause.get(alias);
 			RATableType tempRaTableType = new RATableType(tableName,alias,true, counter++);
 			tableMap.put(alias, tempRaTableType);
 		}
-		if(whereClause != null)
+		IRAType root  = null;
+		while(true){
+			CostingRA.change = false;
+			merge = true;
+			root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
+			root.setTupleCount(0);
+			ReturnJoin costedJoin = CostingRA.costing(root,tableMap);
+			if(!CostingRA.change)
+				break;
+			System.out.println(root.getTupleCount());
+			root = null;
+		}
+		System.out.println(root.getTupleCount());
+	}
+	
+	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
+										Expression whereClause, String groupBy, Map<String, RATableType> tableMap){
+		
+		// First creating the leaf nodes which is basically the
+		// tables present in the from clause of the query.		
+		Map<Integer, RATableType> tablePresent = new HashMap<Integer, RATableType>();
+		Map<Integer, RAJoinType> crossJoinPresent = new HashMap<Integer, RAJoinType>();	
+		Map<Integer, RASelectType> selectPredicatePresent = new HashMap<Integer, RASelectType>();
+//		Map<String,RATableType> tableMap = new HashMap<String, RATableType>();
+//		Iterator<String> aliases = fromClause.keySet().iterator();
+		int counter = 1;
+		ArrayList<RATableType> tableOrder = new ArrayList<RATableType>();
+		/*while(aliases.hasNext()){
+			String alias = aliases.next().toString();
+			String tableName = fromClause.get(alias);
+			RATableType tempRaTableType = new RATableType(tableName,alias,true, counter++);
+			tableMap.put(alias, tempRaTableType);
+		}*/
+/*		if(whereClause != null)
 			traverseSelExpression(createSelPredicate(whereClause));
 		
 		for (Expression exp : _selectionPredicates){	
@@ -368,7 +386,7 @@ public class CommonMethods {
 				}
 			}
 		}
-		_selectionPredicates.clear();
+		_selectionPredicates.clear();*/
 		
 		Iterator<String> tableAlias = tableMap.keySet().iterator();
 		while(tableAlias.hasNext()){

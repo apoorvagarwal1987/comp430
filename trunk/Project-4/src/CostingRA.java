@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -18,9 +19,10 @@ public class CostingRA {
 	
 	
 	private static ArrayList<Expression> selectExpression ;
-	
+	public static Boolean change ; 
 	static {
 		selectExpression = new ArrayList<Expression>();
+		change = false;
 	}
 	
 	private static void makeExpression(Expression expression){
@@ -39,19 +41,70 @@ public class CostingRA {
 	
 	
 	
-	public static ReturnJoin costing (IRAType current){
+	public static ReturnJoin costing (IRAType current, Map<String, RATableType> tableMap){
 		
-		if(current.getType().equals("RA_JOIN_TYPE")){
+		if(current.getType().equals("RA_JOIN_TYPE")){			
 			
 			IRAType leftNode = ((RAJoinType)current).getLeft();
 			IRAType rightNode = ((RAJoinType)current).getRight();
 			
-			ReturnJoin leftReturn = costing(leftNode);
-			ReturnJoin rightReturn = costing(rightNode);
+			ReturnJoin leftReturn = costing(leftNode,tableMap);
+			ReturnJoin rightReturn = costing(rightNode,tableMap);
 			
+			if(change)
+				return null;
 			
 			double leftTupleCount = leftNode.getTupleCount();
 			double rightTupleCount = rightNode.getTupleCount();
+			
+			if(leftTupleCount > 10000000){
+				change = true;
+				IRAType traversalPointer = leftNode;
+				if(traversalPointer.getType().equals("RA_SELECT_TYPE")){
+					while(!traversalPointer.getNext().equals("RA_JOIN_TYPE")){
+						traversalPointer = traversalPointer.getNext();
+					}
+				}
+				while(true){
+					
+					if(traversalPointer.getType().equals("RA_JOIN_TYPE")){
+						traversalPointer = ((RAJoinType)traversalPointer).getRight();
+					}
+					
+					else if(traversalPointer.getType().equals("RA_SELECT_TYPE")){
+						traversalPointer = traversalPointer.getNext();
+					}
+						
+					else{
+						//condition that it is a TABLE TYPE
+						break;
+					}
+				}
+				String alias = ((RATableType)traversalPointer).getAlias();
+				Iterator<String> underlyingAlias = ((RAJoinType)current).getUnderlyingTables().iterator();
+				RATableType tempTable = tableMap.get(alias);
+				int currentJoinPriority = tempTable.getjoinPriority(); 
+				Boolean flag = false;
+				String change = null;
+				while(underlyingAlias.hasNext()){
+					String temp = underlyingAlias.next();
+					if(!(tableMap.get(temp).getjoinPriority() == currentJoinPriority)){
+						flag = true;
+						change = temp ;
+					}
+				}
+				
+				if(flag){
+					tempTable = tableMap.get(change);
+					tempTable.setjoinPriority(1);
+					tableMap.put(change, tempTable);
+				}
+				else{
+					tempTable.setjoinPriority(1);
+					tableMap.put(alias,tempTable);
+				}
+				return null;
+			}			
 			
 			ArrayList<AttribJoin> leftAttributes = leftReturn.getJoinOutAttribts();
 			ArrayList<AttribJoin> rightAttributes = rightReturn.getJoinOutAttribts();
@@ -196,6 +249,8 @@ public class CostingRA {
 		}
 		
 		else if(current.getType().equals("RA_SELECT_TYPE")){
+			
+					
 			IRAType nextNode = current.getNext();			
 			
 			/**
@@ -204,7 +259,11 @@ public class CostingRA {
 			 */
 			
 			if(nextNode.getType().equals("RA_JOIN_TYPE") || nextNode.getType().equals("RA_SELECT_TYPE")){
-				ReturnJoin prevResult = costing(nextNode);
+				ReturnJoin prevResult = costing(nextNode,tableMap);
+				
+				if(change)
+					return null;
+				
 				ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 				int pos = 1;
 				double tOut = 0;
@@ -249,6 +308,16 @@ public class CostingRA {
 						double relationTuples = nextNode.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().replace('.', '_');
+						
+						
+						for(AttribJoin attInformation : prevInAttrbutes){
+							AttInfo cAttInfo = attInformation.getAttinfo();
+							double currentCount = cAttInfo.getOutputCount();							
+							if(cAttInfo.getAttName().equals(attribute)){			
+								tOut = (relationTuples/currentCount);
+							}							
+						}
+									
 
 						for(AttribJoin attInformation : prevInAttrbutes){
 							AttInfo cAttInfo = attInformation.getAttinfo();
@@ -256,7 +325,6 @@ public class CostingRA {
 							
 							if(cAttInfo.getAttName().equals(attribute)){								
 								cAttInfo.setOutputCount(1);	
-								tOut = (relationTuples/currentCount);
 							}							
 							else{
 								double min = (currentCount > tOut ) ? tOut : currentCount;								
@@ -279,14 +347,19 @@ public class CostingRA {
 			 * Case 3: When the underlying node is a TABLE
 			 */
 			else{
+				
+				if(change)
+					return null;
+				
+				
 				double tOut = 0;
 				ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 				RATableType next = (RATableType)nextNode;
-				Map<String, AttInfo> tableMap = next.getAttributesInfo();
+				Map<String, AttInfo> tableMapTemp = next.getAttributesInfo();
 				ArrayList<AttInfo> tempInfo = new ArrayList<AttInfo>();
 				
 				int pos = 1 ;
-				for (Entry<String, AttInfo> entry : tableMap.entrySet()) {
+				for (Entry<String, AttInfo> entry : tableMapTemp.entrySet()) {
 					  AttInfo value = entry.getValue();
 					  tempInfo.add(value);
 					}
@@ -309,7 +382,7 @@ public class CostingRA {
 						double relationTuples = next.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().substring(leftExpression.getValue().indexOf('.')+1);
-						int attributeCount = tableMap.get(attribute).getNumDistinctVals();
+						int attributeCount = tableMapTemp.get(attribute).getNumDistinctVals();
 						tOut = (relationTuples/3);
 						for(AttInfo attInformation : tempInfo){
 							if(attInformation.getAttName().equals(attribute)){
@@ -329,7 +402,7 @@ public class CostingRA {
 						double relationTuples = next.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().substring(leftExpression.getValue().indexOf('.')+1);
-						int attributeValueCount = tableMap.get(attribute).getNumDistinctVals();
+						int attributeValueCount = tableMapTemp.get(attribute).getNumDistinctVals();
 						tOut = (relationTuples/attributeValueCount);
 						for(AttInfo attInformation : tempInfo){
 							if(attInformation.getAttName().equals(attribute)){
@@ -362,12 +435,12 @@ public class CostingRA {
 		 */
 		else if(current.getType().equals("RA_TABLE_TYPE")){
 			RATableType currentNode = (RATableType)current;
-			Map<String, AttInfo> tableMap = currentNode.getAttributesInfo();
+			Map<String, AttInfo> tableMapTemp = currentNode.getAttributesInfo();
 			ArrayList<AttInfo> tempInfo = new ArrayList<AttInfo>();
 			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 			double tOut = currentNode.getTupleCount();
 			int pos = 1 ;
-			for (Entry<String, AttInfo> entry : tableMap.entrySet()) {
+			for (Entry<String, AttInfo> entry : tableMapTemp.entrySet()) {
 				  AttInfo value = entry.getValue();
 				  tempInfo.add(value);
 				}			
@@ -389,9 +462,14 @@ public class CostingRA {
 		 * is PROJECT type so just returning the tuple count from the previous node.
 		 */
 		else{
+			
 			RAProjectType currentNode = (RAProjectType)current;
 			IRAType nextNode = currentNode.getNext();
-			ReturnJoin prevOutput = costing(nextNode);
+			ReturnJoin prevOutput = costing(nextNode,tableMap);
+			
+			if(change)
+				return null;
+			
 			double tOut = nextNode.getTupleCount();
 			ArrayList<AttribJoin> joinOutAttribts = prevOutput.getJoinOutAttribts();			
 			currentNode.setTupleCount(tOut);
