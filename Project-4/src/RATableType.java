@@ -17,7 +17,7 @@ public class RATableType implements IRAType {
 	private String alias;
 	private ArrayList <Attribute> attributes;
 	private Map<String, AttInfo> attributesInfo;
-	private int tupleCount;
+	private double tupleCount;
 	private int joinCount;
 	private Map <String, TableData> res;
 	private int position; 
@@ -114,7 +114,7 @@ public class RATableType implements IRAType {
 	/**
 	 * @return the tupleCount
 	 */
-	public int getTupleCount() {
+	public double getTupleCount() {
 		return tupleCount;
 	}
 
@@ -170,6 +170,15 @@ public class RATableType implements IRAType {
 
 	public void setTupleCount(int tupleCount) {
 				
+	}
+
+	/* (non-Javadoc)
+	 * @see IRAType#setTupleCount(double)
+	 */
+	@Override
+	public void setTupleCount(double tupleCount) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

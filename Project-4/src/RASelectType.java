@@ -18,20 +18,20 @@ public class RASelectType implements IRAType {
 	private IRAType _previous;
 	private HashSet<String> contributedTable;
 	private IRAType underlyingJoin;
-	private int tupleCount;	
+	private double tupleCount;	
 	
 	
 	
 	/**
 	 * @return the tupleCount
 	 */
-	public int getTupleCount() {
+	public double getTupleCount() {
 		return tupleCount;
 	}
 	/**
 	 * @param tupleCount the tupleCount to set
 	 */
-	public void setTupleCount(int tupleCount) {
+	public void setTupleCount(double tupleCount) {
 		this.tupleCount = tupleCount;
 	}
 	public RASelectType (){

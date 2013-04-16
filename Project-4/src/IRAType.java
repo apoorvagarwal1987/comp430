@@ -17,7 +17,7 @@ public interface IRAType {
 	public IRAType getPrevious();
 	public void setPrevious(IRAType _previous);
 	
-	public int getTupleCount() ;
-	public void setTupleCount(int tupleCount);
+	public double getTupleCount() ;
+	public void setTupleCount(double tupleCount);
 	
 }

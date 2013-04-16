@@ -14,19 +14,19 @@ class AttInfo {
 	private String attName;
 	private String alias;
 	private String tableName;
-	private int outputCount;
+	private double outputCount;
 
 	/**
 	 * @return the outputCount
 	 */
-	public int getOutputCount() {
+	public double getOutputCount() {
 		return outputCount;
 	}
 
 	/**
 	 * @param outputCount the outputCount to set
 	 */
-	public void setOutputCount(int outputCount) {
+	public void setOutputCount(double outputCount) {
 		this.outputCount = outputCount;
 	}
 

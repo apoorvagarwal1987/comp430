@@ -50,14 +50,14 @@ public class CostingRA {
 			ReturnJoin rightReturn = costing(rightNode);
 			
 			
-			int leftTupleCount = leftNode.getTupleCount();
-			int rightTupleCount = rightNode.getTupleCount();
+			double leftTupleCount = leftNode.getTupleCount();
+			double rightTupleCount = rightNode.getTupleCount();
 			
 			ArrayList<AttribJoin> leftAttributes = leftReturn.getJoinOutAttribts();
 			ArrayList<AttribJoin> rightAttributes = rightReturn.getJoinOutAttribts();
 			Map<String,AttInfo> outAttributes = new HashMap<String, AttInfo>();
 			ArrayList<Expression> joinPredicate = ((RAJoinType)current).getSelectionPredicate();
-			int tOut = 0 ;
+			double tOut = 0 ;
 			
 			/**
 			 * CASE 1: The condition of the cross join
@@ -101,10 +101,97 @@ public class CostingRA {
 			
 			/**
 			 * CASE 2: The condition of the JOIN predicate
+			 * 			Handling the cases where the join predicates 
 			 */
 			else{
-				//TODO
-				return null;
+				double leftDenom = 1;
+				double rightDenom = 1;
+				
+				for(AttribJoin attInformation : leftAttributes){
+					AttInfo lAttInfo = attInformation.getAttinfo();
+					String lAttName =""+lAttInfo.getAlias() +"_"+lAttInfo.getAttName();
+					outAttributes.put(lAttName, lAttInfo);
+				}
+				for(AttribJoin attInformation : rightAttributes){
+					AttInfo rAttInfo = attInformation.getAttinfo();
+					String rAttName =""+rAttInfo.getAlias() +"_"+rAttInfo.getAttName();
+					outAttributes.put(rAttName, rAttInfo);
+				}			
+				
+				for(Expression exp : joinPredicate){					
+					Expression lExp = exp.getLeftSubexpression();
+					Expression rExp = exp.getRightSubexpression();
+					String lAttribute = lExp.getValue().replace('.', '_');
+					String rAttribute = rExp.getValue().replace('.', '_');
+					String lAttNameJoin = null;
+					String rAttNameJoin = null;
+					for(AttribJoin attInformation : leftAttributes){
+						AttInfo cAttInfo = attInformation.getAttinfo();
+						String cAttName =""+cAttInfo.getAlias() +"_"+cAttInfo.getAttName();
+						if(lAttribute.equals(cAttName)){
+							leftDenom = leftDenom * cAttInfo.getOutputCount();
+							lAttNameJoin = cAttName;
+							break;
+						}	
+						else if (rAttribute.equals(cAttName)){
+							rightDenom = rightDenom * cAttInfo.getOutputCount();
+							rAttNameJoin = cAttName;
+							break;
+						}
+						else{
+							//do nothing
+						}
+					}
+					
+					for(AttribJoin attInformation : rightAttributes){
+						AttInfo cAttInfo = attInformation.getAttinfo();
+						String cAttName = ""+cAttInfo.getAlias()+"_"+cAttInfo.getAttName();
+						if(rAttribute.equals(cAttName)){
+							rightDenom = rightDenom * cAttInfo.getOutputCount();
+							rAttNameJoin = cAttName;
+							break;
+						}
+						else if(lAttribute.equals(cAttName)){
+							leftDenom = leftDenom * cAttInfo.getOutputCount();
+							lAttNameJoin = cAttName;
+							break;
+						}	
+						
+						else{
+							//do nothing
+						}
+					}
+					
+					double minValueL = outAttributes.get(lAttNameJoin).getOutputCount();
+					double minValueR = outAttributes.get(rAttNameJoin).getOutputCount();
+					double minValue = (minValueL < minValueR) ? minValueL : minValueR ;
+					
+					AttInfo leftAttInfo = outAttributes.get(lAttNameJoin);
+					leftAttInfo.setOutputCount(minValue);
+					
+					AttInfo rightAttInfo = outAttributes.get(rAttNameJoin);			
+					rightAttInfo.setOutputCount(minValue);
+					
+					outAttributes.put(lAttNameJoin, leftAttInfo);
+					outAttributes.put(rAttNameJoin, rightAttInfo);					
+				}
+				
+				double minLR = (leftDenom < rightDenom ) ? leftDenom : rightDenom;				
+				tOut= minLR * (leftTupleCount/leftDenom)* (rightTupleCount/rightDenom);
+				
+				int pos = 1;
+				ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
+				for(Entry<String, AttInfo> outAttribSet : outAttributes.entrySet()){
+					AttInfo value = outAttribSet.getValue();
+					if(value.getOutputCount() > tOut)
+						value.setOutputCount(tOut);					
+					
+					joinOutAttribts.add(new AttribJoin(value, pos++));
+				}
+				
+				ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
+				current.setTupleCount(tOut);
+				return outputInfo;				
 			}			
 		}
 		
@@ -120,24 +207,23 @@ public class CostingRA {
 				ReturnJoin prevResult = costing(nextNode);
 				ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 				int pos = 1;
-				int tOut = 0;
+				double tOut = 0;
 				ArrayList<AttribJoin> prevInAttrbutes = prevResult.getJoinOutAttribts();
 				Collections.sort(prevInAttrbutes, new AttribJoinComparator());
 				selectExpression.clear();
 				ArrayList<Expression> selExpressions = ((RASelectType)current).getSelectPredicate();
 				for(Expression exp : selExpressions){
 					makeExpression(exp);
-				}
-				
+				}				
 				
 				/**
 				 * Assuming the case when in the select predicate there is only one
 				 * Select predicate which is either equals or
 				 * "greater than" or "less than"
-				 */
+				 */				
 				for(Expression currentExp: selectExpression){					
 					if(currentExp.getType().equals("greater than") || currentExp.getType().equals("less than")){
-						int relationTuples = nextNode.getTupleCount();
+						double relationTuples = nextNode.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().replace('.', '_');
 						
@@ -145,13 +231,13 @@ public class CostingRA {
 						
 						for(AttribJoin attInformation : prevInAttrbutes){
 							AttInfo cAttInfo = attInformation.getAttinfo();
-							int currentCount = cAttInfo.getOutputCount();
+							double currentCount = cAttInfo.getOutputCount();
 							String attName = ""+ cAttInfo.getAlias()+"_"+cAttInfo.getAttName();							
 							if(attName.equals(attribute)){	
 								cAttInfo.setOutputCount(currentCount/3);
 							}
 							else{
-								int min = (currentCount > tOut ) ? tOut : currentCount;								
+								double min = (currentCount > tOut ) ? tOut : currentCount;								
 								cAttInfo.setOutputCount(min);
 							}
 							joinOutAttribts.add(new AttribJoin(cAttInfo, pos++));
@@ -160,20 +246,20 @@ public class CostingRA {
 					}				
 					
 					else if(currentExp.getType().equals("equals")){
-						int relationTuples = nextNode.getTupleCount();
+						double relationTuples = nextNode.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().replace('.', '_');
 
 						for(AttribJoin attInformation : prevInAttrbutes){
 							AttInfo cAttInfo = attInformation.getAttinfo();
-							int currentCount = cAttInfo.getOutputCount();
+							double currentCount = cAttInfo.getOutputCount();
 							
 							if(cAttInfo.getAttName().equals(attribute)){								
 								cAttInfo.setOutputCount(1);	
 								tOut = (relationTuples/currentCount);
 							}							
 							else{
-								int min = (currentCount > tOut ) ? tOut : currentCount;								
+								double min = (currentCount > tOut ) ? tOut : currentCount;								
 								cAttInfo.setOutputCount(min);
 							}							
 							joinOutAttribts.add(new AttribJoin(cAttInfo, pos++));
@@ -190,10 +276,10 @@ public class CostingRA {
 			}			
 			
 			/**
-			 * Case 3: When the underlying node is a BASE TABLE
+			 * Case 3: When the underlying node is a TABLE
 			 */
 			else{
-				int tOut = 0;
+				double tOut = 0;
 				ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
 				RATableType next = (RATableType)nextNode;
 				Map<String, AttInfo> tableMap = next.getAttributesInfo();
@@ -220,7 +306,7 @@ public class CostingRA {
 				 */
 				for(Expression currentExp: selectExpression){					
 					if(currentExp.getType().equals("greater than") || currentExp.getType().equals("less than")){
-						int relationTuples = next.getTupleCount();
+						double relationTuples = next.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().substring(leftExpression.getValue().indexOf('.')+1);
 						int attributeCount = tableMap.get(attribute).getNumDistinctVals();
@@ -230,7 +316,7 @@ public class CostingRA {
 								attInformation.setOutputCount((attributeCount/3));
 							}
 							else{
-								int min = (attInformation.getNumDistinctVals() > tOut ) ?
+								double min = (attInformation.getNumDistinctVals() > tOut ) ?
 												tOut : attInformation.getNumDistinctVals();
 								
 								attInformation.setOutputCount(min);
@@ -240,7 +326,7 @@ public class CostingRA {
 					}				
 					
 					else if(currentExp.getType().equals("equals")){
-						int relationTuples = next.getTupleCount();
+						double relationTuples = next.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().substring(leftExpression.getValue().indexOf('.')+1);
 						int attributeValueCount = tableMap.get(attribute).getNumDistinctVals();
@@ -250,12 +336,11 @@ public class CostingRA {
 								attInformation.setOutputCount(1);
 							}
 							else{
-								int min = (attInformation.getNumDistinctVals() > tOut ) ?
+								double min = (attInformation.getNumDistinctVals() > tOut ) ?
 												tOut : attInformation.getNumDistinctVals();
 								
 								attInformation.setOutputCount(min);
-							}
-							
+							}							
 							joinOutAttribts.add(new AttribJoin(attInformation, pos++));
 						}
 					}
@@ -269,19 +354,18 @@ public class CostingRA {
 				return outputInfo;
 			}
 		}
-		
+
 		/**
-		 * The base case where the current node
+		 * The case where the current node
 		 * is TABLE type so just returning the table tuple output as the 
 		 * number of the tuple count of the base table.
 		 */
-		else{
+		else if(current.getType().equals("RA_TABLE_TYPE")){
 			RATableType currentNode = (RATableType)current;
 			Map<String, AttInfo> tableMap = currentNode.getAttributesInfo();
 			ArrayList<AttInfo> tempInfo = new ArrayList<AttInfo>();
 			ArrayList<AttribJoin> joinOutAttribts = new ArrayList<AttribJoin>();
-			int tOut = currentNode.getTupleCount();
-			current.setTupleCount(tOut);
+			double tOut = currentNode.getTupleCount();
 			int pos = 1 ;
 			for (Entry<String, AttInfo> entry : tableMap.entrySet()) {
 				  AttInfo value = entry.getValue();
@@ -294,6 +378,23 @@ public class CostingRA {
 				attInformation.setOutputCount(outCount);
 				joinOutAttribts.add(new AttribJoin(attInformation, pos++));
 			}
+			
+			current.setTupleCount(tOut);
+			ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
+			return outputInfo;
+		}
+		
+		 /**
+		 * The base case where the current node
+		 * is PROJECT type so just returning the tuple count from the previous node.
+		 */
+		else{
+			RAProjectType currentNode = (RAProjectType)current;
+			IRAType nextNode = currentNode.getNext();
+			ReturnJoin prevOutput = costing(nextNode);
+			double tOut = nextNode.getTupleCount();
+			ArrayList<AttribJoin> joinOutAttribts = prevOutput.getJoinOutAttribts();			
+			currentNode.setTupleCount(tOut);
 			ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
 			return outputInfo;
 		}		

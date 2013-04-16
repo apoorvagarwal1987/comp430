@@ -1,16 +1,13 @@
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * 
  */
 
 /**
- * @author apoorvagarwal
+ * @author apoorv agarwal
  *
  */
 public class ExecuteQuery {
@@ -141,17 +138,10 @@ public class ExecuteQuery {
 	 * 
 	 */
 	public void execution() {
-		switch(myFrom.size()){
-			case 1:
-				CommonMethods.fromClause = myFrom;
-				CommonMethods.executeRATree(CommonMethods.createRATree(myFrom, mySelect, where ,att));
-				break;
-			
-			default:
-				//doJoin();
-				CommonMethods.fromClause = myFrom;
-				CommonMethods.executeRATree(CommonMethods.createRATree(myFrom, mySelect, where,att));
-				break;				
-		}		
+		CommonMethods.fromClause = myFrom;
+//		CommonMethods.executeRATree(CommonMethods.createRATree(myFrom, mySelect, where,att));
+//		CommonMethods.createRATree(myFrom, mySelect, where ,att);
+		CommonMethods.analysisRATree(myFrom, mySelect, where, att);
+		
 	}	
 }
