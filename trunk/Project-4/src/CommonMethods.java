@@ -317,6 +317,15 @@ public class CommonMethods {
 			  return (new ResultValue(2, true));
 		  }
 		
+	public static void analysisRATree(Map <String, String> fromClause, ArrayList <Expression> selectClause,
+			Expression whereClause, String groupBy){
+		
+		IRAType root = createRATree(fromClause, selectClause, whereClause ,groupBy);
+		ReturnJoin costedJoin = CostingRA.costing(root);
+		System.out.println(costedJoin);
+
+	}
+	
 	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
 										Expression whereClause, String groupBy){
 		
@@ -409,6 +418,7 @@ public class CommonMethods {
 				mergeSelJoinNodes(_raProjectType);
 			}
 			System.out.println(_raProjectType);
+			
 			return _raProjectType;
 			
 		}		
@@ -466,19 +476,12 @@ public class CommonMethods {
 			ArrayList<String> groupbyClause = new ArrayList<String>();
 			groupbyClause.add(groupBy);
 			_raProjectType.setGroupBy(groupbyClause);
-			
-			
-			System.out.println(_raProjectType);
-
+						
 			while(merge){
 				merge = false;
 				mergeSelJoinNodes(_raProjectType);
 			}
-			mergeSelSelNodes(_raProjectType);
-			System.out.println(_raProjectType);
-			
-			
-			
+			mergeSelSelNodes(_raProjectType);			
 			return _raProjectType;
 		}
 	}
@@ -487,7 +490,7 @@ public class CommonMethods {
 	 * @param tableMap
 	 * @param selectClause
 	 */
-	private static void analyzeTableOrder(Map<String, RATableType> tableMap, ArrayList<Expression> selectClause) {
+/*	private static void analyzeTableOrder(Map<String, RATableType> tableMap, ArrayList<Expression> selectClause) {
 		for (Expression exp : selectClause){	
 			if(exp.getType().equals("equals")){
 				Expression lExp = exp.getLeftSubexpression();
@@ -502,7 +505,7 @@ public class CommonMethods {
 				}
 			}
 		}
-	}
+	}*/
 
 	/**
 	 * @param _raProjectType

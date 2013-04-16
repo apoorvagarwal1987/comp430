@@ -17,12 +17,12 @@ public class RAJoinType implements IRAType {
  	private ReturnJoin _outputInfo;
  	private HashSet<String> underlyingTables;
  	private ArrayList<Expression> selectionPredicate;
- 	private int tupleCount;
+ 	private double tupleCount;
  	
 	/**
 	 * @return the tupleCount
 	 */
-	public int getTupleCount() {
+	public double getTupleCount() {
 		return tupleCount;
 	}
 
@@ -30,7 +30,7 @@ public class RAJoinType implements IRAType {
 	/**
 	 * @param tupleCount the tupleCount to set
 	 */
-	public void setTupleCount(int tupleCount) {
+	public void setTupleCount(double tupleCount) {
 		this.tupleCount = tupleCount;
 	}
 
