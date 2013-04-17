@@ -2,6 +2,7 @@
  * 
  */
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Scanner;
 
 /**
  * @author apoorvagarwal
@@ -756,7 +758,7 @@ public class CommonMethods {
 		String selection = "(Int)1 == (Int)1";//parseExpression(_raSelectType.getSelectPredicate(), fromClause,true);
 		String tableUsed = previousOutput.getOutputFile();
 		
-		if (checkGroupByQuery(_root)){
+		if (isGroupByQuery(_root)){
 		    try {
 			      @SuppressWarnings("unused")
 			      Grouping foo = new Grouping (tableAttribute, selectExpTypes, 
@@ -766,6 +768,9 @@ public class CommonMethods {
 			      System.out.println("Final output: "+outputFile);
 			      
 			      nameCounter = 0;
+			      
+			      manipulateFile(outputFile,30);
+			      
 			    } 
 		   catch (Exception e) {
 			      throw new RuntimeException (e);
@@ -774,30 +779,65 @@ public class CommonMethods {
 		else{
 			try {
 			      @SuppressWarnings("unused")
-			     /* Grouping foo = new Grouping (tableAttribute, selectExpTypes, 
-			    		  groupingAtts, aggsSelect, 
-			    		  tableUsed, outputFile,compiler, outputLocation); 
-			     */ 
 			      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, 
 			    		  compiler, outputLocation );
 			      
-			      
-			      
-			      System.out.println("Final output: "+outputFile);
-			      
+			      System.out.println("Final output: "+outputFile);			      
 			      nameCounter = 0;
+			      
+			      manipulateFile(outputFile,30);
 			    } 
 		   catch (Exception e) {
 			      throw new RuntimeException (e);
 	       }	
 		}
+		
 	}
 	
 	
-	private static boolean checkGroupByQuery(IRAType node){
+	private static boolean isGroupByQuery(IRAType node){
+		 RAProjectType current = (RAProjectType)node;
+		 String grouppAtt = current.getGroupBy().get(0);
+		 if(grouppAtt!= null){
+			 ArrayList<Expression> selExp = current.getSelectExprs();
+			 for(Expression exp : selExp)
+				 if(isUnaryOperation(exp.getType()))
+					 return true;
+		 }
 		return false;
 	}
 	
+	
+	private static void manipulateFile(String filename, int lineNumber){
+		 int count = 0;
+         Scanner file;
+		try {
+			
+			file = new Scanner(new File(filename));
+	         while (file.hasNextLine()) {
+                 count++;
+                 file.nextLine();
+               }
+	         System.out.println("**************************************FINAL OUTPUT*******************************************************");
+	         System.out.println("The result has " + count + " tuples in it");
+	         count = 0;
+	         file = new Scanner(new File(filename));
+	         while (file.hasNextLine()) {
+                 
+                 if(count<=lineNumber)
+                	 System.out.println(file.nextLine());                
+            	 else
+            		 break;
+                 
+                 count++;
+               }
+	         System.out.println("******************************************************************************************************");
+
+		} 
+		catch (FileNotFoundException e) {			
+			e.printStackTrace();
+		}
+	}
 	
 	/**
 	 * @param selectExpTypes
