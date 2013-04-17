@@ -798,11 +798,14 @@ public class CommonMethods {
 	private static boolean isGroupByQuery(IRAType node){
 		 RAProjectType current = (RAProjectType)node;
 		 String grouppAtt = current.getGroupBy().get(0);
-		 if(grouppAtt!= null){
+		 if(grouppAtt== null){
 			 ArrayList<Expression> selExp = current.getSelectExprs();
 			 for(Expression exp : selExp)
 				 if(isUnaryOperation(exp.getType()))
 					 return true;
+		 }
+		 else{
+			 return true;
 		 }
 		return false;
 	}
