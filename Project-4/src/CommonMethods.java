@@ -330,8 +330,8 @@ public class CommonMethods {
 			tableMap.put(alias, tempRaTableType);
 		}
 		IRAType root  = null;
-		//root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
-		while(true){
+		root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
+		/*while(true){
 			CostingRA.change = false;
 			merge = true;
 			root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
@@ -342,7 +342,7 @@ public class CommonMethods {
 			System.out.println(root.getTupleCount());
 			root = null;
 		}
-		System.out.println(root.getTupleCount());
+		System.out.println(root.getTupleCount());*/
 		return root;
 	}
 	
@@ -741,7 +741,7 @@ public class CommonMethods {
 		
 		ArrayList <Attribute> selectExpTypes = CommonMethods.makeTypeOutAttributes(selResultValue);
 		
-	//	HashMap <String, String> exprs = makeSelectExpression(selectExpTypes, true, ((RAProjectType)_root).getSelectExprs(), fromClause);
+		HashMap <String, String> exprs = makeSelectExpression(selectExpTypes, true, ((RAProjectType)_root).getSelectExprs(), fromClause);
 		
 		HashMap<String,AggFunc> aggsSelect = makeProjectExpression(selectExpTypes, true, ((RAProjectType)_root).getSelectExprs(), fromClause);
 		
@@ -755,18 +755,47 @@ public class CommonMethods {
 		
 		String selection = "(Int)1 == (Int)1";//parseExpression(_raSelectType.getSelectPredicate(), fromClause,true);
 		String tableUsed = previousOutput.getOutputFile();
-	    try {
-		      @SuppressWarnings("unused")
-		      Grouping foo = new Grouping (tableAttribute, selectExpTypes, groupingAtts, aggsSelect, 
-		    		  tableUsed, outputFile,compiler, outputLocation); 
-
-		      System.out.println("Final output: "+outputFile);
-		      
-		      nameCounter = 0;
-		    } 
-	   catch (Exception e) {
-		      throw new RuntimeException (e);
-       }		
+		
+		if (checkGroupByQuery(_root)){
+		    try {
+			      @SuppressWarnings("unused")
+			      Grouping foo = new Grouping (tableAttribute, selectExpTypes, 
+			    		  groupingAtts, aggsSelect, 
+			    		  tableUsed, outputFile,compiler, outputLocation); 
+	
+			      System.out.println("Final output: "+outputFile);
+			      
+			      nameCounter = 0;
+			    } 
+		   catch (Exception e) {
+			      throw new RuntimeException (e);
+	       }	
+		}
+		else{
+			try {
+			      @SuppressWarnings("unused")
+			     /* Grouping foo = new Grouping (tableAttribute, selectExpTypes, 
+			    		  groupingAtts, aggsSelect, 
+			    		  tableUsed, outputFile,compiler, outputLocation); 
+			     */ 
+			      Selection foo = new Selection (tableAttribute, selectExpTypes, selection, exprs, tableUsed, outputFile, 
+			    		  compiler, outputLocation );
+			      
+			      
+			      
+			      System.out.println("Final output: "+outputFile);
+			      
+			      nameCounter = 0;
+			    } 
+		   catch (Exception e) {
+			      throw new RuntimeException (e);
+	       }	
+		}
+	}
+	
+	
+	private static boolean checkGroupByQuery(IRAType node){
+		return false;
 	}
 	
 	

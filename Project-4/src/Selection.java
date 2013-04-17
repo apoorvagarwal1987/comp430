@@ -49,6 +49,9 @@ class Selection {
     }
     out.close ();
     
+    
+    
+    
     // next we write the code with the selection predicate
     fstream = new FileWriter(cppDir + "Predicate.cc");
     out = new BufferedWriter (fstream);
@@ -114,6 +117,10 @@ class Selection {
     }
     
     // and we run it
+    
+    // HACK
+    //inFile = "foo.tbl";
+    
     try {            
       Runtime rt = Runtime.getRuntime();
       String cmdarr[] = {cppDir + "a.out", inFile, outFile};
