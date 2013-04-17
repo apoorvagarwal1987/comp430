@@ -118,7 +118,7 @@ public class ExecuteQuery {
 	    	//selectExpTypes, selection, exprs, tableUsed, 
 	    	//outputFile, compiler, outputLocation );
 
-	    } catch (Exception e) {
+	    } catch (Exception e)  {
 	      throw new RuntimeException (e);
 	    }
 	}
