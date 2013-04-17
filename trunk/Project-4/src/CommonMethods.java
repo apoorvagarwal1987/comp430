@@ -332,19 +332,23 @@ public class CommonMethods {
 			tableMap.put(alias, tempRaTableType);
 		}
 		IRAType root  = null;
-		root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
-		/*while(true){
+		//root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
+		while(true){
 			CostingRA.change = false;
 			merge = true;
 			root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
 			root.setTupleCount(0);
+			
+			if(tableMap.size() < 2)
+				return root;
+			
 			ReturnJoin costedJoin = CostingRA.costing(root,tableMap);
 			if(!CostingRA.change)
 				break;
 			System.out.println(root.getTupleCount());
 			root = null;
 		}
-		System.out.println(root.getTupleCount());*/
+		System.out.println(root.getTupleCount());
 		return root;
 	}
 	
