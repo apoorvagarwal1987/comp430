@@ -9,8 +9,8 @@ class Runner {
     long startTime = System.currentTimeMillis();  
 //    System.out.println ("first running a selection...");
 //    DoSelection ();
-    System.out.println ("now running a join...");
-    DoJoin ();
+    System.out.println ("now running a temp join...");
+    DoSelectionTemp ();
     /*System.out.println ("now running a group by...");
     DoGroupBy ();*/
     long endTime = System.currentTimeMillis();
@@ -57,6 +57,9 @@ class Runner {
       throw new RuntimeException (e);
     }
   }
+  
+  
+  
   
   /******************************************/
   // This code shows how to run a selection //
@@ -162,5 +165,88 @@ class Runner {
     }
     
   }
+  
+  
+  
+  private static void DoSelectionTemp () {
+      
+	    ArrayList <Attribute> inAtts = new ArrayList <Attribute> ();
+	    inAtts.add (new Attribute ("Int", "l_orderkey"));
+	    inAtts.add (new Attribute ("Int", "l_partkey"));
+	    inAtts.add (new Attribute ("Int", "l_suppkey"));
+	    inAtts.add (new Attribute ("Int", "l_linenumber"));
+	    inAtts.add (new Attribute ("Int", "l_quantity"));
+	    
+	    inAtts.add (new Attribute ("Float", "l_extendedprice"));
+	    inAtts.add (new Attribute ("Float", "l_discount"));
+	    inAtts.add (new Attribute ("Float", "l_tax"));
+
+	    inAtts.add (new Attribute ("Str", "l_returnflag"));
+	    inAtts.add (new Attribute ("Str", "l_linestatus"));
+	    inAtts.add (new Attribute ("Str", "l_shipdate"));
+	    inAtts.add (new Attribute ("Str", "l_commitdate"));
+	    inAtts.add (new Attribute ("Str", "l_receiptdate"));
+	    inAtts.add (new Attribute ("Str", "l_shipinstruct"));
+	    inAtts.add (new Attribute ("Str", "l_shipmode"));
+	    inAtts.add (new Attribute ("Str", "l_comment"));
+
+
+	    
+	    ArrayList <Attribute> outAtts = new ArrayList <Attribute> ();
+	    outAtts.add (new Attribute ("Int", "att1"));
+	    outAtts.add (new Attribute ("Int", "att2"));
+	    outAtts.add (new Attribute ("Int", "att3"));
+	    outAtts.add (new Attribute ("Int", "att4"));
+	    outAtts.add (new Attribute ("Int", "att5"));
+	    
+	    outAtts.add (new Attribute ("Float", "att6"));
+	    outAtts.add (new Attribute ("Float", "att7"));
+	    outAtts.add (new Attribute ("Float", "att8"));
+
+	    outAtts.add (new Attribute ("Str", "att9"));
+	    outAtts.add (new Attribute ("Str", "att10"));
+	    outAtts.add (new Attribute ("Str", "att11"));
+	    outAtts.add (new Attribute ("Str", "att12"));
+	    outAtts.add (new Attribute ("Str", "att13"));
+	    outAtts.add (new Attribute ("Str", "att14"));
+	    outAtts.add (new Attribute ("Str", "att15"));
+	    outAtts.add (new Attribute ("Str", "att16"));
+	    
+	    for (Attribute att : outAtts){
+	    	att.print();
+	    }
+	    
+	    String selection = "l_shipinstruct == Str (\"take back return\") && " +
+    			"(l_extendedprice / l_quantity) > Float (1759.6) && " +
+    			"(l_extendedprice / l_quantity) < Float (1759.8)";
+	    
+	    HashMap <String, String> exprs = new HashMap <String, String> ();
+	    exprs.put ("att1", "l_orderkey");
+	    exprs.put ("att2", "l_partkey");
+	    exprs.put ("att3", "l_suppkey");
+	    exprs.put ("att4", "l_linenumber");
+	    exprs.put ("att5", "l_quantity");
+	    exprs.put ("att6", "l_extendedprice");
+	    exprs.put ("att7", "l_discount");
+	    exprs.put ("att8", "l_tax");
+	    exprs.put ("att9", "l_returnflag");
+	    exprs.put ("att10", "l_linestatus");
+	    exprs.put ("att11", "l_shipdate");
+	    exprs.put ("att12", "l_commitdate");
+	    exprs.put ("att13", "l_receiptdate");
+	    exprs.put ("att14", "l_shipinstruct");
+	    exprs.put ("att15", "l_shipmode");
+	    exprs.put ("att16", "l_comment");
+	    
+	    System.out.println(exprs);
+	    
+	    // run the selection operation
+	    try {
+	      Selection foo = new Selection (inAtts, outAtts, selection, exprs, "src/lineitem.tbl", "src/outTemp.tbl", "g++", "src/cppDir/"); 
+	    } catch (Exception e) {
+	      throw new RuntimeException (e);
+	    }
+	  }
+  
   
 }

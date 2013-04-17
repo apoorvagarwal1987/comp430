@@ -330,6 +330,7 @@ public class CommonMethods {
 			tableMap.put(alias, tempRaTableType);
 		}
 		IRAType root  = null;
+		//root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
 		while(true){
 			CostingRA.change = false;
 			merge = true;
@@ -348,6 +349,7 @@ public class CommonMethods {
 	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
 										Expression whereClause, String groupBy, Map<String, RATableType> tableMap){
 		
+		_selectionPredicates.clear();
 		// First creating the leaf nodes which is basically the
 		// tables present in the from clause of the query.		
 		Map<Integer, RATableType> tablePresent = new HashMap<Integer, RATableType>();
@@ -436,6 +438,7 @@ public class CommonMethods {
 				merge = false;
 				mergeSelJoinNodes(_raProjectType);
 			}
+			mergeSelSelNodes(_raProjectType);
 			System.out.println(_raProjectType);
 			
 			return _raProjectType;
@@ -447,6 +450,7 @@ public class CommonMethods {
 			RATableType _raLeftTable = tablePresent.get(current);
 			RATableType _raRightTable = tablePresent.get(++current);
 			_raJoin.setBranch(_raLeftTable,_raRightTable);
+			_raJoin.getSelectionPredicate().clear();
 			_raLeftTable.setPrevious(_raJoin);
 			_raRightTable.setPrevious(_raJoin);
 			crossJoinPresent.put(counter++,_raJoin);
@@ -458,6 +462,7 @@ public class CommonMethods {
 				_raTempJoin.setBranch(_insertedRAJoin,_raRightTable);
 				_raRightTable.setPrevious(_raTempJoin);
 				_insertedRAJoin.setPrevious(_raTempJoin);
+				_raTempJoin.getSelectionPredicate().clear();
 				crossJoinPresent.put(counter++,_raTempJoin);				
 			}		
 			RAJoinType _raJoinTop = crossJoinPresent.get(counter-1); 
