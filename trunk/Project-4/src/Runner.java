@@ -10,7 +10,9 @@ class Runner {
 //    System.out.println ("first running a selection...");
 //    DoSelection ();
     System.out.println ("now running a temp join...");
-    DoSelectionTemp ();
+   /// DoSelectionTemp ();
+    
+    DoGroupBy();
     /*System.out.println ("now running a group by...");
     DoGroupBy ();*/
     long endTime = System.currentTimeMillis();
@@ -37,18 +39,18 @@ class Runner {
     ArrayList <Attribute> outAtts = new ArrayList <Attribute> ();
     outAtts.add (new Attribute ("Str", "att1"));
     outAtts.add (new Attribute ("Str", "att2"));
-    outAtts.add (new Attribute ("Float", "att3"));
-    outAtts.add (new Attribute ("Int", "att4"));
+   // outAtts.add (new Attribute ("Float", "att3"));
+   // outAtts.add (new Attribute ("Int", "att4"));
     
     ArrayList <String> groupingAtts = new ArrayList <String> ();
-    groupingAtts.add ("o_orderdate");
-    groupingAtts.add ("o_orderstatus");
+    /*groupingAtts.add ("o_orderdate");
+    groupingAtts.add ("o_orderstatus");*/
     
     HashMap <String, AggFunc> myAggs = new HashMap <String, AggFunc>  ();
     myAggs.put ("att1", new AggFunc ("none", "Str(\"status: \") + o_orderstatus"));
     myAggs.put ("att2", new AggFunc ("none", "Str(\"date: \") + o_orderdate"));
-    myAggs.put ("att3", new AggFunc ("avg", "o_totalprice * Int (100)"));
-    myAggs.put ("att4", new AggFunc ("sum", "Int (1)"));
+   // myAggs.put ("att3", new AggFunc ("avg", "o_totalprice * Int (100)"));
+    //myAggs.put ("att4", new AggFunc ("sum", "Int (1)"));
     
     // run the selection operation
     try {
