@@ -129,8 +129,7 @@ public class ExecuteQuery {
 	 */
 	
 	public void doJoin() {
-		//CommonMethods.executeRATree(myFrom, mySelect, where);
-		
+		//CommonMethods.executeRATree(myFrom, mySelect, where);		
 		//CommonMethods.createRATree(myFrom, mySelect, where);
 	}
 	
@@ -141,7 +140,7 @@ public class ExecuteQuery {
 		CommonMethods.fromClause = myFrom;
 		CommonMethods.executeRATree(CommonMethods.analysisRATree(myFrom, mySelect, where, att));
 //		CommonMethods.createRATree(myFrom, mySelect, where ,att);
-		//CommonMethods.analysisRATree(myFrom, mySelect, where, att);
+//		CommonMethods.analysisRATree(myFrom, mySelect, where, att);
 		
 	}	
 }

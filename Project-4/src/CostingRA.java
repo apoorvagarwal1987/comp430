@@ -196,7 +196,7 @@ public class CostingRA {
 						}
 					}
 					
-					for(AttribJoin attInformation : rightAttributes){
+ 					for(AttribJoin attInformation : rightAttributes){
 						AttInfo cAttInfo = attInformation.getAttinfo();
 						String cAttName = ""+cAttInfo.getAlias()+"_"+cAttInfo.getAttName();
 						if(rAttribute.equals(cAttName)){
@@ -359,6 +359,8 @@ public class CostingRA {
 				ArrayList<AttInfo> tempInfo = new ArrayList<AttInfo>();
 				
 				int pos = 1 ;
+				Map<String,AttInfo> modifiedOutput = new HashMap<String, AttInfo>();
+				
 				for (Entry<String, AttInfo> entry : tableMapTemp.entrySet()) {
 					  AttInfo value = entry.getValue();
 					  tempInfo.add(value);
@@ -367,6 +369,7 @@ public class CostingRA {
 				
 				Collections.sort(tempInfo, new AttInfoComparator());
 				selectExpression.clear();
+				double relationTuples = next.getTupleCount();
 				ArrayList<Expression> selExpressions = ((RASelectType)current).getSelectPredicate();
 				for(Expression exp : selExpressions){
 					makeExpression(exp);
@@ -379,42 +382,43 @@ public class CostingRA {
 				 */
 				for(Expression currentExp: selectExpression){					
 					if(currentExp.getType().equals("greater than") || currentExp.getType().equals("less than")){
-						double relationTuples = next.getTupleCount();
+						
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().substring(leftExpression.getValue().indexOf('.')+1);
 						int attributeCount = tableMapTemp.get(attribute).getNumDistinctVals();
-						tOut = (relationTuples/3);
+						tOut = tOut + (relationTuples/3);
 						for(AttInfo attInformation : tempInfo){
-							if(attInformation.getAttName().equals(attribute)){
-								attInformation.setOutputCount((attributeCount/3));
+							if(attInformation.getAttName().equals(attribute)){								
+								double count = attInformation.getOutputCount() + (attributeCount/3);								
+								attInformation.setOutputCount(count);							
 							}
-							else{
+							/*else{
 								double min = (attInformation.getNumDistinctVals() > tOut ) ?
 												tOut : attInformation.getNumDistinctVals();
 								
 								attInformation.setOutputCount(min);
 							}							
-							joinOutAttribts.add(new AttribJoin(attInformation, pos++));
-						}
+							joinOutAttribts.add(new AttribJoin(attInformation, pos++));*/
+						}						
 					}				
 					
 					else if(currentExp.getType().equals("equals")){
-						double relationTuples = next.getTupleCount();
 						Expression leftExpression = currentExp.getLeftSubexpression();
 						String attribute = leftExpression.getValue().substring(leftExpression.getValue().indexOf('.')+1);
 						int attributeValueCount = tableMapTemp.get(attribute).getNumDistinctVals();
-						tOut = (relationTuples/attributeValueCount);
+						tOut = tOut + (relationTuples/attributeValueCount);
 						for(AttInfo attInformation : tempInfo){
-							if(attInformation.getAttName().equals(attribute)){
-								attInformation.setOutputCount(1);
+							if(attInformation.getAttName().equals(attribute)){								
+								double count = attInformation.getOutputCount() + 1;								
+								attInformation.setOutputCount(count);							
 							}
-							else{
+							/*else{
 								double min = (attInformation.getNumDistinctVals() > tOut ) ?
 												tOut : attInformation.getNumDistinctVals();
 								
 								attInformation.setOutputCount(min);
 							}							
-							joinOutAttribts.add(new AttribJoin(attInformation, pos++));
+							joinOutAttribts.add(new AttribJoin(attInformation, pos++));*/
 						}
 					}
 					else{
@@ -423,7 +427,23 @@ public class CostingRA {
 				}
 				selectExpression.clear();
 				ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
-				current.setTupleCount(tOut);
+				double tOutFinal = (tOut < relationTuples) ? tOut : relationTuples;
+				for(AttInfo attInformation : tempInfo){
+					if(attInformation.getOutputCount() != 0){
+						double outputCount = attInformation.getOutputCount();
+						double minCount = (tOut<outputCount)? tOut : outputCount;
+						attInformation.setOutputCount(minCount);
+						joinOutAttribts.add(new AttribJoin(attInformation, pos++));
+					}
+					else{
+						double distinctValue = attInformation.getNumDistinctVals();
+						double minCount = (tOut<distinctValue)? tOut : distinctValue;
+						attInformation.setOutputCount(minCount);
+						joinOutAttribts.add(new AttribJoin(attInformation, pos++));
+					}					
+				}				
+				
+				current.setTupleCount(tOutFinal);
 				return outputInfo;
 			}
 		}
