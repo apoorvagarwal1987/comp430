@@ -792,6 +792,24 @@ public class CommonMethods {
 	       }	
 		}
 		
+		File delfilePrev = new File(tableUsed); 
+	      
+	      if(delfilePrev.delete()){
+  			System.out.println(delfilePrev.getName() + " is deleted!");
+  		}else{
+  			System.out.println( delfilePrev.getName()  + " Delete operation is failed.");
+  		}
+		
+	      
+	      File delfileCurrent = new File(outputFile); 
+	      
+	      if(delfileCurrent.delete()){
+  			System.out.println(delfileCurrent.getName() + " is deleted!");
+  		}else{
+  			System.out.println( delfileCurrent.getName()  + " Delete operation is failed.");
+  		}
+	      
+		
 	}
 	
 	
