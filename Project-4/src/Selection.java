@@ -52,6 +52,14 @@ class Selection {
     // next we write the code with the selection predicate
     fstream = new FileWriter(cppDir + "Predicate.cc");
     out = new BufferedWriter (fstream);
+   /* if(selectionPredOnInAtts.equals("(Int)1 == (Int)1")){
+    	
+    }
+    else{
+    	selectionPredOnInAtts = "l_l_shipinstruct == Str (\"take back return\") && " +
+    			"(l_l_extendedprice / l_l_quantity) > Float (1759.6) && " +
+    			"(l_l_extendedprice / l_l_quantity) < Float (1759.8)";
+    }*/
     out.write ("return " + selectionPredOnInAtts + ";\n");
     out.close ();
     

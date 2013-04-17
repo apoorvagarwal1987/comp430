@@ -57,7 +57,7 @@ public class CostingRA {
 			double leftTupleCount = leftNode.getTupleCount();
 			double rightTupleCount = rightNode.getTupleCount();
 			
-			if(leftTupleCount > 10000000){
+			if(leftTupleCount > 1000000){
 				change = true;
 				IRAType traversalPointer = leftNode;
 				if(traversalPointer.getType().equals("RA_SELECT_TYPE")){
