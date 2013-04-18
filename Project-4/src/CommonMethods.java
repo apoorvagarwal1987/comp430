@@ -3,6 +3,7 @@
  */
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 /**
  * @author apoorvagarwal
@@ -25,7 +27,8 @@ public class CommonMethods {
 	static HashSet<String> contributedTable;
 	static IRAType helper ;
 	static boolean merge ;
-	
+	public static Map<ArrayList<Integer>,Number> costMapFinal;
+
 	//This needs to be initialized during the call of the class
 	static Map <String, String> fromClause;
 	
@@ -34,6 +37,8 @@ public class CommonMethods {
 		_selectionPredicates = new ArrayList<Expression>();
 		contributedTable = new HashSet<String>();			
 		merge = true;
+		costMapFinal = new HashMap<ArrayList<Integer>, Number>();
+
 	}
 	
 	/**
@@ -342,11 +347,54 @@ public class CommonMethods {
 			if(tableMap.size() < 2)
 				return root;
 			
-			ReturnJoin costedJoin = CostingRA.costing(root,tableMap);
-			if(!CostingRA.change)
-				break;
-			System.out.println(root.getTupleCount());
-			root = null;
+			else{
+				CostingRA.storeJoinOrders(tableMap.size());
+				for (Entry<ArrayList<Integer>, Number> entry : CostingRA.costMap.entrySet()) {
+					ArrayList<Integer> joinOrder = entry.getKey();
+					int pos = 0;
+					Map<String,RATableType> costTableMap = new HashMap<String, RATableType>();
+					for (Entry<String, RATableType> tableSet : tableMap.entrySet()) {
+						String tableAlias = tableSet.getKey();
+						RATableType table = tableSet.getValue();
+						table.setjoinPriority(joinOrder.get(pos++));						
+						costTableMap.put(tableAlias, table);					
+					}					
+					root = createRATree(fromClause, selectClause,whereClause,groupBy,costTableMap);
+					@SuppressWarnings("unused")
+					ReturnJoin costedJoin = CostingRA.costing(root,costTableMap);
+					costMapFinal.put(joinOrder, root.getTotalTupleCount());
+					pos = 0;
+				}
+				
+				CostMapComparator cmp = new CostMapComparator(costMapFinal);
+				TreeMap<ArrayList<Integer> , Number>sortedCostMap = new TreeMap<ArrayList<Integer> , Number>(cmp);
+				System.out.println(sortedCostMap);			
+				
+				double min = Double.MAX_VALUE;
+				ArrayList<Integer> bestPlan = new ArrayList<Integer>(); 
+				for (Entry<ArrayList<Integer>, Number> tableSet : costMapFinal.entrySet()){
+					double current = tableSet.getValue().doubleValue();
+					if(current < min){
+						min = current;
+						bestPlan = tableSet.getKey();
+					}
+				}
+				
+				int pos = 0;
+				Map<String,RATableType> costTableMap = new HashMap<String, RATableType>();
+				for (Entry<String, RATableType> tableSet : tableMap.entrySet()) {
+					String tableAlias = tableSet.getKey();
+					RATableType table = tableSet.getValue();
+					table.setjoinPriority(bestPlan.get(pos++));						
+					costTableMap.put(tableAlias, table);					
+				}					
+				root = createRATree(fromClause, selectClause,whereClause,groupBy,costTableMap);		
+				
+				if(!CostingRA.change)
+					break;
+				System.out.println(root.getTupleCount());
+				root = null;
+			}
 		}
 		System.out.println(root.getTupleCount());
 		return root;

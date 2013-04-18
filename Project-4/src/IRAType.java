@@ -20,4 +20,7 @@ public interface IRAType {
 	public double getTupleCount() ;
 	public void setTupleCount(double tupleCount);
 	
+	public double getTotalTupleCount();
+	public void setTotalTupleCount(double totalTupleCount);
+	
 }
