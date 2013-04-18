@@ -330,11 +330,13 @@ public class CommonMethods {
 		int counter = 1;
 		Map<String,RATableType> tableMap = new HashMap<String, RATableType>();
 		Iterator<String> aliases = fromClause.keySet().iterator();
+		ArrayList<String> aliasArray = new ArrayList<String>();
 		while(aliases.hasNext()){
 			String alias = aliases.next().toString();
 			String tableName = fromClause.get(alias);
 			RATableType tempRaTableType = new RATableType(tableName,alias,true, counter++);
 			tableMap.put(alias, tempRaTableType);
+			aliasArray.add(alias);
 		}
 		IRAType root  = null;
 		//root = createRATree(fromClause, selectClause,whereClause,groupBy,tableMap);
@@ -353,11 +355,12 @@ public class CommonMethods {
 					ArrayList<Integer> joinOrder = entry.getKey();
 					int pos = 0;
 					Map<String,RATableType> costTableMap = new HashMap<String, RATableType>();
-					for (Entry<String, RATableType> tableSet : tableMap.entrySet()) {
-						String tableAlias = tableSet.getKey();
-						RATableType table = tableSet.getValue();
+					
+					while(pos<tableMap.size()) {						
+						String tableAlias = aliasArray.get(pos);
+						RATableType table = tableMap.get(tableAlias);
 						table.setjoinPriority(joinOrder.get(pos++));						
-						costTableMap.put(tableAlias, table);					
+						costTableMap.put(tableAlias, table);							
 					}					
 					root = createRATree(fromClause, selectClause,whereClause,groupBy,costTableMap);
 					@SuppressWarnings("unused")
@@ -382,28 +385,33 @@ public class CommonMethods {
 				
 				int pos = 0;
 				Map<String,RATableType> costTableMap = new HashMap<String, RATableType>();
-				for (Entry<String, RATableType> tableSet : tableMap.entrySet()) {
-					String tableAlias = tableSet.getKey();
-					RATableType table = tableSet.getValue();
+								
+				while(pos<tableMap.size()) {						
+					String tableAlias = aliasArray.get(pos);
+					RATableType table = tableMap.get(tableAlias);
 					table.setjoinPriority(bestPlan.get(pos++));						
-					costTableMap.put(tableAlias, table);					
-				}					
-				root = createRATree(fromClause, selectClause,whereClause,groupBy,costTableMap);		
+					costTableMap.put(tableAlias, table);							
+				}	
 				
-				if(!CostingRA.change)
-					break;
+				root = createRATree(fromClause, selectClause,whereClause,groupBy,costTableMap);		
+				merge = true;
+				while(merge){
+					merge = false;
+					mergeSelJoinNodes(root);
+				}
+				mergeSelSelNodes(root);	
 				System.out.println(root.getTupleCount());
-				root = null;
+				return root;
 			}
 		}
-		System.out.println(root.getTupleCount());
-		return root;
+		//System.out.println(root.getTupleCount());		
 	}
 	
 	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
 										Expression whereClause, String groupBy, Map<String, RATableType> tableMap){
 		
 		_selectionPredicates.clear();
+		merge = true;
 		// First creating the leaf nodes which is basically the
 		// tables present in the from clause of the query.		
 		Map<Integer, RATableType> tablePresent = new HashMap<Integer, RATableType>();
