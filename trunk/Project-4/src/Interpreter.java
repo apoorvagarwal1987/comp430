@@ -18,7 +18,7 @@ public static void main (String [] args) throws Exception {
     	
       InputStreamReader converter = new InputStreamReader(System.in);
       BufferedReader in = new BufferedReader(converter);
-      
+      long startTimeProgram = System.currentTimeMillis();
       System.out.format ("\nSQL>");
       String soFar = in.readLine () + " ";
       
@@ -45,9 +45,9 @@ public static void main (String [] args) throws Exception {
         if (parser.parse () == false) {
           break; 
         }
-        
+        System.out.println("************************************************************************************************\n");
         // print the results
-        System.out.println ("RESULT OF PARSING");
+        System.out.println ("\n\nRESULT OF PARSING");
         System.out.println ("Expressions in SELECT:");
         ArrayList <Expression> mySelect = parser.getSELECT ();
         for (Expression e : mySelect)
@@ -87,19 +87,27 @@ public static void main (String [] args) throws Exception {
 	  	  * Executing the query for Hw 4.2
 	  	  */
 	 
-	  	System.out.println("\n\n************************Execution of Query************************************************\n");
+	  	System.out.println("\n\n*****************************Execution of Query************************************************\n");
 
 	    long startTime = System.currentTimeMillis(); 
 	    new ExecuteQuery(myFrom,mySelect,att,where,rvQuery.getSelTypes()).execution();
 	    long endTime = System.currentTimeMillis();
 	    System.out.println("The run took " + (endTime - startTime) + " milliseconds");
 	    
-	  	System.out.println("***********************************************************************************************\n");
+	  	System.out.println("**************************************************************************************************\n");
 
 	  	
 	  	System.out.format ("\nSQL>");
               
       } 
+      
+      
+      long endTimeProgram = System.currentTimeMillis();
+	    System.out.println("The Complete Session took " + (endTimeProgram - startTimeProgram) + " milliseconds");
+	    
+	  	System.out.println("**************************************************************************************************\n");
+
+      
     } catch (Exception e) {
       System.out.println("Error! Exception: " + e.getStackTrace()); 
     } 

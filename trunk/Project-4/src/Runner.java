@@ -7,14 +7,16 @@ class Runner {
   static public void main (String [] args) {
 
     long startTime = System.currentTimeMillis();  
-//    System.out.println ("first running a selection...");
-//    DoSelection ();
-    System.out.println ("now running a temp join...");
-   /// DoSelectionTemp ();
+
+    System.out.println ("first running a selection...");
+    DoSelection ();
+
+    System.out.println ("now running a join by...");
+    DoJoin();
     
-    DoGroupBy();
-    /*System.out.println ("now running a group by...");
-    DoGroupBy ();*/
+    System.out.println ("now running a group by...");
+    DoGroupBy ();
+    
     long endTime = System.currentTimeMillis();
     System.out.println("The run took " + (endTime - startTime) + " milliseconds");
   }
@@ -39,18 +41,18 @@ class Runner {
     ArrayList <Attribute> outAtts = new ArrayList <Attribute> ();
     outAtts.add (new Attribute ("Str", "att1"));
     outAtts.add (new Attribute ("Str", "att2"));
-   // outAtts.add (new Attribute ("Float", "att3"));
-   // outAtts.add (new Attribute ("Int", "att4"));
+    outAtts.add (new Attribute ("Float", "att3"));
+    outAtts.add (new Attribute ("Int", "att4"));
     
     ArrayList <String> groupingAtts = new ArrayList <String> ();
-    /*groupingAtts.add ("o_orderdate");
-    groupingAtts.add ("o_orderstatus");*/
+    groupingAtts.add ("o_orderdate");
+    groupingAtts.add ("o_orderstatus");
     
     HashMap <String, AggFunc> myAggs = new HashMap <String, AggFunc>  ();
     myAggs.put ("att1", new AggFunc ("none", "Str(\"status: \") + o_orderstatus"));
     myAggs.put ("att2", new AggFunc ("none", "Str(\"date: \") + o_orderdate"));
-   // myAggs.put ("att3", new AggFunc ("avg", "o_totalprice * Int (100)"));
-    //myAggs.put ("att4", new AggFunc ("sum", "Int (1)"));
+    myAggs.put ("att3", new AggFunc ("avg", "o_totalprice * Int (100)"));
+    myAggs.put ("att4", new AggFunc ("sum", "Int (1)"));
     
     // run the selection operation
     try {
@@ -86,10 +88,6 @@ class Runner {
     outAtts.add (new Attribute ("Str", "att3"));
     outAtts.add (new Attribute ("Int", "att4"));
     
-    for (Attribute att : outAtts){
-    	att.print();
-    }
-    
     String selection = "o_orderdate > Str (\"1996-12-19\") && o_custkey < Int (100)";
     
     HashMap <String, String> exprs = new HashMap <String, String> ();
@@ -98,8 +96,7 @@ class Runner {
     exprs.put ("att3", "o_orderdate + Str (\" this is my string\")");
     exprs.put ("att4", "o_custkey");
     
-    System.out.println(exprs);
-    
+  
     // run the selection operation
     try {
       Selection foo = new Selection (inAtts, outAtts, selection, exprs, "src/orders.tbl", "src/out.tbl", "g++", "src/cppDir/"); 
