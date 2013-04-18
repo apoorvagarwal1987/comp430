@@ -60,55 +60,6 @@ public class CostingRA {
 			double leftTupleCount = leftNode.getTupleCount();
 			double rightTupleCount = rightNode.getTupleCount();
 
-			/*		if(leftTupleCount > 1000000){
-				change = true;
-				IRAType traversalPointer = leftNode;
-				if(traversalPointer.getType().equals("RA_SELECT_TYPE")){
-					while(!traversalPointer.getNext().equals("RA_JOIN_TYPE")){
-						traversalPointer = traversalPointer.getNext();
-					}
-				}
-				while(true){
-
-					if(traversalPointer.getType().equals("RA_JOIN_TYPE")){
-						traversalPointer = ((RAJoinType)traversalPointer).getRight();
-					}
-
-					else if(traversalPointer.getType().equals("RA_SELECT_TYPE")){
-						traversalPointer = traversalPointer.getNext();
-					}
-
-					else{
-						//condition that it is a TABLE TYPE
-						break;
-					}
-				}
-				String alias = ((RATableType)traversalPointer).getAlias();
-				Iterator<String> underlyingAlias = ((RAJoinType)current).getUnderlyingTables().iterator();
-				RATableType tempTable = tableMap.get(alias);
-				int currentJoinPriority = tempTable.getjoinPriority(); 
-				Boolean flag = false;
-				String change = null;
-				while(underlyingAlias.hasNext()){
-					String temp = underlyingAlias.next();
-					if(!(tableMap.get(temp).getjoinPriority() == currentJoinPriority)){
-						flag = true;
-						change = temp ;
-					}
-				}
-
-				if(flag){
-					tempTable = tableMap.get(change);
-					tempTable.setjoinPriority(1);
-					tableMap.put(change, tempTable);
-				}
-				else{
-					tempTable.setjoinPriority(1);
-					tableMap.put(alias,tempTable);
-				}
-				return null;
-			}			
-			 */
 			ArrayList<AttribJoin> leftAttributes = leftReturn.getJoinOutAttribts();
 			ArrayList<AttribJoin> rightAttributes = rightReturn.getJoinOutAttribts();
 			Map<String,AttInfo> outAttributes = new HashMap<String, AttInfo>();
@@ -131,7 +82,7 @@ public class CostingRA {
 
 				for(AttribJoin attInformation : leftAttributes){
 					AttInfo cAttInfo = attInformation.getAttinfo();
-					String cAttName =cAttInfo.getAttName();
+					String cAttName =""+cAttInfo.getAlias()+"_"+cAttInfo.getAttName();
 					if(outAttributes.get(cAttName)== null){
 						outAttributes.put(cAttName, cAttInfo);
 					}
@@ -139,13 +90,18 @@ public class CostingRA {
 
 				for(AttribJoin attInformation : rightAttributes){
 					AttInfo cAttInfo = attInformation.getAttinfo();
-					String cAttName = cAttInfo.getAttName();
+					String cAttName =""+cAttInfo.getAlias()+"_"+cAttInfo.getAttName();
 					if(outAttributes.get(cAttName)== null){
 						outAttributes.put(cAttName, cAttInfo);
 					}
 				}
-
+				
+				//System.out.println("\n\nLeft Attributes :");
+				int AttribPos = 1;
 				for(Entry<String, AttInfo> outAttribSet : outAttributes.entrySet()){
+					String lAttName =""+outAttribSet.getValue().getAlias() +"_"+outAttribSet.getValue().getAttName();
+					//System.out.println(AttribPos+".  "+lAttName);
+					AttribPos++;
 					AttInfo value = outAttribSet.getValue();
 					joinOutAttribts.add(new AttribJoin(value, pos++));
 				}
@@ -168,10 +124,13 @@ public class CostingRA {
 			else{
 				double leftDenom = 1;
 				double rightDenom = 1;
-
+				int AttribPos = 1;
+				//System.out.println("\n\nLeft Attributes :");
 				for(AttribJoin attInformation : leftAttributes){
 					AttInfo lAttInfo = attInformation.getAttinfo();
 					String lAttName =""+lAttInfo.getAlias() +"_"+lAttInfo.getAttName();
+					//System.out.println(AttribPos+".  "+lAttName);
+					AttribPos++;
 					outAttributes.put(lAttName, lAttInfo);
 				}
 				for(AttribJoin attInformation : rightAttributes){
@@ -187,8 +146,11 @@ public class CostingRA {
 					String rAttribute = rExp.getValue().replace('.', '_');
 					String lAttNameJoin = null;
 					String rAttNameJoin = null;
+					
 					for(AttribJoin attInformation : leftAttributes){
+						
 						AttInfo cAttInfo = attInformation.getAttinfo();
+						
 						String cAttName =""+cAttInfo.getAlias() +"_"+cAttInfo.getAttName();
 						if(lAttribute.equals(cAttName)){
 							leftDenom = leftDenom * cAttInfo.getOutputCount();

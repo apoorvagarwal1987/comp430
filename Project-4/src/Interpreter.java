@@ -101,7 +101,7 @@ public static void main (String [] args) throws Exception {
               
       } 
     } catch (Exception e) {
-      System.out.println("Error! Exception: " + e); 
+      System.out.println("Error! Exception: " + e.getStackTrace()); 
     } 
   }
 }
