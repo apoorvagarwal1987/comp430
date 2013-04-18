@@ -22,7 +22,23 @@ public class RATableType implements IRAType {
 	private Map <String, TableData> res;
 	private int position; 
 	private IRAType _previous;
+	private double totalTupleCount;
 	
+	
+	/**
+	 * @return the totalTupleCount
+	 */
+	public double getTotalTupleCount() {
+		return totalTupleCount;
+	}
+
+	/**
+	 * @param totalTupleCount the totalTupleCount to set
+	 */
+	public void setTotalTupleCount(double totalTupleCount) {
+		this.totalTupleCount = totalTupleCount;
+	}
+
 	public RATableType(String tableName, String alias,boolean replace, int position) {
 		this.res = Interpreter.res;
 		this.value = tableName;
@@ -42,6 +58,7 @@ public class RATableType implements IRAType {
 		}
 		
 		tupleCount = res.get(tableName).getTupleCount();
+		totalTupleCount = tupleCount;
 		this.position = position;
 		
 		ArrayList<AttInfo> tempData = new ArrayList<AttInfo>();

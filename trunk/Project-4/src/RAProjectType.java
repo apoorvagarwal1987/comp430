@@ -16,6 +16,24 @@ public class RAProjectType implements IRAType {
 	private ReturnJoin _outputInfo;
 	private ArrayList<String> groupBy;
 	private double tupleCount;
+	private double totalTupleCount;
+	
+	/**
+	 * @return the totalTupleCount
+	 */
+	public double getTotalTupleCount() {
+		return totalTupleCount;
+	}
+
+
+	/**
+	 * @param totalTupleCount the totalTupleCount to set
+	 */
+	public void setTotalTupleCount(double totalTupleCount) {
+		this.totalTupleCount = totalTupleCount;
+	}
+
+
 	/**
 	 * @param _iraType
 	 */

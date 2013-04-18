@@ -18,7 +18,24 @@ public class RAJoinType implements IRAType {
  	private HashSet<String> underlyingTables;
  	private ArrayList<Expression> selectionPredicate;
  	private double tupleCount;
+ 	private double totalTupleCount;
  	
+	/**
+	 * @return the totalTupleCount
+	 */
+	public double getTotalTupleCount() {
+		return totalTupleCount;
+	}
+
+
+	/**
+	 * @param totalTupleCount the totalTupleCount to set
+	 */
+	public void setTotalTupleCount(double totalTupleCount) {
+		this.totalTupleCount = totalTupleCount;
+	}
+
+
 	/**
 	 * @return the tupleCount
 	 */
@@ -197,6 +214,9 @@ public class RAJoinType implements IRAType {
 	public void setSelectionPredicate(Expression selectionPredicate) {
 		this.selectionPredicate.add(selectionPredicate);
 	}
+
+
+	
 
 
 	

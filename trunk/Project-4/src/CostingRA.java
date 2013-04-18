@@ -20,9 +20,11 @@ public class CostingRA {
 	
 	private static ArrayList<Expression> selectExpression ;
 	public static Boolean change ; 
+	public static Map<ArrayList<Integer>,Number> costMap;
 	static {
 		selectExpression = new ArrayList<Expression>();
 		change = false;
+		costMap = new HashMap<ArrayList<Integer>, Number>();
 	}
 	
 	private static void makeExpression(Expression expression){
@@ -57,7 +59,7 @@ public class CostingRA {
 			double leftTupleCount = leftNode.getTupleCount();
 			double rightTupleCount = rightNode.getTupleCount();
 			
-			if(leftTupleCount > 1000000){
+	/*		if(leftTupleCount > 1000000){
 				change = true;
 				IRAType traversalPointer = leftNode;
 				if(traversalPointer.getType().equals("RA_SELECT_TYPE")){
@@ -105,7 +107,7 @@ public class CostingRA {
 				}
 				return null;
 			}			
-			
+			*/
 			ArrayList<AttribJoin> leftAttributes = leftReturn.getJoinOutAttribts();
 			ArrayList<AttribJoin> rightAttributes = rightReturn.getJoinOutAttribts();
 			Map<String,AttInfo> outAttributes = new HashMap<String, AttInfo>();
@@ -149,6 +151,12 @@ public class CostingRA {
 				
 				ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
 				current.setTupleCount(tOut);
+
+				double totalLeftTupleCount = leftNode.getTotalTupleCount();
+				double totalRightTupleCount = rightNode.getTotalTupleCount();
+				
+				current.setTotalTupleCount(totalLeftTupleCount+totalRightTupleCount+tOut);					
+						
 				return outputInfo;
 			}
 			
@@ -244,6 +252,9 @@ public class CostingRA {
 				
 				ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
 				current.setTupleCount(tOut);
+				double totalLeftTupleCount = leftNode.getTotalTupleCount();
+				double totalRightTupleCount = rightNode.getTotalTupleCount();
+				current.setTotalTupleCount(totalLeftTupleCount+totalRightTupleCount+tOut);
 				return outputInfo;				
 			}			
 		}
@@ -340,6 +351,9 @@ public class CostingRA {
 				selectExpression.clear();
 				ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
 				current.setTupleCount(tOut);
+				
+				current.setTotalTupleCount(tOut+nextNode.getTotalTupleCount());
+				
 				return outputInfo;
 			}			
 			
@@ -444,6 +458,7 @@ public class CostingRA {
 				}				
 				
 				current.setTupleCount(tOutFinal);
+				current.setTotalTupleCount(tOut+nextNode.getTotalTupleCount());
 				return outputInfo;
 			}
 		}
@@ -473,6 +488,7 @@ public class CostingRA {
 			}
 			
 			current.setTupleCount(tOut);
+			current.setTotalTupleCount(tOut);
 			ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
 			return outputInfo;
 		}
@@ -493,8 +509,44 @@ public class CostingRA {
 			double tOut = nextNode.getTupleCount();
 			ArrayList<AttribJoin> joinOutAttribts = prevOutput.getJoinOutAttribts();			
 			currentNode.setTupleCount(tOut);
+			current.setTotalTupleCount(nextNode.getTotalTupleCount());
 			ReturnJoin outputInfo = new ReturnJoin(joinOutAttribts,"costing");
 			return outputInfo;
 		}		
 	}
+	
+	
+	
+	private static ArrayList<Integer> generateJoinOrder(int tableCount){		
+		ArrayList<Integer> numbers = new ArrayList<Integer>();
+		for (int i = 0; i< tableCount ; i++){
+			numbers.add(i+1);			
+		}
+		ArrayList<Integer> newJoinOrder = new ArrayList<Integer>();
+		for(int i =0 ; i < tableCount ; i++  ){
+			Collections.shuffle(numbers);
+			newJoinOrder.add(numbers.get(0));
+		}	
+		return newJoinOrder;
+	}
+	
+	public static void storeJoinOrders (int tableCount){
+		int result = 0;
+		for (int j = 0; j< 500;j++){
+			
+			ArrayList<Integer> newJoinOrder =  new ArrayList<Integer>();
+			newJoinOrder = generateJoinOrder(tableCount);
+			for (int i = 0; i < newJoinOrder.size();i++){
+				result = result*10 + newJoinOrder.get(i);
+			}			
+			costMap.put(newJoinOrder, 0.0);		
+		}
+	}
 }
+
+
+
+
+
+
+
