@@ -356,42 +356,40 @@ public class CommonMethods {
 					int pos = 0;
 					Map<String,RATableType> costTableMap = new HashMap<String, RATableType>();
 					
+					System.out.println("Join Order: "+joinOrder);
 					
-					System.out.println(joinOrder);
-				/*	joinOrder.add(4);
+					// TODO For DeBUGGING PURPOSE
+			/*		joinOrder.clear();
+					joinOrder.add(1);
+					joinOrder.add(7);
+					joinOrder.add(6);
+					joinOrder.add(9);
 					joinOrder.add(5);
 					joinOrder.add(2);
-					joinOrder.add(1);
-					joinOrder.add(3);*/
+					joinOrder.add(8);
+					joinOrder.add(3);
+					joinOrder.add(4);*/
 					
 					costTableMap.clear(); 
 					while(pos<tableMap.size()) {						
 						String tableAlias = aliasArray.get(pos);
-						System.out.println("Table Alias :" + tableAlias);						
+						//System.out.println("Table Alias :" + tableAlias);						
 						String alias = aliasArray.get(pos);
 						String tableName = fromClause.get(alias);
 						RATableType tempRaTableType = new RATableType(tableName,alias,true, joinOrder.get(pos));
-						System.out.println("Priority Set:" + tempRaTableType.getjoinPriority());
+						//System.out.println("Priority Set:" + tempRaTableType.getjoinPriority());						
 						costTableMap.put(alias, tempRaTableType);
 						pos++;
 					}
 					
 					pos = 0;
-					/*
-					while(pos<tableMap.size()) {						
-						String tableAlias = aliasArray.get(pos);
-						System.out.println("Table Alias :" + tableAlias);
-						RATableType table = tableMap.get(tableAlias);
-						table.setjoinPriority(joinOrder.get(pos++));
-						System.out.println("Priority Set:" + table.getjoinPriority());
-						costTableMap.put(tableAlias, table);							
-					}		*/			
+		
 					root = createRATree(fromClause, selectClause,whereClause,groupBy,costTableMap);
 					@SuppressWarnings("unused")
 					ReturnJoin costedJoin = CostingRA.costing(root,costTableMap);
 					costMapFinal.put(joinOrder, root.getTotalTupleCount());
 					
-					System.out.println("Cost Plan : "+ root.getTotalTupleCount());
+					System.out.println("Join Order: "+joinOrder+" Cost Plan : "+ root.getTotalTupleCount());
 					pos = 0;
 				}
 				
@@ -411,32 +409,6 @@ public class CommonMethods {
 				
 				int pos = 0;
 				Map<String,RATableType> costTableMap = new HashMap<String, RATableType>();
-		/*		bestPlan.clear();
-				bestPlan.add(4);
-				bestPlan.add(5);
-				bestPlan.add(2);
-				bestPlan.add(1);
-				bestPlan.add(3);
-				*/
-			/*	
-				while(pos<tableMap.size()) {						
-					String tableAlias = aliasArray.get(pos++);
-					RATableType table = tableMap.get(tableAlias);
-					table.setjoinPriority(0);
-					costTableMap.put(tableAlias, table);							
-				}
-				*/
-				
-				
-				/*
-				while(pos<tableMap.size()) {						
-					String tableAlias = aliasArray.get(pos);
-					System.out.println("Table Alias :" + tableAlias);
-					RATableType table = tableMap.get(tableAlias);
-					table.setjoinPriority(bestPlan.get(pos++));	
-					System.out.println("Priority Set:" + table.getjoinPriority());
-					costTableMap.put(tableAlias, table);							
-				}	*/
 				
 				costTableMap.clear(); 
 				while(pos<tableMap.size()) {						
@@ -466,7 +438,6 @@ public class CommonMethods {
 				return root;
 			}
 		}
-		//System.out.println(root.getTupleCount());		
 	}
 	
 	public static IRAType createRATree (Map <String, String> fromClause, ArrayList <Expression> selectClause,
