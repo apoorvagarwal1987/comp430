@@ -44,7 +44,7 @@ public class RATableType implements IRAType {
 		this.value = tableName;
 		this.alias = alias;
 		this.type = "RA_TABLE_TYPE";
-		this.joinPriority = 0;
+		this.joinPriority = position;
 		// publishing the attribute of the table in the objects of the RA Table-type		
 		this.attributesInfo = new HashMap<String, AttInfo>();
 		Map<String, AttInfo> tattributesInfo = res.get(tableName).getAttributes();		
