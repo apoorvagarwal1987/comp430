@@ -29,7 +29,7 @@ public class TpClimberServlet extends HttpServlet {
 
 			// set up the connection
 			DriverManager.registerDriver(new AppEngineDriver());
-			c = DriverManager.getConnection("jdbc:google:rdbms://your:peak/peak-database:peak-database");
+			c = DriverManager.getConnection("jdbc:google:rdbms://peak-database:peak-database/peak");
 
 			// execute a query that will obtain all of the peaks
 			

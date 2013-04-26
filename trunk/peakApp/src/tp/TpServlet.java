@@ -50,13 +50,14 @@ public class TpServlet extends HttpServlet {
 		//System.out.println("Response ::" + response.toString());
 		// this is how we will talk to the database
 		Connection c = null;
-
+		response.setContentType("text/plain");
+		response.getWriter().println("dgfdsg");
 		// process the request by getting all of the peak names and adding them to the request
 		try {
 
 			// set up the connection
 			DriverManager.registerDriver(new AppEngineDriver());
-			c = DriverManager.getConnection("jdbc:google:rdbms://your:peak/peak-database:peak-database");
+			c = DriverManager.getConnection("jdbc:google:rdbms://peak-database:peak-database/peak");
 
 			// execute a query that will obtain all of the peaks
 			String statement = "select distinct REGION from PEAK";
@@ -83,8 +84,12 @@ public class TpServlet extends HttpServlet {
 			rd.forward (request, response);
 
 		} catch (SQLException e) {
-			e.printStackTrace();
+			response.getWriter().println(e.getMessage());
+
+//			e.printStackTrace();
 		} catch (ServletException e) {
+			response.getWriter().println(e.getMessage());
+
 			e.printStackTrace();
 		}		
 		
