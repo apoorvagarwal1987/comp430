@@ -10,7 +10,7 @@
 
 <html>
 <body>
-<form action="/peak" method="GET">
+<form action="/tp" method="GET">
 <%	
 	// get the user
         String user = (String) session.getAttribute ("user");
@@ -19,15 +19,19 @@
                 <p>You are not logged in.</p>
 <%
         } else {
+        
+        String peakName = (String) request.getAttribute("peak");
 %>
 		<p>Hello, <%= user %>.</p>
-		<p>Hello!  The time is now <%= new java.util.Date() %></p>
-		<p>The Climber for the peak:</p>
+		<p>Hello!  The time is now <%= new java.util.Date() %></p>		  
 		<ol>
 <%
 		ArrayList <String> myList = (ArrayList <String>) request.getAttribute ("climber");
+		ArrayList <String> climberDate = (ArrayList <String>) request.getAttribute ("date");
+		int pos  = 0;
 		for (String s : myList) {
-			out.println ("<li>" + s + "</li>");
+			out.println ("<li>" + s + "  has climbed on "+ climberDate.get(pos)  + "</li>");
+			pos++;
 		}
 		out.println ("</ol>");
 	}	

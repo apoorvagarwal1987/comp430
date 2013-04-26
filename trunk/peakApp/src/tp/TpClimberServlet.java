@@ -33,7 +33,7 @@ public class TpClimberServlet extends HttpServlet {
 
 			// execute a query that will obtain all of the peaks
 			
-			String statement =	"select P.NAME from CLIMBED C, PARTICIPATED P where C.PEAK =  \'" + peakSel +"\'" +
+			String statement =	"select P.NAME,C.WHEN_CLIMBED from CLIMBED C, PARTICIPATED P where C.PEAK =  \'" + peakSel +"\'" +
 							"and  C.TRIP_ID = P.TRIP_ID " ;
 			
 			PreparedStatement stmt = c.prepareStatement (statement);
@@ -41,9 +41,11 @@ public class TpClimberServlet extends HttpServlet {
 
 			// store all of the peaks into a list
 			ArrayList <String> climberName = new ArrayList <String> ();
+			ArrayList <String> climberDate = new ArrayList <String> ();
 			
 			while (rs.next ()) {
 				climberName.add (rs.getString (1));
+				climberDate.add( rs.getString(2));
 			}			
 
 			// close the connection
@@ -51,8 +53,9 @@ public class TpClimberServlet extends HttpServlet {
 
 			// augment the request by adding the list of regions to it
 			request.setAttribute ("climber", climberName);
-;
-
+			request.setAttribute("peak", peakSel);
+			request.setAttribute("date", climberDate);
+			
 			System.out.println("Result set ::" + climberName);
 
 			// and forward the request to the "showregions.jsp" page for display
