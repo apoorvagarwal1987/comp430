@@ -1,5 +1,4 @@
 package tp;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,40 +13,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
 import com.google.appengine.api.rdbms.AppEngineDriver;
-import com.google.appengine.api.users.User;
-import com.google.appengine.api.users.UserService;
-import com.google.appengine.api.users.UserServiceFactory;
-
 @SuppressWarnings("serial")
-public class TpServlet extends HttpServlet {
+public class TpPeakServlet extends HttpServlet {
+
 	public void doGet (HttpServletRequest request, HttpServletResponse response)throws IOException {
+		System.out.println("TP Peak Servelete java");
+		String regionSel = request.getParameter("region");
 
-		// make sure that the user has been authenticated
-		UserService userService = UserServiceFactory.getUserService();
-		User user = userService.getCurrentUser();
-
-		// if not, send them to the login page
-		if (user == null) {
-			response.sendRedirect(userService.createLoginURL(request.getRequestURI()));
-
-
-			// if so, then add them to the session
-		} 
-		else {
-//			
-//			String uEmail = user.getEmail();
-//			System.out.println("Email : " + uEmail);
-//			String domain = uEmail.substring(uEmail.indexOf('@')+1);
-//			if(domain.equals("gmail.com")){
-				request.getSession ().setAttribute ("user", user.getEmail ());
-//				System.out.println("User ::" + user.getEmail());
-//			}
-//			else
-//				response.sendRedirect(userService.createLoginURL(request.getRequestURI()));
-
-		}
-		
-		//System.out.println("Response ::" + response.toString());
 		// this is how we will talk to the database
 		Connection c = null;
 
@@ -59,34 +31,44 @@ public class TpServlet extends HttpServlet {
 			c = DriverManager.getConnection("jdbc:google:rdbms://your:peak/peak-database:peak-database");
 
 			// execute a query that will obtain all of the peaks
-			String statement = "select distinct REGION from PEAK";
+			String statement = "select NAME,ELEV,DIFF,MAP from PEAK where REGION = \'" + regionSel +"\'" ;
 			PreparedStatement stmt = c.prepareStatement (statement);
 			ResultSet rs = stmt.executeQuery ();
 
 			// store all of the peaks into a list
-			ArrayList <String> myList = new ArrayList <String> ();
+			ArrayList <String> peakName = new ArrayList <String> ();
+			ArrayList <Integer> peakElev = new ArrayList <Integer> ();
+			ArrayList <Integer> peakDiff = new ArrayList <Integer> ();
+			ArrayList <String> peakMap = new ArrayList <String> ();			
+			
+			
 			while (rs.next ()) {
-				myList.add (rs.getString (1));
+				peakName.add (rs.getString (1));
+				peakElev.add(rs.getInt(2));
+				peakDiff.add(rs.getInt(3));
+				peakMap.add(rs.getString(4));
 			}			
 
 			// close the connection
 			c.close ();
 
 			// augment the request by adding the list of regions to it
-			request.setAttribute ("regions", myList);
-			
-			System.out.println("Result set ::" + myList);
-			
+			request.setAttribute ("peaks", peakName);
+			request.setAttribute("elev", peakElev);
+			request.setAttribute("diff", peakDiff);
+			request.setAttribute("map", peakMap);
+
+			System.out.println("Result set ::" + peakName);
+
 			// and forward the request to the "showregions.jsp" page for display
 	    		ServletContext sc = getServletContext();
-			RequestDispatcher rd = sc.getRequestDispatcher ("/showregions.jsp");
+			RequestDispatcher rd = sc.getRequestDispatcher ("/showPeaks.jsp");
 			rd.forward (request, response);
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (ServletException e) {
 			e.printStackTrace();
-		}		
-		
+		}	
 	}
 }
