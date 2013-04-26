@@ -22,10 +22,10 @@
 %>
 		<p>Hello, <%= user %>.</p>
 		<p>Hello!  The time is now <%= new java.util.Date() %></p>
-		<p>The regions in the database are:</p>
+		<p>The Climber for the peak:</p>
 		<ol>
 <%
-		ArrayList <String> myList = (ArrayList <String>) request.getAttribute ("regions");
+		ArrayList <String> myList = (ArrayList <String>) request.getAttribute ("climber");
 		for (String s : myList) {
 			out.println ("<li>" + s + "</li>");
 		}
@@ -34,8 +34,7 @@
 %>
 
 
-Select Your Region? <INPUT TYPE=TEXT NAME="region" SIZE=20><BR>
-<P><INPUT TYPE=SUBMIT VALUE= SELECT>
+<P><INPUT TYPE = SUBMIT VALUE = HOME>
 </form>
 
 
