@@ -10,7 +10,8 @@
 
 <html>
 <body>
-<form action="/peak" method="GET">
+<form action="/climber" method="GET">
+
 <%	
 	// get the user
         String user = (String) session.getAttribute ("user");
@@ -22,22 +23,28 @@
 %>
 		<p>Hello, <%= user %>.</p>
 		<p>Hello!  The time is now <%= new java.util.Date() %></p>
-		<p>The regions in the database are:</p>
+		<p>The Peaks in the database are:</p>
 		<ol>
 <%
-		ArrayList <String> myList = (ArrayList <String>) request.getAttribute ("regions");
+		ArrayList <String> myList = (ArrayList <String>) request.getAttribute ("peaks");
+		ArrayList <Integer> peakElev = (ArrayList <Integer>) request.getAttribute ("elev");
+		ArrayList <Integer> peakDiff = (ArrayList <Integer>) request.getAttribute ("diff");
+		ArrayList <String> peakMap = (ArrayList <String>) request.getAttribute ("map");
+		
+		int pos = 0;
+		
 		for (String s : myList) {
-			out.println ("<li>" + s + "</li>");
+			out.println ("<li>" + s + "  (The elevation is: "+ peakElev.get(pos)+ " , difficulty level is: " + peakDiff.get(pos)+  
+						"  and is located on Map: "+ peakMap.get(pos)+ " )" + "</li>");
+			pos++;
 		}
 		out.println ("</ol>");
 	}	
 %>
 
-
-Select Your Region? <INPUT TYPE=TEXT NAME="region" SIZE=20><BR>
+Select Your Peak? <INPUT TYPE=TEXT NAME="peak" SIZE=20><BR>
 <P><INPUT TYPE=SUBMIT VALUE= SELECT>
 </form>
-
 
 </body>
 </html>
