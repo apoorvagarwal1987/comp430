@@ -27,7 +27,7 @@
         	int count  = myList.size();
         	if (count > 0){
 %>
-				<form action="/climber" method="GET">
+				<form action="/climber" method="POST">
 				<p>Hello, <%= user %>.</p>
 				<p>Hello!  The time is now <%= new java.util.Date() %></p>
 				<p>The number of Peaks in the database for region <%= regionName %> are <%= count %></p>
