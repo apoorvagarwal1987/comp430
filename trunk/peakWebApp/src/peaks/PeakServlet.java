@@ -17,7 +17,7 @@ import com.google.appengine.api.rdbms.AppEngineDriver;
 @SuppressWarnings("serial")
 public class PeakServlet extends HttpServlet {
 
-	public void doGet (HttpServletRequest request, HttpServletResponse response)throws IOException {
+	public void doPost (HttpServletRequest request, HttpServletResponse response)throws IOException {
 		System.out.println("TP Peak Servelete java");
 		String regionSel = request.getParameter("region");
 

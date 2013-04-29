@@ -10,7 +10,7 @@
 
 <html>
 <body>
-<form action="/peak" method="GET">
+<form action="/peak" method="POST">
 <%	
 	// get the user
         String user = (String) session.getAttribute ("user");

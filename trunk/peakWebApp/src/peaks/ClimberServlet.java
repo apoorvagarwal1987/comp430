@@ -18,7 +18,7 @@ import com.google.appengine.api.rdbms.AppEngineDriver;
 @SuppressWarnings("serial")
 public class ClimberServlet extends HttpServlet {
 
-	public void doGet (HttpServletRequest request, HttpServletResponse response)throws IOException {
+	public void doPost (HttpServletRequest request, HttpServletResponse response)throws IOException {
 		System.out.println("TP Climber Servelete java");
 		String peakSel = request.getParameter("peak");
 
@@ -45,7 +45,10 @@ public class ClimberServlet extends HttpServlet {
 			ArrayList <String> climberDate = new ArrayList <String> ();
 			
 			while (rs.next ()) {
-				climberName.add (rs.getString (1));
+				
+				//String temp = rs.getString (1);
+				String temp = new String((rs.getString (1)).substring(0, 1) + (((rs.getString (1))).substring(1)).toLowerCase());				
+				climberName.add (temp);
 				climberDate.add( rs.getString(2));
 			}			
 
